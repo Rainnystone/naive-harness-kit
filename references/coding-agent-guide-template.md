@@ -136,20 +136,21 @@ If the project has stronger packet rules, summarize them here and point to the w
 
 This section should answer: what must be clear before dispatch or implementation begins.
 
-### 7. Quick File Map
+### 7. Code Entry Map
 
-Provide a compact file and directory map for the highest-value entry points only.
+Provide a compact code/file map for the highest-value execution entry points only.
 
-Use a lightweight tree or grouped list.
+Use a lightweight tree, grouped list, or compact table.
 Do not try to mirror the whole repository.
 
-Include:
-- top-level docs and routing files
-- major source roots
-- persistence, runtime, frontend, backend, or worker entry areas
-- archive and tooling locations when relevant
+Include examples such as:
+- main source roots
+- primary route or page entry areas
+- backend, worker, runtime, or persistence entry areas
+- test and verification roots
+- high-value first-hop files for common task classes
 
-This section should answer: what are the main entry points in this repository.
+This section should answer: if the task is already routed to a code area, what files or directories should I open first.
 
 ### 8. Search Hints
 
@@ -217,6 +218,8 @@ The final project `coding-agent-guide.md` should follow these principles:
 - Prefer entry files and first-hop directories over exhaustive module inventories.
 - If a section grows too large, split detail into `docs/codemaps/` or another companion doc.
 - Keep documentation lifecycle rules in `documentation-governance.md` or an equivalent dedicated doc rather than expanding them here.
+- Keep workspace-wide document-surface inventories in `documentation-governance.md` or another dedicated companion doc rather than expanding them here.
+- Keep code/file maps and execution entry maps here rather than pushing them into `documentation-governance.md`.
 
 ## Companion Doc Guidance
 

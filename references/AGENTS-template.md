@@ -8,15 +8,19 @@ Keep this file focused on:
 - stable execution rules
 - document loading and context discipline
 - verification expectations
-- project-specific entry points and routing guidance
+- only the minimum project context needed to execute safely
 
 Do not turn this file into a changelog, implementation diary, or long-form architecture spec. If the project becomes too complex, move detailed routing, codemaps, and evolving plans into companion documents and keep this file as the stable control layer.
 
 Template usage rules:
 - This file is a template, not a final `AGENTS.md`.
-- Instructional text such as `Fill in this section with`, `Document:`, `Suggested categories:`, `If the project is complex`, and similar template guidance should not remain in the final project `AGENTS.md`.
-- Template guidance exists only to help the human or agent draft a project-specific `AGENTS.md`.
+- Guidance-only text such as `Fill in this section with`, `Document:`, `Suggested categories:`, `If the project is complex`, and similar template instructions must not remain in the final project `AGENTS.md`.
+- Fill-in sections must be rewritten for the actual workspace; they are not copy-paste blocks.
 - Any subsection explicitly marked as verbatim-preserved content must be copied into the final project `AGENTS.md` without changing a single word unless the human explicitly approves a change.
+- Final line budget:
+  - simple workspace target: usually no more than 100 lines
+  - complex workspace hard cap: 185 lines
+- If the file starts approaching the line budget, move document-system maps and loading detail to `documentation-governance.md`, and move code/file maps plus task-routing or implementation detail to `coding-agent-guide.md` instead of expanding this file.
 
 ## 2. Project-Specific Fill-in Sections
 
@@ -42,12 +46,14 @@ Fill in this section with:
 - where detailed codemaps, task-routing guides, or recovery docs live
 - which historical materials should only be consulted when current docs are insufficient
 
-If the workspace is simple, this section may point directly to a few source directories.
+If the workspace is simple, this section may include a very short inline key-path or file-map summary.
 
-If the workspace is complex, this section should point to companion docs such as:
+If the workspace is complex, this section should stay brief and point to companion docs such as:
 - `coding-agent-guide.md`
 - `docs/codemaps/`
 - recovery files like `task_plan.md`, `findings.md`, `progress.md`
+
+In complex workspaces, do not keep a large file map in `AGENTS.md`.
 
 ### Architecture
 
@@ -60,6 +66,7 @@ Fill in this section with the minimum architecture description needed for safe e
 If the project has multiple operational loops or modes, describe them separately.
 
 If the project is simple, keep this section brief and only document boundaries that matter for implementation safety.
+If the project is complex, keep this section as a boundary summary only and move operational detail into companion docs.
 
 ## 3. Mandatory Execution Rules
 
@@ -78,7 +85,20 @@ If the project is simple, keep this section brief and only document boundaries t
 - If code, tests, and active project documents disagree, resolve intended behavior first.
 - Then bring implementation, tests, and active docs back into sync.
 
-### 4. Project-Specific Architecture Discipline
+### 4. Task Tracking Discipline
+
+- If the workspace maintains a todo list, task list, checklist, plan, or other active tracking surface, update it when each task is completed.
+- Do not batch all task-list updates at the very end if task-by-task updates are practical.
+- If the workspace uses `task_plan.md`, `progress.md`, or `findings.md`, keep them aligned with actual task status rather than letting them drift.
+
+### 5. Workflow Completion and Archive Check
+
+- After a full `superpowers` workflow cycle or another clearly bounded implementation cycle, check whether the active docs and tracking surfaces suggest that a workstream may be complete.
+- If the workspace is NHK-managed and the workstream looks complete, ask whether `nhk-archive` should be invoked.
+- If the workspace is not NHK-managed, ask whether the project's equivalent archive transition should be invoked.
+- Do not archive automatically.
+
+### 6. Project-Specific Architecture Discipline
 
 If the project has important architecture-specific execution boundaries, summarize them here instead of copying rules from another workspace.
 
@@ -184,46 +204,6 @@ They are not instructional placeholders. They are final-content blocks and shoul
 - If two packets share the same primary production file or the same primary test file, default to serial execution unless the plan explains why parallel work is still safe.
 - If a packet grows across unrelated concerns, long execution chains, or multiple verification paths, split it again.
 
-## 6. Key Paths and System Mapping
-
-### Key Paths
-
-Fill in a table for the most important workspace locations.
-
-Suggested categories:
-
-| What | Where |
-| --- | --- |
-| Recovery docs | `...` |
-| Task-routing guide | `...` |
-| Active plans | `...` |
-| Active specs | `...` |
-| Codemaps | `...` |
-| Main app source | `...` |
-| Tests | `...` |
-| Simulation / tooling | `...` |
-| Historical architecture reference | `...` |
-
-Only include paths that materially help agents route work safely.
-
-### System Mapping
-
-Document where an agent should go for:
-- code-area routing
-- entry files
-- ownership boundaries
-- default verification commands
-- parallelization hints
-
-If the project is complex, maintain a separate routing guide such as:
-- `coding-agent-guide.md`
-- `docs/codemaps/`
-- a dedicated `coding-agent-guide/` directory
-
-In that case, keep this section short and point to those materials.
-
-If the project is small, this section may directly list the relevant directories and entry files.
-
 ## 7. Blocker Protocol
 When blocked during implementation:
 
@@ -264,6 +244,11 @@ They may stay minimal in a simple repository, but they should still exist as sta
 
 Complexity still matters for heavier companion materials.
 
+File-map guidance:
+- Simple workspaces may keep a very short key-path summary inline in `AGENTS.md` if the file remains within the line budget.
+- Complex workspaces should move document-surface maps and key-path inventories into `documentation-governance.md` or another dedicated companion doc.
+- Code/file maps, task-routing detail, and implementation-oriented guidance should live in `coding-agent-guide.md`, not here.
+
 For medium-complexity or complex projects, consider adding:
 - `task_plan.md`, `findings.md`, `progress.md` for multi-session continuity
 - `docs/codemaps/` for module relationships
@@ -289,4 +274,5 @@ General rules:
 - PRs should target `<active development branch>` unless the human explicitly says otherwise.
 - Human review required before merge.
 - When working from a Plan in `<plan directory>`, check off tasks as you complete them.
+- If the workspace uses a todo list outside the plan system, update it as each task completes.
 - Do not treat code changes as complete until the required verification commands have passed

@@ -93,6 +93,29 @@ For each active surface, document:
 Recommended reference:
 - For root tracking files such as `task_plan.md`, `progress.md`, and `findings.md`, refer to `$planning-with-files-zh`.
 
+## Key Paths and Document Map
+
+Document the highest-value workspace paths that agents need in order to find the active document system and major execution surfaces.
+
+Recommended shape:
+
+| What | Where |
+| --- | --- |
+| Workspace instruction file | `...` |
+| Routing guide | `...` |
+| Documentation governance | `...` |
+| Active specs | `...` |
+| Active plans | `...` |
+| Root tracking files | `...` |
+| Codemaps | `...` |
+| Archive | `...` |
+
+Rules:
+- In simple workspaces, this map may be very short.
+- In complex workspaces, prefer keeping the full key-path and document-surface inventory here instead of expanding `AGENTS.md` or `CLAUDE.md`.
+- Keep the emphasis on document surfaces, active versus archived locations, and the paths that affect loading discipline and CLI retrieval.
+- Leave code entry maps and production-file navigation to `coding-agent-guide.md`.
+
 ## Archive Structure
 
 Document the archive structure for the real project.
@@ -188,11 +211,12 @@ The final project `documentation-governance.md` should usually contain these sec
 2. Relationship To Other Docs
 3. Active vs Archive Rules
 4. Active Documentation Surfaces
-5. Archive Structure
-6. Naming Rules
-7. Read Order and Loading Discipline
-8. Transition Rules
-9. Optional Project-Specific Exceptions
+5. Key Paths and Document Map
+6. Archive Structure
+7. Naming Rules
+8. Read Order and Loading Discipline
+9. Transition Rules
+10. Optional Project-Specific Exceptions
 
 ## Writing Principles
 
@@ -204,3 +228,4 @@ The final project file should follow these principles:
 - Treat archive as a deliberate human-approved state, not an automatic cleanup mechanism.
 - Optimize for CLI discoverability and low-friction retrieval.
 - If a rule affects searchability, naming, or context loading, write it explicitly.
+- In complex workspaces, absorb file-map and document-surface detail here rather than allowing the workspace instruction file to grow past its line budget.
