@@ -59,7 +59,7 @@ NHK 是刻意把“写给人看”和“写给 agent 看”的文档拆开的：
 | 路由层 | `coding-agent-guide.md` | 快速任务分流、入口文件、packet 落点、第一轮验证 |
 | 治理层 | `documentation-governance.md` | active/archive 规则、命名规则、加载顺序、归档转换规则 |
 | 活跃工作层 | active `specs/`、active `plans/`，以及按需启用的根目录 `task_plan.md` / `progress.md` / `findings.md` | 只放正在进行的工作 |
-| 归档层 | `archive/` 或等价位置 | 已完成的 spec、plan、tracking，以及历史参考材料 |
+| 归档层 | `archive/` 加根级 `archive/README.md` | 已完成的 spec、plan、tracking，以及历史参考材料 |
 
 NHK 在这里是故意有主张的：
 
@@ -67,6 +67,7 @@ NHK 在这里是故意有主张的：
 - 根目录 tracking 文件是按需启用，不是默认永远存在
 - active 文档和 archive 文档不能混着放
 - archive 转换必须有人类确认
+- 已归档 workstream 应通过根级 `archive/README.md` 保持可检索
 
 治理层的直接依据就是 `references/documentation-governance-template.md`。NHK 不认为文档生命周期应该靠默认脑补解决，而是要求这些规则在目标 workspace 里明确写出来。
 
@@ -107,7 +108,7 @@ NHK 本质上是一个文件型 skill bundle，没有什么要编译的东西。
 
 1. 先从 `welcome-to-nhk` 开始。
 2. 让它判断现在应该进入 `nhk-bootstrap`、`nhk-upkeep` 还是 `nhk-archive`。
-3. 用 `nhk-bootstrap` 去建立或适配主 instruction file，加上两个强制 companion docs。
+3. 用 `nhk-bootstrap` 去建立或适配主 instruction file、两个强制 companion docs，以及根级 archive surface（`archive/` 加 `archive/README.md`）。
 4. 正常开发周期走完后，用 `nhk-upkeep` 修正漂移，并确认当前 workstream 还该不该继续保持 active。
 5. 只有在用户明确说“这个 workstream 完成了，可以归档”之后，才进入 `nhk-archive`。
 

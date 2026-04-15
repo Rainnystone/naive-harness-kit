@@ -31,6 +31,7 @@ Document this boundary clearly in the final project file:
 - `docs/codemaps/` or equivalent provide deeper module and system structure only when routing docs are insufficient.
 - active `specs/` and `plans/` document work still in progress.
 - `archive/` stores completed or historical documentation that is no longer an active execution source.
+- `archive/README.md` is the root archive index for archived workstreams.
 
 Recommended reference:
 - For `specs/` and `plans/` naming conventions, refer to `$using-superpowers`.
@@ -121,10 +122,15 @@ Rules:
 Document the archive structure for the real project.
 
 At minimum, define:
+- the root archive index location
 - where completed specs go
 - where completed plans go
 - where completed tracking files go
 - whether there are special archive areas for recovery snapshots, tracks, or legacy documentation
+
+The root archive index should support retrieval and discoverability.
+It should not replace the lifecycle rules in `documentation-governance.md`.
+Do not turn `documentation-governance.md` into an archive log; keep archived-workstream listings in `archive/README.md`.
 
 If the project has multiple archive categories, document the difference between them.
 
@@ -228,4 +234,5 @@ The final project file should follow these principles:
 - Treat archive as a deliberate human-approved state, not an automatic cleanup mechanism.
 - Optimize for CLI discoverability and low-friction retrieval.
 - If a rule affects searchability, naming, or context loading, write it explicitly.
+- Keep archive listings in `archive/README.md` rather than letting this governance file grow into an archive catalog.
 - In complex workspaces, absorb file-map and document-surface detail here rather than allowing the workspace instruction file to grow past its line budget.

@@ -59,7 +59,7 @@ For an NHK-managed workspace, the expected document system is layered:
 | Routing layer | `coding-agent-guide.md` | quick task routing, entry files, packet landing zones, first-pass verification |
 | Governance layer | `documentation-governance.md` | active vs archive rules, naming rules, loading discipline, archival transition rules |
 | Active work layer | active `specs/`, active `plans/`, optional root `task_plan.md` / `progress.md` / `findings.md` | work in progress only |
-| Archive layer | `archive/` or equivalent | completed specs, completed plans, completed tracking files, historical reference only |
+| Archive layer | `archive/` plus root `archive/README.md` | completed specs, completed plans, completed tracking files, historical reference only |
 
 NHK is opinionated here on purpose:
 
@@ -67,6 +67,7 @@ NHK is opinionated here on purpose:
 - root tracking files are conditional, not automatic
 - active docs and archive docs should not be mixed
 - archive transitions require human confirmation
+- archived workstreams should stay discoverable through a root `archive/README.md` index
 
 The direct source for the governance layer is `references/documentation-governance-template.md`. NHK does not treat documentation lifecycle as an implicit side effect. It expects those rules to be written down explicitly in the target workspace.
 
@@ -107,7 +108,7 @@ The shortest path is:
 
 1. Start with `welcome-to-nhk`.
 2. Let it decide whether the workspace needs `nhk-bootstrap`, `nhk-upkeep`, or `nhk-archive`.
-3. Use `nhk-bootstrap` to create or adapt the workspace instruction file plus the two mandatory companion docs.
+3. Use `nhk-bootstrap` to create or adapt the workspace instruction file, the two mandatory companion docs, and the root archive surface (`archive/` plus `archive/README.md`).
 4. Use `nhk-upkeep` after normal delivery cycles to repair drift and ask whether a workstream should remain active.
 5. Use `nhk-archive` only after the human clearly confirms that one workstream is done and should move to archive.
 

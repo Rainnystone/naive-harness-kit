@@ -59,10 +59,17 @@ Do not archive:
 2. Resolve the workstream identity.
 3. Gather only the related materials for that identity.
 4. Move the completed specs, plans, and related tracking records into the uniquely named archive container.
-5. Update `coding-agent-guide.md` current execution state so it no longer presents the archived workstream as active and so it points to the remaining active surface, if any.
-6. Update `documentation-governance.md` current-state or active-versus-archive references so the archive location and active/archive boundary remain accurate.
-7. Only after the archive move is complete and the archived copies are named clearly may root `task_plan.md`, `progress.md`, and `findings.md` be cleared or reset.
-8. Clear root tracking files only when they were the active surface for the archived workstream and no other live workstream still depends on them.
+5. Ensure `archive/README.md` exists and add or update one row for the archived workstream.
+6. The root archive index row should record:
+   - workstream identity
+   - archival date
+   - archive location
+   - main included materials
+   - a short note only if needed
+7. Update `coding-agent-guide.md` current execution state so it no longer presents the archived workstream as active and so it points to the remaining active surface, if any.
+8. Update `documentation-governance.md` current-state or active-versus-archive references so the archive location and active/archive boundary remain accurate.
+9. Only after the archive move is complete and the archived copies are named clearly may root `task_plan.md`, `progress.md`, and `findings.md` be cleared or reset.
+10. Clear root tracking files only when they were the active surface for the archived workstream and no other live workstream still depends on them.
 
 ## Local References
 
@@ -71,6 +78,7 @@ Use local references to keep the transition aligned:
 - `../references/validation-scenarios.md`
 - `../references/coding-agent-guide-template.md`
 - `../references/documentation-governance-template.md`
+- `../references/archive-readme-template.md`
 - `../references/dependency-setup.md`
 
 These references are local alignment aids, not blind copy targets.

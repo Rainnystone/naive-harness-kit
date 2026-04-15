@@ -24,7 +24,7 @@ This file is the baseline pressure-test set for NHK skill validation. Each scena
 
 **Expected baseline failure without the finished skills:** The agent guesses, merges the files, overwrites one, or picks a winner based on a weak heuristic like recency or perceived style. It may also fall back to environment signals even though the ambiguity is already explicit.
 
-**Validation signal for the skill set:** The workflow must stop and ask which file is active. It must not merge, delete, migrate, or rewrite either file without explicit user direction.
+**Validation signal for the skill set:** The workflow must stop and ask which file is active. It must not merge, delete, migrate, or rewrite either file without explicit user direction. In an NHK-managed workspace, `nhk-bootstrap` must also create the standard archive surface with `archive/` and a stub `archive/README.md` root index.
 
 ## 3. Drifted Docs After a Completed Workflow Cycle
 
@@ -48,7 +48,7 @@ This file is the baseline pressure-test set for NHK skill validation. Each scena
 
 **Expected baseline failure without the finished skill:** The agent archives too broadly, renames files generically, leaves the archive path ambiguous, or clears root tracking before the transition is finished. It may also fail to update the current-state references that point to the active docs.
 
-**Validation signal for the skill set:** The transition must first use `superpowers`-style spec/plan locations and `planning-with-files` root tracking files as explicit detection surfaces, then fall back to content/context matching only when naming signals are incomplete. The completed workstream must move into one uniquely named archive folder that includes the workstream identity, and root tracking files must only be cleared after that move is complete and approved.
+**Validation signal for the skill set:** The transition must first use `superpowers`-style spec/plan locations and `planning-with-files` root tracking files as explicit detection surfaces, then fall back to content/context matching only when naming signals are incomplete. The completed workstream must move into one uniquely named archive folder that includes the workstream identity, the root `archive/README.md` index must gain or update a row for that archived workstream, and root tracking files must only be cleared after that move is complete and approved.
 
 ## 5. User-Refused Archive Transition
 

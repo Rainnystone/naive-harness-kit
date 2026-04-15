@@ -5,7 +5,7 @@ description: Use when a workspace needs first-time NHK setup or is missing the r
 
 # NHK Bootstrap
 
-NHK `nhk-bootstrap` establishes the first usable workspace harness. It must leave the workspace with one active instruction file plus the two mandatory companion docs, and it must not guess through instruction-file ambiguity.
+NHK `nhk-bootstrap` establishes the first usable workspace harness. It must leave the workspace with one active instruction file, the mandatory companion docs, and the root archive surface, and it must not guess through instruction-file ambiguity.
 
 ## Minimum Outputs
 
@@ -14,8 +14,10 @@ An NHK-managed workspace must finish `nhk-bootstrap` with:
 - one active instruction file: `AGENTS.md` or `CLAUDE.md`
 - `coding-agent-guide.md`
 - `documentation-governance.md`
+- `archive/`
+- `archive/README.md`
 
-`coding-agent-guide.md` and `documentation-governance.md` are mandatory minimum outputs even for simple repositories. Simplicity affects how short they may be, not whether they exist.
+`coding-agent-guide.md`, `documentation-governance.md`, and the root archive surface are mandatory minimum outputs even for simple repositories. Simplicity affects how short they may be, not whether they exist.
 
 ## Instruction File Decision
 
@@ -36,7 +38,10 @@ After the active instruction file is known:
 - build or adapt the active instruction file from the matching local reference shape
 - build or adapt `coding-agent-guide.md` from `../references/coding-agent-guide-template.md`
 - build or adapt `documentation-governance.md` from `../references/documentation-governance-template.md`
-- establish the minimum cross-references among these three files so routing and governance stay connected
+- create `archive/` and build or adapt `archive/README.md` from `../references/archive-readme-template.md`
+- establish the minimum cross-references among the core docs and archive surface so routing and governance stay connected
+
+If `archive/README.md` is created from scratch, it should start with the standard stub shape rather than an empty file.
 
 Treat `documentation-governance.md` as the lifecycle source of truth for:
 
@@ -60,12 +65,13 @@ If none of those conditions hold, do not create root tracking files during `nhk-
 
 ## Template Adaptation Rules
 
-Use the four local template files as references, not blind copy targets.
+Use the local template files as references, not blind copy targets.
 
 - `../references/AGENTS-template.md`
 - `../references/CLAUDE-template.md`
 - `../references/coding-agent-guide-template.md`
 - `../references/documentation-governance-template.md`
+- `../references/archive-readme-template.md`
 
 Required adaptation rules:
 
@@ -84,5 +90,6 @@ Use these local references when pressure-checking the workflow:
 - `../references/CLAUDE-template.md`
 - `../references/coding-agent-guide-template.md`
 - `../references/documentation-governance-template.md`
+- `../references/archive-readme-template.md`
 
 The `nhk-bootstrap` workflow passes its core ambiguity check only if it preserves an already-existing single instruction file and asks the user rather than guessing when both instruction files already exist.

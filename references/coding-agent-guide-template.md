@@ -67,6 +67,7 @@ Include:
 Also document:
 - which historical docs are optional follow-up reading
 - which deeper docs should only be loaded when the first pass is insufficient
+- that archive lookups should start from `archive/README.md` before opening specific archived materials
 
 This section should answer: what do I read first, in what order, and why.
 
