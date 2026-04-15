@@ -70,6 +70,10 @@ If the project is complex, keep this section as a boundary summary only and move
 
 ## 3. Mandatory Execution Rules
 
+The first three subsections below are verbatim-preserved content.
+They are final-content blocks, not instructional placeholders.
+They must be copied into the real project `CLAUDE.md` without changing a single word unless the human explicitly approves a change.
+
 ### 3. Immutable Data Patterns
 - Never mutate state objects. Always return new copies.
 - `const newState = { ...oldState, field: newValue }`
@@ -118,44 +122,16 @@ Rules for writing this subsection:
 
 ## 4. Documentation Governance and Context Loading
 
-Use a dedicated companion doc such as `documentation-governance.md` for detailed documentation lifecycle rules.
+Keep this section short.
+Use a dedicated companion doc such as `documentation-governance.md` for detailed lifecycle, naming, archive, and loading rules.
 
-This `CLAUDE.md` section should keep only the minimum execution-facing summary.
-
-### 1. Documentation Governance Source Of Truth
-
-- The project should define a dedicated documentation governance doc, such as `documentation-governance.md`, for active/archive rules, naming rules, archival rules, and documentation lifecycle management.
-- `CLAUDE.md` should not duplicate the full governance policy.
-- If a governance doc exists, it is the primary source for documentation lifecycle rules.
-
-### 2. Active vs Historical Documents
-
-- Active execution should prefer current code, current tests, and active docs first.
-- Archive should be treated as reference material, not as the default execution source.
-- Archived materials must not silently override direct human instructions or active execution sources.
-
-### 3. Active Planning and Recovery Files
-
-- If the project uses root tracking files such as `task_plan.md`, `findings.md`, and `progress.md`, document that they are active work surfaces only.
-- For structure and operating discipline, refer to `$planning-with-files-zh`.
-
-### 4. Context Loading Discipline
-
-- Start with the smallest active document set that can route the current task safely.
-- Load codemaps, plans, specs, or archive only when the current task genuinely needs them.
-- If the project defines task-specific loading order, summarize it here briefly and point to `coding-agent-guide.md` or `documentation-governance.md` for detail.
-
-### 5. Spec and Context Budget
-
+- If a governance doc exists, it is the source of truth for documentation lifecycle rules.
+- Prefer current code, current tests, and active docs first; treat archive as reference material rather than a default execution source.
+- Start with the smallest active document set that can route the task safely, and load codemaps, plans, specs, or archive only when the task genuinely needs them.
 - Spec text budget: max 40,000 tokens per session.
-- If spec or design materials exceed that budget, summarize or route through companion docs instead of loading everything into the main execution context.
-- Do not let `CLAUDE.md` become a substitute for detailed specs, codemaps, or governance records.
+- If active plans, specs, tests, and implementation drift apart, resolve intended behavior first, then bring the active source of truth and dependent materials back into sync.
+- For root tracking discipline, refer to `$planning-with-files-zh`.
 - For active `specs/` and `plans/` conventions, refer to `$using-superpowers`.
-
-### 6. Sync Discipline
-
-- If active plans, specs, tests, and implementation drift apart, resolve intended behavior first.
-- Then update the active source of truth and bring dependent materials back into sync.
 
 ## 5. Subagent and Packet Discipline
 
