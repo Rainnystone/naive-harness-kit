@@ -2,18 +2,21 @@
 
 [English](README.md) | **中文**
 
-NHK 是一个面向 Codex 和 Claude Code 的 prompt-first 懒人包，专门给那些不想先修"Agent harness engineering"再开工的人。
+NHK 是一个面向 Codex 和 Claude Code 的 prompt-first 懒人包，专门给那些不想先修 "Agent harness engineering" 再开工的人。
 
-它的气质是：稍微自嘲一点，稍微谦卑一点，但尽量务实。目标不是显得很厉害，而是让你用更少的折腾、更少的拍脑袋判断，把一个 agent workspace 的指令系统搭起来、维持住、别养歪。
+它的气质是：稍微自嘲一点，稍微谦卑一点，但尽量务实。目标不是显得很厉害，而是先把好用的工具安上、把它们合理串起来，然后尽量少折腾、少拍脑袋，把一个 agent workspace 的指令系统搭起来、维持住、别养歪。
 
 ## NHK 是什么
 
-NHK 主要解决四类反复出现的问题：
+NHK 主要解决几类很快就会反复出现的问题：
 
-- 在当前环境里到底该用 `AGENTS.md` 还是 `CLAUDE.md`
+- 先把真正有用的工作流工具接进来，尤其是 `superpowers` 和 `planning-with-files`
+- 在当前环境里懒一点但别乱来地初始化 `AGENTS.md` 还是 `CLAUDE.md`
 - 怎么让 `coding-agent-guide.md` 和 `documentation-governance.md` 始终和真实状态一致
 - 一个 workstream 到底该继续保持 active，还是该正式进入 archive
 - 整个过程尽量靠明确 prompt 驱动，而不是靠不透明的 hooks 偷偷做事
+
+换句话说，NHK 不是要假装自己会魔法，而是想当那个有点碎嘴但还算靠谱的朋友：可以偷懒，但别糊弄；可以简化，但要把规则写下来，免得未来的你回头看时像在考古。
 
 这套东西就是给新手、小白、懒得自己从零搭 harness 的人准备的。大佬当然可以全手搓，但 NHK 的定位本来就不是考大家是不是大佬。
 
@@ -74,6 +77,17 @@ NHK 默认把下面两个工作流系统视为并列依赖：
 - [`superpowers`](https://github.com/obra/superpowers)：负责流程纪律、skill-first 路由、brainstorm/spec/plan 这套方法
 - [`planning-with-files`](https://github.com/othmanadi/planning-with-files)：负责外部 tracking、恢复、跨轮连续性
 
+这两个东西搭配起来的意义很大。
+
+`superpowers` 好用，是因为它会给 agent 工作一个比较清楚的形状，不至于一路滑向“先随便做点什么再说”的即兴表演。它能帮助模型选 workflow、走 brainstorm/spec/plan 这类更稳的路径，也减少模型隔一会儿就重新发明一套方法论的冲动。
+
+`planning-with-files` 则正好补上另一块：Codex 和 Claude Code 在长期记忆管理这件事上，实际表现都偏模糊。把任务状态、发现、进度放进外部文件，虽然不酷，但比把一切都押在模型“应该还记得吧”上可靠得多。它很适合拿来维持外部记忆，避免 agent 忘记哪个 workstream 还 active、哪些验证已经跑过、哪些事情只是看起来做完了。
+
+合在一起看：
+- `superpowers` 给流程形状
+- `planning-with-files` 给记忆一个落在模型外部的稳定位置
+- NHK 则用这两者去把 `AGENTS.md` / `CLAUDE.md` 初始化、日常维护、active/archive 判断这几件事做得更不拍脑袋
+
 如果缺了其中一个，NHK 不应该装作没事继续跑，而是应该停下来问你：是要安装、启用，还是只是手动 adopt 它的工作流约定。对应说明在 [`references/dependency-setup.md`](references/dependency-setup.md)。
 
 ## 怎么安装
@@ -83,7 +97,7 @@ NHK 本质上是一个文件型 skill bundle，没有什么要编译的东西。
 1. 把整个 `nhk/` 目录复制到你当前 agent 环境使用的本地 skills 目录里。
 2. 保持目录结构原样，不要把 `references/` 和各个 skill 文件夹拆散。
 3. 确保 `superpowers` 和 `planning-with-files` 可用；如果暂时不可用，也至少知道自己是要安装、启用，还是手动 adopt。
-4. 到目标 workspace 里，从 `welcome-to-nhk` 开始。
+4. 到目标 workspace 里，从 `welcome-to-nhk` 开始，让 NHK 懒一点但别瞎猜地初始化 `AGENTS.md` 或 `CLAUDE.md`。
 
 如果你是第一次配这种环境，不确定依赖有没有装好，这非常正常。NHK 的设计本来就是在这种地方先停下来问，而不是装懂。
 

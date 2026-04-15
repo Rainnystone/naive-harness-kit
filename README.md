@@ -4,16 +4,19 @@
 
 NHK is a prompt-first starter kit for people who want a usable agent workspace harness without becoming full-time harness engineers first.
 
-It is intentionally a little humble, a little self-aware, and very practical. The point is not to look clever. The point is to help you stand up and maintain a sane workspace for Codex or Claude Code with less ceremony, less guessing, and fewer document pileups.
+It is intentionally a little humble, a little self-aware, and very practical. The point is not to look clever. The point is to help you get the good tools in place, wire them together sanely, and keep a Codex or Claude Code workspace from turning into a vague little document swamp.
 
 ## What NHK Is
 
-NHK helps you keep a small but stable workspace instruction system around four recurring jobs:
+NHK helps with four recurring jobs that show up surprisingly fast once you start using coding agents seriously:
 
-- choosing the right instruction file for the current agent environment
+- getting the useful workflow tools in place, especially `superpowers` and `planning-with-files`
+- lazily but safely initializing the right workspace instruction file for the current agent environment
 - keeping `coding-agent-guide.md` and `documentation-governance.md` aligned with reality
 - deciding whether a workstream should stay active or move to archive
 - doing all of that with explicit prompts instead of opaque hooks
+
+In other words, NHK is not trying to be magic. It is trying to be the slightly fussy friend who says: yes, let's make this easier, but let's also write the rules down so future-you is not stuck deciphering agent vibes.
 
 This kit is for beginners, lazy pragmatists, and anyone who would rather ship than hand-roll a custom agent harness from scratch.
 
@@ -74,6 +77,17 @@ NHK expects these peer workflow systems:
 - [`superpowers`](https://github.com/obra/superpowers): process discipline, skill-first routing, brainstorm/spec/plan flow
 - [`planning-with-files`](https://github.com/othmanadi/planning-with-files): persistent task tracking, recovery, and continuity
 
+The pairing matters.
+
+`superpowers` is useful because it gives agent work an actual shape instead of a vague "just keep going" spiral. It helps the model route work, choose the right workflow, and avoid improvising its own grand theory every twenty minutes.
+
+`planning-with-files` pairs well with that because Codex and Claude Code are both a bit fuzzy about long-lived working memory in practice. External tracking files are not glamorous, but they are much better than hoping the model remembers which thread is still active, what has already been verified, or whether a half-finished workstream was supposed to stay live.
+
+Together they give NHK a steadier foundation:
+- `superpowers` gives the process shape
+- `planning-with-files` gives the memory somewhere reliable to live outside the model
+- NHK uses both to make `AGENTS.md` / `CLAUDE.md` setup, daily upkeep, and archive decisions less ad hoc
+
 If one of them is missing, NHK should pause and ask whether you want to install it, enable it, or just adopt its conventions manually. That decision is described in [`references/dependency-setup.md`](references/dependency-setup.md).
 
 ## Installation
@@ -83,7 +97,7 @@ NHK is a file-based skill bundle. There is nothing to compile.
 1. Copy the `nhk/` directory into the local skill collection used by your agent environment.
 2. Preserve the directory structure exactly, especially `references/` and each skill folder.
 3. Make sure `superpowers` and `planning-with-files` are available, or be prepared to adopt their conventions manually.
-4. In the target workspace, start with `welcome-to-nhk`.
+4. In the target workspace, start with `welcome-to-nhk` so NHK can lazily initialize `AGENTS.md` or `CLAUDE.md` without guessing recklessly.
 
 If you are installing NHK into a new environment and are not sure whether the dependencies are already present, that is normal. NHK is designed to stop and ask before pretending everything is ready.
 
