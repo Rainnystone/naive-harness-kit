@@ -35,6 +35,7 @@ It also ships with frozen local references:
 - `CLAUDE-template.md`
 - `coding-agent-guide-template.md`
 - `documentation-governance-template.md`
+- `archive-readme-template.md`
 - `dependency-setup.md`
 - `validation-scenarios.md`
 
