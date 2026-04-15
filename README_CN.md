@@ -2,7 +2,7 @@
 
 [English](README.md) | **中文**
 
-NHK 是一个面向 Codex 和 Claude Code 的 prompt-first 懒人包，专门给那些不想先修一门“代理工作流基础设施工程”再开工的人。
+NHK 是一个面向 Codex 和 Claude Code 的 prompt-first 懒人包，专门给那些不想先修"Agent harness engineering"再开工的人。
 
 它的气质是：稍微自嘲一点，稍微谦卑一点，但尽量务实。目标不是显得很厉害，而是让你用更少的折腾、更少的拍脑袋判断，把一个 agent workspace 的指令系统搭起来、维持住、别养歪。
 
