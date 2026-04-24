@@ -38,7 +38,19 @@ This file is the baseline pressure-test set for NHK skill validation. Each scena
 
 **Validation signal for the skill set:** The skill must compare the docs against the live workspace state, repair the stale references, and then ask the user whether the completed workstream should remain active or move to archive.
 
-## 4. User-Confirmed Archive Transition
+## 4. Over-Compressed Instruction File
+
+**Target skills:** `nhk-bootstrap`, `nhk-upkeep`
+
+**Test prompt:** “Bootstrap NHK for this simple prompt-first repo. Keep the instruction file concise and do not blindly copy the template.”
+
+**Pressure setup:** The selected local instruction template contains final execution-discipline categories such as subagent delegation, implementation packet discipline, task tracking, verification, archive check, and documentation governance. The repo itself is simple, so the agent is likely to over-interpret concision as permission to compress away those categories.
+
+**Expected baseline failure without the finished skills:** The agent creates the required files but reduces the active instruction file to a short summary, omitting final-content execution discipline because it treats those sections as template filler. It may only verify that files exist instead of auditing instruction coverage.
+
+**Validation signal for the skill set:** `nhk-bootstrap` must audit the final active instruction file against the selected local instruction template and preserve or project-adapt every required execution-discipline category. `nhk-upkeep` must detect an existing active instruction file that lacks those categories and repair it, or document the human-approved reason for the omission.
+
+## 5. User-Confirmed Archive Transition
 
 **Target skill:** `nhk-archive`
 
@@ -50,7 +62,7 @@ This file is the baseline pressure-test set for NHK skill validation. Each scena
 
 **Validation signal for the skill set:** The transition must first use `superpowers`-style spec/plan locations and `planning-with-files` root tracking files as explicit detection surfaces, then fall back to content/context matching only when naming signals are incomplete. The completed workstream must move into one uniquely named archive folder that includes the workstream identity, the root `archive/README.md` index must gain or update a row for that archived workstream, and root tracking files must only be cleared after that move is complete and approved.
 
-## 5. User-Refused Archive Transition
+## 6. User-Refused Archive Transition
 
 **Target skill:** `nhk-archive`
 

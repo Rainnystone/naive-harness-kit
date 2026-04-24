@@ -29,6 +29,8 @@ Use `nhk-upkeep` only for maintenance after NHK already exists.
 - Check `coding-agent-guide.md` against current routing reality, not just against its previous wording.
 - Check `documentation-governance.md` against the actual active/archive layout and the current naming and loading rules.
 - Treat `documentation-governance.md` as the workspace lifecycle contract, and repair it when the live workspace no longer matches its documented rules.
+- Check whether the active instruction file still covers the required execution-discipline categories from the matching local template.
+- If categories such as subagent delegation, implementation packet discipline, verification, archive check, or documentation governance are missing, repair them or document the human-approved reason for omission.
 - Inspect root `task_plan.md`, `progress.md`, and `findings.md` as live surfaces, not permanent assumptions.
 - Repair stale statements about active repositories, branches, dependencies, entry docs, routing, verification, active/archive boundaries, and loading order.
 - Remove or demote docs that are no longer active execution entry points, and reflect when root tracking files are no longer active surfaces.

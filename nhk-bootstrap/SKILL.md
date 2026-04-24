@@ -81,6 +81,28 @@ Required adaptation rules:
 - explain which local references were used and what was adapted for this workspace
 - do not leave documentation lifecycle rules implied; write them explicitly into the final `documentation-governance.md`
 
+## Mandatory Coverage Audit
+
+Before finishing `nhk-bootstrap`, audit the generated active instruction file against the selected local instruction template.
+
+Template adaptation may remove scaffolding, placeholders, and instructional filler. It must not remove final execution-discipline categories.
+
+The final active instruction file must preserve or project-adapt these categories when they appear in the selected template:
+
+- stable execution rules
+- task tracking discipline
+- workflow completion and archive check
+- documentation governance and context loading
+- subagent delegation discipline
+- implementation packet discipline
+- blocker protocol
+- testing and verification expectations
+- git and delivery expectations
+
+Verbatim-preserved blocks must remain verbatim unless the human explicitly approves a change.
+
+If root tracking files are active, record the audit result in `progress.md`; otherwise summarize the audit in the final delivery note.
+
 ## Local Validation Targets
 
 Use these local references when pressure-checking the workflow:
