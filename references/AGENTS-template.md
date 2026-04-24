@@ -145,6 +145,7 @@ They are not instructional placeholders. They are final-content blocks and shoul
 - For complex work, prefer decomposing the implementation into bounded tasks and dispatching subagents rather than keeping the whole execution on the main thread.
 - Subagent dispatch must follow `subagent-driven-development`; do not improvise a parallel workflow outside that discipline when the task has already been decomposed.
 - Choose the subagent model according to task complexity instead of defaulting to the largest model. Valid deployment options include:
+  - `gpt-5.5` with `medium` / `high` / `xhigh`
   - `gpt-5.4` with `medium` / `high` / `xhigh`
   - `gpt-5.4-mini` with `high` / `xhigh`
   - `gpt-5.3-codex` with `high` / `xhigh`
