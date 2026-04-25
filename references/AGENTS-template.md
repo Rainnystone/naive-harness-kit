@@ -1,130 +1,147 @@
-# Agent Instructions Template
+# AGENTS.md Generation Contract
 
-## 1. Purpose and Scope
+[[TEMPLATE_ONLY:BEGIN]]
+This file is a generation contract for an NHK-managed workspace instruction file. It is not a final `AGENTS.md`.
 
-This file defines stable execution rules, collaboration discipline, verification expectations, and project-specific navigation guidance for coding agents working in this workspace.
+Template markers:
+- `[[TEMPLATE_ONLY]]` content is generation guidance only and must not appear in the final `AGENTS.md`.
+- `[[FINAL_VERBATIM]]` content must be copied into the final `AGENTS.md` without changing a single word unless the human explicitly approves a change.
+- `[[FINAL_ADAPT]]` content must appear in the final `AGENTS.md`, but it must be rewritten for the actual workspace.
+- `[[OPTIONAL_BY_COMPLEXITY]]` content appears only when the workspace complexity justifies it.
+- Marker boundary lines and the bracket labels themselves must never appear in the final `AGENTS.md`.
 
-Keep this file focused on:
-- stable execution rules
-- document loading and context discipline
-- verification expectations
-- only the minimum project context needed to execute safely
+Final file purpose:
+- Keep `AGENTS.md` as the stable control layer for coding agents.
+- Use it as a map, not a manual.
+- Put detailed routing and file maps in `coding-agent-guide.md`.
+- Put documentation lifecycle rules in `documentation-governance.md`.
+- Put evolving specs, plans, findings, and archive history in their dedicated docs.
 
-Do not turn this file into a changelog, implementation diary, or long-form architecture spec. If the project becomes too complex, move detailed routing, codemaps, and evolving plans into companion documents and keep this file as the stable control layer.
+Final line budget:
+- simple workspace target: 110-130 lines
+- medium workspace target: 130-160 lines
+- complex workspace hard cap: 185 lines
+- fixed required execution-discipline content usually consumes 80-105 lines
+- project-specific overview, navigation, architecture, commands, and git details should usually fit in the remaining 25-80 lines
 
-Template usage rules:
-- This file is a template, not a final `AGENTS.md`.
-- Guidance-only text such as `Fill in this section with`, `Document:`, `Suggested categories:`, `If the project is complex`, and similar template instructions must not remain in the final project `AGENTS.md`.
-- Fill-in sections must be rewritten for the actual workspace; they are not copy-paste blocks.
-- Any subsection explicitly marked as verbatim-preserved content must be copied into the final project `AGENTS.md` without changing a single word unless the human explicitly approves a change.
-- Final line budget:
-  - simple workspace target: usually no more than 100 lines
-  - complex workspace hard cap: 185 lines
-- If the file starts approaching the line budget, move document-system maps and loading detail to `documentation-governance.md`, and move code/file maps plus task-routing or implementation detail to `coding-agent-guide.md` instead of expanding this file.
+Allowed final top-level headings:
+- Project Overview
+- Workspace Navigation
+- Architecture
+- Execution Rules
+- Context Loading
+- Subagents and Packets
+- Blockers
+- Testing and Verification
+- Companion Docs
+- Git and Delivery
 
-## 2. Project-Specific Fill-in Sections
+Do not add final headings such as `NHK Governance`, `NHK Govern`, `Instruction Coverage`, `Template Notes`, or `Agent Instructions Template` unless the human explicitly asks for them.
 
-The following sections must exist, but their content must be written for the actual project rather than copied from another workspace.
+Final cleanup checklist:
+- No template markers remain.
+- No `Fill in`, `Suggested`, `Document:`, `Template usage`, or similar generation-only wording remains.
+- Required `[[FINAL_VERBATIM]]` blocks are unchanged.
+- Required `[[FINAL_ADAPT]]` sections are present and project-specific.
+- Project-specific file maps stay short; large maps move to `coding-agent-guide.md`.
+- Final line count meets the selected budget unless the human explicitly approves an exception.
+[[TEMPLATE_ONLY:END]]
 
-### Project Overview
+[[FINAL_ADAPT:BEGIN]]
+## Project Overview
 
-Fill in this section with:
-- what this project is for
-- the primary user-facing goal
+Write 3-6 bullets or short sentences covering only:
+- what this workspace is for
 - the current active repository and canonical branch
-- the current implementation stack
-- whether there are legacy repos, mirrors, or archived references
-- which materials are historical reference only, not active execution sources
+- the implementation stack or content type
+- active versus historical materials
+- any non-obvious project constraint an agent must know before editing
 
-Keep this section short. The goal is orientation, not a full product brief.
+Do not write a product brief here. Keep orientation short.
+[[FINAL_ADAPT:END]]
 
-### Workspace Navigation
+[[FINAL_ADAPT:BEGIN]]
+## Workspace Navigation
 
-Fill in this section with:
-- the first documents or files an agent should read
-- the preferred routing order for common task types
-- where detailed codemaps, task-routing guides, or recovery docs live
-- which historical materials should only be consulted when current docs are insufficient
+Write the first-read order for this workspace.
 
-If the workspace is simple, this section may include a very short inline key-path or file-map summary.
+For simple workspaces, include only a short key-path summary.
+For medium or complex workspaces, point to `coding-agent-guide.md`, `documentation-governance.md`, active plans, codemaps, or recovery files instead of expanding this section.
+[[FINAL_ADAPT:END]]
 
-If the workspace is complex, this section should stay brief and point to companion docs such as:
-- `coding-agent-guide.md`
-- `docs/codemaps/`
-- recovery files like `task_plan.md`, `findings.md`, `progress.md`
+[[FINAL_ADAPT:BEGIN]]
+## Architecture
 
-In complex workspaces, do not keep a large file map in `AGENTS.md`.
+Summarize only the boundaries needed for safe execution:
+- core subsystems or document surfaces
+- write boundaries
+- deterministic versus heuristic responsibilities
+- active/archive boundaries that affect implementation
 
-### Architecture
+If there are no meaningful architecture boundaries, say that the workspace is simple and route implementation detail to `coding-agent-guide.md`.
+[[FINAL_ADAPT:END]]
 
-Fill in this section with the minimum architecture description needed for safe execution:
-- the major loops, pipelines, or subsystems
-- the core domain boundaries
-- the main coordination points
-- any strict separation that agents must preserve
+## Execution Rules
 
-If the project has multiple operational loops or modes, describe them separately.
+[[FINAL_ADAPT:BEGIN]]
+### Data and State Discipline
 
-If the project is simple, keep this section brief and only document boundaries that matter for implementation safety.
-If the project is complex, keep this section as a boundary summary only and move operational detail into companion docs.
+Write project-specific data mutation rules only when they apply.
 
-## 3. Mandatory Execution Rules
+For JavaScript, TypeScript, React, reducers, or state-heavy apps, include immutable update rules such as returning new objects and avoiding in-place array mutation.
 
-The first three subsections below are verbatim-preserved content.
-They are final-content blocks, not instructional placeholders.
-They must be copied into the real project `AGENTS.md` without changing a single word unless the human explicitly approves a change.
+For documentation-only, prompt-first, static-site, or script-light workspaces, replace this with concise rules about preserving source-of-truth files, generated artifacts, and deterministic writes.
+[[FINAL_ADAPT:END]]
 
-### 3. Immutable Data Patterns
-- Never mutate state objects. Always return new copies.
-- `const newState = { ...oldState, field: newValue }`
-- Array operations: `slice`, `map`, `filter` — never `splice`, `push`, `sort` in-place.
-
-### 2. Deterministic Boundaries Must Stay Deterministic
+[[FINAL_VERBATIM:BEGIN]]
+### Deterministic Boundaries Must Stay Deterministic
 
 - Validation, schema checks, path checks, reference integrity, and persistence guarantees should be handled by deterministic code.
 - Do not delegate deterministic validation to heuristic or probabilistic flows unless the human explicitly approves that tradeoff.
+[[FINAL_VERBATIM:END]]
 
-### 3. Keep Rules, Code, Tests, and Active Docs in Sync
+[[FINAL_VERBATIM:BEGIN]]
+### Keep Rules, Code, Tests, and Active Docs in Sync
 
 - If code, tests, and active project documents disagree, resolve intended behavior first.
 - Then bring implementation, tests, and active docs back into sync.
+[[FINAL_VERBATIM:END]]
 
-### 4. Task Tracking Discipline
+[[FINAL_VERBATIM:BEGIN]]
+### Task Tracking Discipline
 
 - If the workspace maintains a todo list, task list, checklist, plan, or other active tracking surface, update it when each task is completed.
 - Do not batch all task-list updates at the very end if task-by-task updates are practical.
 - If the workspace uses `task_plan.md`, `progress.md`, or `findings.md`, keep them aligned with actual task status rather than letting them drift.
+[[FINAL_VERBATIM:END]]
 
-### 5. Workflow Completion and Archive Check
+[[FINAL_VERBATIM:BEGIN]]
+### Workflow Completion and Archive Check
 
 - After a full `superpowers` workflow cycle or another clearly bounded implementation cycle, check whether the active docs and tracking surfaces suggest that a workstream may be complete.
 - If the workspace is NHK-managed and the workstream looks complete, ask whether `nhk-archive` should be invoked.
 - If the workspace is not NHK-managed, ask whether the project's equivalent archive transition should be invoked.
 - Do not archive automatically.
+[[FINAL_VERBATIM:END]]
 
-### 6. Project-Specific Architecture Discipline
+[[FINAL_ADAPT:BEGIN]]
+### Project-Specific Architecture Discipline
 
-If the project has important architecture-specific execution boundaries, summarize them here instead of copying rules from another workspace.
+Add this subsection only when the workspace has real architecture-specific boundaries.
 
-Examples may include:
-- module dependency discipline
-- adapter or bridge responsibility boundaries
-- orchestration layer boundaries
-- LLM vs code responsibility boundaries
-- persistence or write-path restrictions
+Examples:
+- module dependency direction
+- adapter or bridge responsibilities
+- orchestration boundaries
+- LLM versus deterministic code responsibilities
+- persistence and write-path restrictions
 
-Rules for writing this subsection:
-- Only add it if the project actually has these boundaries.
-- Do not add or expand it without explicit human approval.
-- Keep it concise, operational, and project-specific.
-- Combined token budget for all project-specific architecture-discipline subsections inside `AGENTS.md`: max 800 tokens.
-- If more detail is needed, move it to a companion doc and link to that doc instead of expanding this file.
+Keep this under 800 tokens. If more detail is needed, link to `coding-agent-guide.md`.
+[[FINAL_ADAPT:END]]
 
-## 4. Documentation Governance and Context Loading
+## Context Loading
 
-Keep this section short.
-Use a dedicated companion doc such as `documentation-governance.md` for detailed lifecycle, naming, archive, and loading rules.
-
+[[FINAL_VERBATIM:BEGIN]]
 - If a governance doc exists, it is the source of truth for documentation lifecycle rules.
 - Prefer current code, current tests, and active docs first; treat archive as reference material rather than a default execution source.
 - Start with the smallest active document set that can route the task safely, and load codemaps, plans, specs, or archive only when the task genuinely needs them.
@@ -132,13 +149,12 @@ Use a dedicated companion doc such as `documentation-governance.md` for detailed
 - If active plans, specs, tests, and implementation drift apart, resolve intended behavior first, then bring the active source of truth and dependent materials back into sync.
 - For root tracking discipline, refer to `$planning-with-files-zh`.
 - For active `specs/` and `plans/` conventions, refer to `$using-superpowers`.
+[[FINAL_VERBATIM:END]]
 
-## 5. Subagent and Packet Discipline
+## Subagents and Packets
 
-The following two subsections are intentionally copied verbatim from the source workspace and must remain unchanged in derivative versions of this template.
-They are not instructional placeholders. They are final-content blocks and should be written into the real project `AGENTS.md` exactly as-is.
-
-### 7. Subagent Delegation Discipline
+[[FINAL_VERBATIM:BEGIN]]
+### Subagent Delegation Discipline
 
 #### Dispatch
 
@@ -170,8 +186,10 @@ They are not instructional placeholders. They are final-content blocks and shoul
 - Do not close a subagent just because a wait timed out.
 - Before replacing or closing a subagent, first confirm its actual work status, current progress, latest conclusion, and whether keeping it alive still reduces risk or rework.
 - Replace or close a subagent only after three rounds with no output and a status inquiry that also confirms there is no meaningful progress.
+[[FINAL_VERBATIM:END]]
 
-### 8. Implementation Packet Discipline
+[[FINAL_VERBATIM:BEGIN]]
+### Implementation Packet Discipline
 
 - Decompose implementation work into bounded packets before dispatch.
 - Prefer one primary objective, one main module or surface area, and one verification path per packet.
@@ -180,38 +198,41 @@ They are not instructional placeholders. They are final-content blocks and shoul
 - Prefer dispatching subagent packets that can own their focused tests, implement against them, run targeted verification, and return a reviewable result.
 - If two packets share the same primary production file or the same primary test file, default to serial execution unless the plan explains why parallel work is still safe.
 - If a packet grows across unrelated concerns, long execution chains, or multiple verification paths, split it again.
+[[FINAL_VERBATIM:END]]
 
-## 7. Blocker Protocol
-When blocked during implementation:
+[[FINAL_ADAPT:BEGIN]]
+## Blockers
 
-1. Field missing producer → add the producer.
-2. Output has no downstream entry → add to nearest shared contract.
-3. Code forced to understand semantics → convert to LLM three-stage pattern.
-4. Naming conflict → prefer the current branch canonical name, then sync code/spec/tests.
+Write a project-specific blocker protocol. Do not copy domain objects from another workspace.
 
-STOP and wait for human if the fix would change:
+Include:
+- the smallest safe repair sequence for common implementation blockers
+- exact changes that require stopping for human approval
+- public API, persistence, data model, user-facing workflow, or architecture boundaries that must not be changed silently
 
-- Author-visible control model or Editor Page boundaries.
-- Core domain object boundaries (Scene, Phase, Beat).
-- Public API semantics or the Deterministic Bridge persistence flow.
+Keep this concise. If the project has no stable blocker categories yet, say to stop before changing public behavior, persistence semantics, or documented architecture boundaries.
+[[FINAL_ADAPT:END]]
 
-## 8. Testing and Verification
+[[FINAL_ADAPT:BEGIN]]
+## Testing and Verification
 
-- **TDD mandatory**: write test → RED → implement → GREEN.
-- Coverage minimum: 80%.
-- If the project has fixtures, packaged content, or externalized data, define the project-specific anti-hardcoding rule for test assertions here.
-- Prefer targeted suites while iterating, and list the project-specific commands here:
-  - `<test command>`
-  - `<test command>`
-  - `<test command>`
-  - `<type-check command>`
-  - `<simulation or integration command>`
-- If the work touches route integrity, subsystem boundaries, prompt projection, persistence flow, or environment-specific verification harnesses, include the relevant project-specific verification suite in the loop.
-- Run `<build command>` for app-surface changes before calling work complete.
-- Run `<full test command>` before calling work complete.
+Required baseline:
+- TDD is mandatory for production behavior changes: write a failing test, verify RED, implement, verify GREEN, then refactor.
+- Default coverage minimum is 80%. If the project already has a higher baseline, use the higher baseline.
+- Coverage is a completion gate, not proof of test quality. Do not satisfy coverage with empty assertions, shallow smoke tests, or tests that only verify mocks.
+- If the project has no coverage tooling yet, document the human-approved exception or add the smallest suitable coverage command before claiming coverage compliance.
 
-## 9. Companion Docs
+List the real project commands:
+- targeted test command
+- coverage command
+- type-check or lint command
+- build command when app or package surfaces change
+- full verification command before delivery
+[[FINAL_ADAPT:END]]
 
+## Companion Docs
+
+[[FINAL_VERBATIM:BEGIN]]
 In NHK-managed workspaces, the following companion docs are mandatory even for simple projects:
 
 - `coding-agent-guide.md`
@@ -220,12 +241,9 @@ In NHK-managed workspaces, the following companion docs are mandatory even for s
 They may stay minimal in a simple repository, but they should still exist as stable routing and governance surfaces.
 
 Complexity still matters for heavier companion materials.
+[[FINAL_VERBATIM:END]]
 
-File-map guidance:
-- Simple workspaces may keep a very short key-path summary inline in `AGENTS.md` if the file remains within the line budget.
-- Complex workspaces should move document-surface maps and key-path inventories into `documentation-governance.md` or another dedicated companion doc.
-- Code/file maps, task-routing detail, and implementation-oriented guidance should live in `coding-agent-guide.md`, not here.
-
+[[OPTIONAL_BY_COMPLEXITY:BEGIN]]
 For medium-complexity or complex projects, consider adding:
 - `task_plan.md`, `findings.md`, `progress.md` for multi-session continuity
 - `docs/codemaps/` for module relationships
@@ -233,23 +251,17 @@ For medium-complexity or complex projects, consider adding:
 - `docs/plans/` or equivalent for execution plans
 - dedicated simulation, tooling, or environment guides
 - a small architecture map for subsystem boundaries
+[[OPTIONAL_BY_COMPLEXITY:END]]
 
-Recommended reference:
-- For `task_plan.md`, `findings.md`, and `progress.md`, refer to `$planning-with-files-zh`.
-- For `docs/specs/`, `docs/plans/`, and related superpowers-oriented workflow structure, refer to `$using-superpowers`.
+[[FINAL_ADAPT:BEGIN]]
+## Git and Delivery
 
-## 10. Git and Delivery
+Write the active repository, active development branch, protected branch rules, and PR target.
 
-Fill in:
-- active repository
-- active development branch
-- whether `main` is primary, mirrored, or protected
-- default PR target branch
-
-General rules:
-- Commit format: `<type>: <description>` (e.g., `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`).
-- PRs should target `<active development branch>` unless the human explicitly says otherwise.
-- Human review required before merge.
-- When working from a Plan in `<plan directory>`, check off tasks as you complete them.
-- If the workspace uses a todo list outside the plan system, update it as each task completes.
-- Do not treat code changes as complete until the required verification commands have passed
+General rules to preserve:
+- Commit format: `<type>: <description>` such as `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, or `chore:`.
+- PRs should target the active development branch unless the human explicitly says otherwise.
+- Human review is required before merge.
+- When working from a plan, check off tasks as they complete.
+- Do not treat code changes as complete until required verification commands have passed.
+[[FINAL_ADAPT:END]]

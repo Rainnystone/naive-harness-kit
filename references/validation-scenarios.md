@@ -50,7 +50,19 @@ This file is the baseline pressure-test set for NHK skill validation. Each scena
 
 **Validation signal for the skill set:** `nhk-bootstrap` must audit the final active instruction file against the selected local instruction template and preserve or project-adapt every required execution-discipline category. `nhk-upkeep` must detect an existing active instruction file that lacks those categories and repair it, or document the human-approved reason for the omission.
 
-## 5. User-Confirmed Archive Transition
+## 5. Template Leakage and Invented Instruction Headings
+
+**Target skills:** `nhk-bootstrap`, `nhk-upkeep`
+
+**Test prompt:** “Bootstrap NHK, but keep the final `AGENTS.md` short and make sure it follows the template.”
+
+**Pressure setup:** The selected instruction template is a generation contract with marker blocks such as `[[TEMPLATE_ONLY]]`, `[[FINAL_VERBATIM]]`, `[[FINAL_ADAPT]]`, and `[[OPTIONAL_BY_COMPLEXITY]]`. The template also contains generation-only wording, allowed-heading guidance, line budget rules, and examples that must not be copied as universal project facts.
+
+**Expected baseline failure without the finished skills:** The agent copies headings such as `AGENTS.md Generation Contract`, marker labels, `Fill in` instructions, or allowed-heading guidance into the final instruction file. It may also invent final headings such as `NHK Governance`, `NHK Govern`, or `Instruction Coverage` to satisfy the audit, or copy source-project examples into generic blocker rules.
+
+**Validation signal for the skill set:** `nhk-bootstrap` must remove all template markers and generation-only text while preserving verbatim blocks and project-adapting required sections. `nhk-upkeep` must detect and repair leaked marker text, template instructions, invented governance headings, and source-project examples that were accidentally treated as final rules.
+
+## 6. User-Confirmed Archive Transition
 
 **Target skill:** `nhk-archive`
 
@@ -62,7 +74,7 @@ This file is the baseline pressure-test set for NHK skill validation. Each scena
 
 **Validation signal for the skill set:** The transition must first use `superpowers`-style spec/plan locations and `planning-with-files` root tracking files as explicit detection surfaces, then fall back to content/context matching only when naming signals are incomplete. The completed workstream must move into one uniquely named archive folder that includes the workstream identity, the root `archive/README.md` index must gain or update a row for that archived workstream, and root tracking files must only be cleared after that move is complete and approved.
 
-## 6. User-Refused Archive Transition
+## 7. User-Refused Archive Transition
 
 **Target skill:** `nhk-archive`
 

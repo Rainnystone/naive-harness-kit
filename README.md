@@ -39,6 +39,8 @@ It also ships with frozen local references:
 - `dependency-setup.md`
 - `validation-scenarios.md`
 
+The instruction templates are generation contracts, not copy-paste snacks. They tell the agent what must survive, what must be adapted, and what should quietly disappear before the final `AGENTS.md` or `CLAUDE.md` lands in a real workspace.
+
 ## Documentation Logic
 
 NHK separates human-facing docs from agent-facing docs on purpose:

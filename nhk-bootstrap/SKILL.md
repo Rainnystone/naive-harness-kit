@@ -85,7 +85,14 @@ Required adaptation rules:
 
 Before finishing `nhk-bootstrap`, audit the generated active instruction file against the selected local instruction template.
 
-Template adaptation may remove scaffolding, placeholders, and instructional filler. It must not remove final execution-discipline categories.
+Template adaptation may remove scaffolding, placeholders, markers, and instructional filler. It must not remove final execution-discipline categories.
+
+When using instruction templates with `[[...]]` markers:
+
+- `[[FINAL_VERBATIM]]` blocks must be copied exactly, with the marker lines removed.
+- `[[FINAL_ADAPT]]` blocks must be present but rewritten for the actual workspace.
+- `[[OPTIONAL_BY_COMPLEXITY]]` blocks may be omitted when the workspace is simple.
+- `[[TEMPLATE_ONLY]]` blocks and all marker text must be absent from the final active instruction file.
 
 The final active instruction file must preserve or project-adapt these categories when they appear in the selected template:
 
@@ -100,6 +107,13 @@ The final active instruction file must preserve or project-adapt these categorie
 - git and delivery expectations
 
 Verbatim-preserved blocks must remain verbatim unless the human explicitly approves a change.
+
+Also check for common generation failures:
+
+- leftover template wording such as `Fill in`, `Suggested`, `Document:`, `Template usage`, or `Generation Contract`
+- invented governance headings such as `NHK Governance`, `NHK Govern`, or `Instruction Coverage` unless the human explicitly asked for them
+- project-specific examples from the template appearing as universal rules
+- line count outside the template budget without a human-approved reason
 
 If root tracking files are active, record the audit result in `progress.md`; otherwise summarize the audit in the final delivery note.
 

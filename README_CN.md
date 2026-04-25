@@ -39,6 +39,8 @@ NHK 自带 4 个核心 skill：
 - `dependency-setup.md`
 - `validation-scenarios.md`
 
+其中 instruction template 更像生成契约，不是复制粘贴小零食。它会告诉 agent 哪些必须留下、哪些必须按项目改写、哪些只是在生成阶段帮忙，到了最终 `AGENTS.md` 或 `CLAUDE.md` 里就该安静退场。
+
 ## 文档管理逻辑
 
 NHK 是刻意把“写给人看”和“写给 agent 看”的文档拆开的：
