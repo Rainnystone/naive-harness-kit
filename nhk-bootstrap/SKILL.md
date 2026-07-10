@@ -1,125 +1,84 @@
 ---
 name: nhk-bootstrap
-description: Use when a workspace needs first-time NHK setup or is missing the required instruction, routing, or documentation-governance surfaces.
+description: Use when a workspace needs first-time NHK setup or is missing a required instruction, routing, documentation-governance, or archive surface.
 ---
 
 # NHK Bootstrap
 
-NHK `nhk-bootstrap` establishes the first usable workspace harness. It must leave the workspace with one active instruction file, the mandatory companion docs, and the root archive surface, and it must not guess through instruction-file ambiguity.
+Establish or repair the minimum NHK foundation. Preserve correct existing surfaces and add or repair only what is missing or explicitly selected; do not rebuild a healthy workspace from scratch.
 
-## Minimum Outputs
+## Prerequisite
 
-An NHK-managed workspace must finish `nhk-bootstrap` with:
+Confirm that `superpowers` and `planning-with-files` are installed, enabled, or explicitly adopted for this NHK run. Adopt is temporary manual authorization, not installation, and must not create a persistent marker. If the user has not selected a mode for a missing dependency, stop.
 
-- one active instruction file: `AGENTS.md` or `CLAUDE.md`
+## Required Foundation
+
+The finished workspace must have:
+
+- one canonical instruction source: standalone `AGENTS.md` or standalone `CLAUDE.md`
+- optionally, a thin `CLAUDE.md` adapter importing canonical `AGENTS.md`
 - `coding-agent-guide.md`
 - `documentation-governance.md`
 - `archive/`
 - `archive/README.md`
 
-`coding-agent-guide.md`, `documentation-governance.md`, and the root archive surface are mandatory minimum outputs even for simple repositories. Simplicity affects how short they may be, not whether they exist.
+Simple workspaces may keep these surfaces short, but may not omit them.
 
-## Instruction File Decision
+## Canonical Instruction Decision
 
-Check the workspace root for `AGENTS.md` and `CLAUDE.md` before creating anything.
+A valid thin import is a line whose trimmed content is exactly `@AGENTS.md` or `@./AGENTS.md`, outside fenced code, Markdown blockquotes, and comments.
 
-1. If exactly one file already exists, preserve it as the active instruction file unless the user explicitly asks to migrate.
-2. When exactly one file exists, adapt that file in place if needed. Do not create the other file by default.
-3. If both files already exist, stop and ask the user which file is active.
-4. If both files exist, do not merge, delete, migrate, or rewrite either file without explicit user direction.
-5. Consult environment signals only when neither instruction file exists.
-6. Environment signals may include the current coding agent, workspace conventions, or toolchain cues, but they are fallback signals only.
-7. If the no-file case is still ambiguous after checking environment signals, ask the user instead of guessing.
+1. Only `AGENTS.md`: preserve it as canonical. Do not create `CLAUDE.md` unless a thin adapter is already present, needed by the environment, or requested by the user.
+2. Only ordinary `CLAUDE.md`: preserve it as standalone canonical.
+3. Both plus a valid thin import in `CLAUDE.md`: preserve `AGENTS.md` as canonical and `CLAUDE.md` as the thin adapter; do not ask which is active.
+4. Only `CLAUDE.md` plus a valid thin import: ask whether to restore `AGENTS.md` or convert `CLAUDE.md` to standalone. Make only the selected repair.
+5. Both without a valid thin import: ask which source should be canonical. Do not merge, delete, migrate, or rewrite either file until the user decides.
+6. Neither: use environment and workspace signals. If they remain inconclusive, ask rather than guessing.
 
-## Build The Harness Surfaces
+An import mentioned only in prose, fenced code, a blockquote, or a comment does not make a thin adapter.
 
-After the active instruction file is known:
+## Build Only Missing Surfaces
 
-- build or adapt the active instruction file from the matching local reference shape
-- build or adapt `coding-agent-guide.md` from `../references/coding-agent-guide-template.md`
-- build or adapt `documentation-governance.md` from `../references/documentation-governance-template.md`
-- create `archive/` and build or adapt `archive/README.md` from `../references/archive-readme-template.md`
-- establish the minimum cross-references among the core docs and archive surface so routing and governance stay connected
+Once the canonical source is known:
 
-If `archive/README.md` is created from scratch, it should start with the standard stub shape rather than an empty file.
+- adapt the matching instruction template only when the canonical file is missing or materially incomplete
+- preserve a valid thin adapter, or create one only when the decision above calls for it
+- add or repair `coding-agent-guide.md` from `../references/coding-agent-guide-template.md`
+- add or repair `documentation-governance.md` from `../references/documentation-governance-template.md`
+- create `archive/` when missing and add or repair `archive/README.md` from `../references/archive-readme-template.md`
+- connect the canonical instruction source, companion docs, and archive index with concise, accurate references
 
-Treat `documentation-governance.md` as the lifecycle source of truth for:
+Never overwrite correct project-specific content merely to match template wording.
 
-- active versus archive boundaries
-- root tracking activation and reset expectations
-- active specs and plans versus archived materials
-- naming and loading discipline for documentation surfaces
+## Root Tracking Is Conditional
 
-Do not treat repository simplicity as a reason to skip `coding-agent-guide.md` or `documentation-governance.md`.
+Do not create root `task_plan.md`, `findings.md`, or `progress.md` merely because bootstrap runs. Create them only when the current work genuinely needs multi-session recovery, an active plan/spec, multiple packets, or explicit progress tracking. The archive foundation is still mandatory in a simple workspace.
 
-## Root Tracking Activation
+## Instruction Template Audit
 
-Root tracking files are conditional, not automatic. Initialize active root tracking files such as `task_plan.md`, `findings.md`, and `progress.md` only when one or more of these conditions hold:
+Use `../references/AGENTS-template.md` or `../references/CLAUDE-template.md` as a generation contract, not a copy target.
 
-- the work is expected to span multiple sessions
-- the work requires active specs or active plans
-- the work is likely to involve parallel agents or multiple implementation packets
-- the work requires explicit recovery of findings and progress across turns
+- Select simple, medium, or complex deliberately.
+- A standalone final file must contain the seven required top-level sections in template order and stay within 100, 125, or 150 lines respectively.
+- A thin `CLAUDE.md` must contain a valid import, only necessary Claude-specific notes, and no more than 35 lines; after producing thin mode, do not process standalone blocks.
+- Copy `FINAL_VERBATIM` content exactly unless the user approves a change.
+- Project-adapt `FINAL_ADAPT`; include `OPTIONAL_BY_COMPLEXITY` only when justified.
+- Remove every marker, generation instruction, placeholder, and template-only heading.
+- Do not compress away execution, context, worker, approval, testing, or delivery discipline.
+- Do not expand project detail past the line budget; route it to the companion docs.
 
-If none of those conditions hold, do not create root tracking files during `nhk-bootstrap`.
+## Foundation Verification
 
-## Template Adaptation Rules
+Before finishing:
 
-Use the local template files as references, not blind copy targets.
+- confirm the canonical source and any thin adapter match the topology rules
+- confirm both companion docs, `archive/`, and the archive index exist and cross-references resolve
+- confirm generated instruction content meets its selected structure and line limit
+- confirm no existing healthy surface was unnecessarily replaced
+- if root tracking exists, record the audit there; otherwise report it in the delivery note
+- if a dependency was adopted, state: it is not installed; its conventions were followed manually for this NHK run
 
-- `../references/AGENTS-template.md`
-- `../references/CLAUDE-template.md`
-- `../references/coding-agent-guide-template.md`
-- `../references/documentation-governance-template.md`
-- `../references/archive-readme-template.md`
-
-Required adaptation rules:
-
-- remove template scaffolding, placeholder prompts, and instructional filler from final workspace docs
-- keep verbatim-preserved blocks only where the reference explicitly requires verbatim preservation
-- write project-specific routing, governance, and execution context instead of transplanting another workspace's content
-- explain which local references were used and what was adapted for this workspace
-- do not leave documentation lifecycle rules implied; write them explicitly into the final `documentation-governance.md`
-
-## Mandatory Coverage Audit
-
-Before finishing `nhk-bootstrap`, audit the generated active instruction file against the selected local instruction template.
-
-Template adaptation may remove scaffolding, placeholders, markers, and instructional filler. It must not remove final execution-discipline categories.
-
-When using instruction templates with `[[...]]` markers:
-
-- `[[FINAL_VERBATIM]]` blocks must be copied exactly, with the marker lines removed.
-- `[[FINAL_ADAPT]]` blocks must be present but rewritten for the actual workspace.
-- `[[OPTIONAL_BY_COMPLEXITY]]` blocks may be omitted when the workspace is simple.
-- `[[TEMPLATE_ONLY]]` blocks and all marker text must be absent from the final active instruction file.
-
-The final active instruction file must preserve or project-adapt these categories when they appear in the selected template:
-
-- stable execution rules
-- task tracking discipline
-- workflow completion and archive check
-- documentation governance and context loading
-- subagent delegation discipline
-- implementation packet discipline
-- blocker protocol
-- testing and verification expectations
-- git and delivery expectations
-
-Verbatim-preserved blocks must remain verbatim unless the human explicitly approves a change.
-
-Also check for common generation failures:
-
-- leftover template wording such as `Fill in`, `Suggested`, `Document:`, `Template usage`, or `Generation Contract`
-- invented governance headings such as `NHK Governance`, `NHK Govern`, or `Instruction Coverage` unless the human explicitly asked for them
-- project-specific examples from the template appearing as universal rules
-- line count outside the template budget without a human-approved reason
-
-If root tracking files are active, record the audit result in `progress.md`; otherwise summarize the audit in the final delivery note.
-
-## Local Validation Targets
-
-Use these local references when pressure-checking the workflow:
+## Local References
 
 - `../references/validation-scenarios.md`
 - `../references/AGENTS-template.md`
@@ -127,5 +86,4 @@ Use these local references when pressure-checking the workflow:
 - `../references/coding-agent-guide-template.md`
 - `../references/documentation-governance-template.md`
 - `../references/archive-readme-template.md`
-
-The `nhk-bootstrap` workflow passes its core ambiguity check only if it preserves an already-existing single instruction file and asks the user rather than guessing when both instruction files already exist.
+- `../references/dependency-setup.md`

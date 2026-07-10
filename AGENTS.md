@@ -12,6 +12,7 @@ Treat this repository as the clean publishable NHK package:
 - agent-facing maintenance instructions
 - four NHK skills
 - frozen local references used by those skills
+- maintainer-only deterministic validation in `scripts/` and `tests/`
 
 Do not turn this repository into a scratchpad for local planning artifacts from outside the package.
 
@@ -23,6 +24,8 @@ Do not turn this repository into a scratchpad for local planning artifacts from 
 - `CLAUDE.md`: Claude Code entrypoint, should remain thin and import this file
 - `welcome-to-nhk/`, `nhk-bootstrap/`, `nhk-upkeep/`, `nhk-archive/`: actual skill behavior
 - `references/`: frozen reference assets, not casual dumping grounds
+- `scripts/`: optional, read-only maintainer validation; not runtime skill content
+- `tests/`: maintainer tests for deterministic validation; not runtime skill content
 
 Do not mix these roles. If a change is meant to teach humans how to use NHK, put it in the READMEs. If a change is meant to guide an agent maintaining this repository, put it here or in `CLAUDE.md`.
 
@@ -58,6 +61,13 @@ When changing template policy, review and sync:
 - any skill that points to those references
 - the READMEs if the user-visible workflow changes
 
+When changing deterministic validation, review and sync:
+
+- `scripts/validate_nhk.py`
+- `tests/test_validate_nhk.py`
+- `references/validation-scenarios.md` when the public contract changes
+- both READMEs when installation or maintainer-facing usage changes
+
 ## Validation Standard
 
 Before claiming the repo is updated:
@@ -66,5 +76,10 @@ Before claiming the repo is updated:
 - verify any changed skill still points to the right local references
 - verify any changed behavior is reflected in `references/validation-scenarios.md`
 - verify the repo root still presents the right human/agent split: READMEs for humans, instruction files for agents
+- run `python3 -B -m unittest discover -s tests -p 'test_*.py' -v`
+- run `python3 -B scripts/validate_nhk.py`
+- run `git diff --check` and inspect `git status --short`
+
+When installation layout or final instruction validation changes, also run representative positive and negative smoke cases for `--install-root` or `--final`. The validator is optional maintainer tooling, not a hook, generator, runtime dependency, or substitute for platform skill discovery.
 
 Prefer the smallest change that keeps the package self-consistent.

@@ -8,7 +8,7 @@ It is intentionally a little humble, a little self-aware, and very practical. Th
 
 ## What NHK Is
 
-NHK helps with four recurring jobs that show up surprisingly fast once you start using coding agents seriously:
+NHK helps with five recurring jobs that show up surprisingly fast once you start using coding agents seriously:
 
 - getting the useful workflow tools in place, especially `superpowers` and `planning-with-files`
 - lazily but safely initializing the right workspace instruction file for the current agent environment
@@ -58,7 +58,7 @@ For an NHK-managed workspace, the expected document system is layered:
 
 | Layer | File(s) | Job |
 | --- | --- | --- |
-| Instruction layer | `AGENTS.md` or `CLAUDE.md` | stable execution rules, verification discipline, collaboration rules |
+| Instruction layer | canonical `AGENTS.md` or standalone `CLAUDE.md`, plus an optional thin Claude adapter | stable execution rules, verification discipline, collaboration rules |
 | Routing layer | `coding-agent-guide.md` | quick task routing, entry files, packet landing zones, first-pass verification |
 | Governance layer | `documentation-governance.md` | active vs archive rules, naming rules, loading discipline, archival transition rules |
 | Active work layer | active `specs/`, active `plans/`, optional root `task_plan.md` / `progress.md` / `findings.md` | work in progress only |
@@ -66,7 +66,7 @@ For an NHK-managed workspace, the expected document system is layered:
 
 NHK is opinionated here on purpose:
 
-- every NHK-managed workspace should have the instruction layer, routing layer, and governance layer
+- every NHK-managed workspace should have the instruction, routing, governance, and root archive surfaces
 - root tracking files are conditional, not automatic
 - active docs and archive docs should not be mixed
 - archive transitions require human confirmation
@@ -92,16 +92,38 @@ Together they give NHK a steadier foundation:
 - `planning-with-files` gives the memory somewhere reliable to live outside the model
 - NHK uses both to make `AGENTS.md` / `CLAUDE.md` setup, daily upkeep, and archive decisions less ad hoc
 
-If one of them is missing, NHK should pause and ask whether you want to install it, enable it, or just adopt its conventions manually. That decision is described in [`references/dependency-setup.md`](references/dependency-setup.md).
+If one of them is missing, NHK should pause and ask whether you want to install it, enable it, or explicitly adopt its conventions manually for this NHK run. Adopt does not install anything, does not persist into later runs, and should be reported honestly. That decision is described in [`references/dependency-setup.md`](references/dependency-setup.md).
 
 ## Installation
 
 NHK is a file-based skill bundle. There is nothing to compile.
 
-1. Copy the `nhk/` directory into the local skill collection used by your agent environment.
-2. Preserve the directory structure exactly, especially `references/` and each skill folder.
-3. Make sure `superpowers` and `planning-with-files` are available, or be prepared to adopt their conventions manually.
-4. In the target workspace, start with `welcome-to-nhk` so NHK can lazily initialize `AGENTS.md` or `CLAUDE.md` without guessing recklessly.
+Copy the four skill directories and their sibling `references/` directory directly under the skills root used by your agent environment:
+
+```text
+<skills-root>/
+├── welcome-to-nhk/
+├── nhk-bootstrap/
+├── nhk-upkeep/
+├── nhk-archive/
+└── references/
+```
+
+From this repository, the equivalent copy command is:
+
+```bash
+cp -R welcome-to-nhk nhk-bootstrap nhk-upkeep nhk-archive references <skills-root>/
+```
+
+Replace `<skills-root>` with the real skill collection path for your environment. Do not add an extra `nhk/` directory around these five siblings.
+
+The repository's `scripts/` and `tests/` directories are maintainer-only and are not runtime installation content. Python is not an NHK dependency. If Python 3 is already available, the zero-third-party-dependency validator is an optional file-layout check:
+
+```bash
+python3 -B scripts/validate_nhk.py --install-root <skills-root>
+```
+
+The validator confirms files and versions; it cannot confirm platform skill discovery. After copying and validating, refresh the agent session and confirm that all four skills are discoverable. Then start in the target workspace with `welcome-to-nhk`.
 
 If you are installing NHK into a new environment and are not sure whether the dependencies are already present, that is normal. NHK is designed to stop and ask before pretending everything is ready.
 
@@ -112,7 +134,7 @@ The shortest path is:
 1. Start with `welcome-to-nhk`.
 2. Let it decide whether the workspace needs `nhk-bootstrap`, `nhk-upkeep`, or `nhk-archive`.
 3. Use `nhk-bootstrap` to create or adapt the workspace instruction file, the two mandatory companion docs, and the root archive surface (`archive/` plus `archive/README.md`).
-4. Use `nhk-upkeep` after normal delivery cycles to repair drift and ask whether a workstream should remain active.
+4. Use `nhk-upkeep` after normal delivery cycles to repair drift; it asks about archive only when one specific workstream has completion evidence and related materials.
 5. Use `nhk-archive` only after the human clearly confirms that one workstream is done and should move to archive.
 
 If you do not know where to begin, NHK is opinionated on purpose: begin at `welcome-to-nhk` and let the router be the adult in the room.
@@ -122,9 +144,13 @@ If you do not know where to begin, NHK is opinionated on purpose: begin at `welc
 NHK is designed to work with both:
 
 - Codex-oriented workspaces usually center on `AGENTS.md`
-- Claude Code workspaces usually center on `CLAUDE.md`
+- Claude Code workspaces may use standalone `CLAUDE.md`, or a thin `CLAUDE.md` that imports canonical `AGENTS.md`
 
-NHK does not guess recklessly. If a workspace already has one of those files, it preserves it. If it has both, NHK asks the human which one is active instead of playing philosopher-king.
+NHK does not guess recklessly. When both files exist and CLAUDE has a real import line exactly equal to `@AGENTS.md` or `@./AGENTS.md`, AGENTS is canonical and NHK does not ask a needless question. A lone importing CLAUDE is a broken adapter; two independent files are real ambiguity and still require a human choice.
+
+## Worker Cost Policy
+
+NHK does not freeze a model catalog that will go stale with the next release. The user's main-thread model and reasoning effort form the default per-worker cost ceiling. A known lower-cost configuration is fine when it is supported and unlikely to create expensive retries; a known increase needs human approval. Exact model pinning remains a project-level, human-approved exception.
 
 ## Repo Maintenance
 

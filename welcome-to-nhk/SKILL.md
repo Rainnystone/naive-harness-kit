@@ -1,50 +1,65 @@
 ---
 name: welcome-to-nhk
-description: Use when starting NHK work in a workspace and needing the first-stop router for dependency readiness, instruction-file state, or lifecycle stage.
+description: Use when starting NHK work in a workspace and needing the first-stop router for dependency readiness, instruction topology, foundation state, or lifecycle stage.
 ---
 
 # Welcome To NHK
 
-NHK `welcome-to-nhk` is the first-stop router. It decides whether the workspace should go to `nhk-bootstrap`, `nhk-upkeep`, or `nhk-archive`, and it does not absorb those workflows.
+Use this skill as the first-stop router. It selects `nhk-bootstrap`, `nhk-upkeep`, or `nhk-archive`; it does not perform those workflows itself.
 
-If you are not sure which NHK skill should run first, start here.
-
-## Required Dependencies
+## 1. Check Peer Dependencies
 
 Treat `superpowers` and `planning-with-files` as peer dependencies.
 
-- Check whether both are available before routing.
-- If either one is missing, stop and ask the user whether to install, enable, or adopt the missing dependency before continuing. Here, `adopt` means manually adopting the required workflow conventions in the current workspace.
-- When the user wants help with that dependency decision, use `../references/dependency-setup.md` to explain the repository source and the difference between install, enable, and adopt.
-- Do not silently continue, emulate the missing workflow, or invent a substitute process.
+- Check whether both are available before inspecting or changing NHK surfaces.
+- If either is missing, stop and ask the user to install, enable, or explicitly adopt it.
+- Adopt is permission to follow that dependency's conventions manually for this NHK run only. It creates no persistent marker and is not installation.
+- Carry adopted-dependency status into any handoff. Whichever skill delivers the result must report that the dependency was not installed and its conventions were followed manually for this NHK run; if this router ends the flow, report it here.
+- If the user does not choose a mode, do not continue. Never silently emulate a missing workflow.
+- Use `../references/dependency-setup.md` when the user needs the sources or decision boundaries.
 
-## Detection Order
+## 2. Identify The Canonical Instruction Source
 
-1. Check the peer dependencies first.
-2. Check the workspace root for `AGENTS.md` and `CLAUDE.md`.
-3. If exactly one exists, preserve that file and treat it as the active instruction file unless the user explicitly asks to migrate.
-4. If both exist, treat that as ambiguity and ask the user which file is active. Do not guess, merge, delete, or migrate.
-5. Consult environment signals only when neither `AGENTS.md` nor `CLAUDE.md` exists.
+A valid thin import is a line whose trimmed content is exactly `@AGENTS.md` or `@./AGENTS.md`, outside fenced code, Markdown blockquotes, and comments. Mentions in prose, examples, quoted text, code fences, or comments do not count.
 
-Environment signals may include the current coding agent, workspace conventions, and existing toolchain hints, but they are fallback signals only.
+Apply this order:
 
-## Routing Rules
+1. Only `AGENTS.md` exists: it is canonical.
+2. Only an ordinary `CLAUDE.md` exists: it is the standalone canonical source.
+3. Both exist and `CLAUDE.md` contains a valid thin import: `AGENTS.md` is canonical and `CLAUDE.md` is its thin adapter. Do not ask which is active.
+4. Only `CLAUDE.md` exists and it contains a valid thin import: this is a broken adapter. Ask whether to restore `AGENTS.md` or convert `CLAUDE.md` to standalone.
+5. Both exist without a valid thin import: this is real ambiguity. Ask which source should be canonical and do not modify either file.
+6. Neither exists: use environment and workspace signals only now. If they do not identify one format clearly, ask the user.
 
-- Route to `nhk-bootstrap` when NHK is not yet established, mandatory companion docs are missing, or the user is setting up NHK for the first time.
-- Route to `nhk-upkeep` when NHK already exists and the active instruction/doc-governance surface needs repair, refresh, or drift correction.
-- Route to `nhk-archive` only when the user explicitly asks for archival handling or confirms that the current workstream should move to archive.
+## 3. Check The NHK Foundation
 
-After deciding the route, hand off to the target skill. Do not perform `nhk-bootstrap`, `nhk-upkeep`, or `nhk-archive` implementation work inside `welcome-to-nhk`.
+After the canonical source is known, check all four foundation surfaces:
+
+- `coding-agent-guide.md`
+- `documentation-governance.md`
+- `archive/`
+- `archive/README.md`
+
+If any surface is missing or the instruction topology needs the user-approved repair described above, route to `nhk-bootstrap` before considering upkeep or archive.
+
+## 4. Select The Lifecycle Route
+
+Only after the foundation is complete:
+
+- Route to `nhk-archive` when the user explicitly asks to archive a completed workstream or has already clearly confirmed that transition.
+- Route to `nhk-upkeep` when instruction, routing, governance, archive-index, or active tracking descriptions may have drifted.
+- If nothing needs setup, repair, or archive handling, report that the foundation is ready and stop.
+
+Hand off after deciding. Do not implement another NHK skill inside this router.
 
 ## Local References
-
-Use local references instead of external copies:
 
 - `../references/validation-scenarios.md`
 - `../references/AGENTS-template.md`
 - `../references/CLAUDE-template.md`
 - `../references/coding-agent-guide-template.md`
 - `../references/documentation-governance-template.md`
+- `../references/archive-readme-template.md`
 - `../references/dependency-setup.md`
 
-These frozen templates are references for the routed workflow, not blind copy targets.
+These are local controlled references, not blind copy targets.

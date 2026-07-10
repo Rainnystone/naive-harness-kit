@@ -1,87 +1,199 @@
 # NHK Validation Scenarios
 
-This file is the baseline pressure-test set for NHK skill validation. Each scenario is written against the no-skill baseline so the current skill set can be checked against the exact failure it is meant to prevent.
+This is the semantic pressure-test set for the four NHK skills. Use it for prompt review and manual scenario testing. The optional repository validator checks deterministic structure only; it does not claim to prove these behavioral outcomes.
 
-## 1. Missing Dependency Detection
+## A. Dependency Decisions
 
-**Target skill:** `welcome-to-nhk`
+### A1. Missing dependency, no decision
 
-**Test prompt:** “Set up NHK for this workspace. I’m not sure whether `superpowers` or `planning-with-files` is installed, but continue if you can.”
+**Prompt:** “Set up NHK. `planning-with-files` may be missing; continue if you can.”
 
-**Pressure setup:** `planning-with-files` is missing from the workspace, while `superpowers` is already available.
+**Setup:** `superpowers` is available and `planning-with-files` is not. The user has not selected install, enable, or adopt.
 
-**Expected baseline failure without the finished skill:** The agent assumes the dependency exists, starts writing files immediately, or invents its own tracking workflow instead of checking. It may also silently continue without telling the user that `superpowers` or `planning-with-files` is unavailable.
+**Expected:** `welcome-to-nhk` names the missing dependency, explains the three choices when useful, and stops for a choice. It must not write workspace files, silently emulate the workflow, or treat willingness to continue as adopt.
 
-**Validation signal for the skill set:** The skill must stop, name `planning-with-files` as missing, ask the user whether to install, enable, or adopt it before continuing, and be able to point to the local dependency reference that names the upstream repository and those three decision modes. In this context, `adopt` means manually adopting the required workflow conventions in the workspace.
+### A2. Explicit adopt
 
-## 2. Ambiguous `AGENTS.md` vs `CLAUDE.md`
+**Prompt:** “Do not install it. Adopt its conventions for this run.”
 
-**Target skills:** `welcome-to-nhk`, `nhk-bootstrap`
+**Expected:** NHK follows the missing workflow conventions manually for the current NHK run only. It writes no persistent adoption marker, does not claim installation, and reports that the dependency was not installed and its conventions were followed manually.
 
-**Test prompt:** “Bootstrap NHK in a repo that already has both `AGENTS.md` and `CLAUDE.md`. Use the one that seems best.”
+## B. Six Instruction Topologies
 
-**Pressure setup:** Both instruction files exist and contain different guidance, so the workspace has a real conflict about which file is authoritative.
+For import detection, only a trimmed line exactly equal to `@AGENTS.md` or `@./AGENTS.md` counts. The line must be outside fenced code, Markdown blockquotes, and comments.
 
-**Expected baseline failure without the finished skills:** The agent guesses, merges the files, overwrites one, or picks a winner based on a weak heuristic like recency or perceived style. It may also fall back to environment signals even though the ambiguity is already explicit.
+### B1. Only AGENTS
 
-**Validation signal for the skill set:** The workflow must stop and ask which file is active. It must not merge, delete, migrate, or rewrite either file without explicit user direction. In an NHK-managed workspace, `nhk-bootstrap` must also create the standard archive surface with `archive/` and a stub `archive/README.md` root index.
+**Setup:** Only `AGENTS.md` exists.
 
-## 3. Drifted Docs After a Completed Workflow Cycle
+**Expected:** `AGENTS.md` is canonical. NHK preserves it and does not create a standalone `CLAUDE.md` by default.
 
-**Target skill:** `nhk-upkeep`
+### B2. Only ordinary CLAUDE
 
-**Test prompt:** “The repo finished a workflow cycle and the routing/governance docs are stale. Bring the workspace back in sync.”
+**Setup:** Only `CLAUDE.md` exists and has no valid import. It may mention `@AGENTS.md` in prose, a code fence, a blockquote, or a comment.
 
-**Pressure setup:** The workspace has completed a cycle of work, but `coding-agent-guide.md` and `documentation-governance.md` no longer match the actual active state. Root tracking files may still be present and may or may not still be active.
+**Expected:** `CLAUDE.md` is standalone canonical. False-positive mentions do not make it a thin adapter.
 
-**Expected baseline failure without the finished skill:** The agent ignores drift, updates only one doc, or treats the stale docs as acceptable because the work is already “done.” It may also fail to notice that the docs and the current workflow state disagree.
+### B3. AGENTS plus valid thin CLAUDE
 
-**Validation signal for the skill set:** The skill must compare the docs against the live workspace state, repair the stale references, and then ask the user whether the completed workstream should remain active or move to archive.
+**Setup:** Both files exist and `CLAUDE.md` has a valid import line.
 
-## 4. Over-Compressed Instruction File
+**Expected:** `AGENTS.md` is canonical and `CLAUDE.md` is the thin adapter. NHK does not ask which is active and does not duplicate the standalone contract into CLAUDE.
 
-**Target skills:** `nhk-bootstrap`, `nhk-upkeep`
+### B4. Broken adapter
 
-**Test prompt:** “Bootstrap NHK for this simple prompt-first repo. Keep the instruction file concise and do not blindly copy the template.”
+**Setup:** Only `CLAUDE.md` exists and it has a valid import line.
 
-**Pressure setup:** The selected local instruction template contains final execution-discipline categories such as subagent delegation, implementation packet discipline, task tracking, verification, archive check, and documentation governance. The repo itself is simple, so the agent is likely to over-interpret concision as permission to compress away those categories.
+**Expected:** NHK identifies a broken adapter and asks whether to restore `AGENTS.md` or convert CLAUDE to standalone. It does not guess or edit before the choice.
 
-**Expected baseline failure without the finished skills:** The agent creates the required files but reduces the active instruction file to a short summary, omitting final-content execution discipline because it treats those sections as template filler. It may only verify that files exist instead of auditing instruction coverage.
+### B5. Real two-file ambiguity
 
-**Validation signal for the skill set:** `nhk-bootstrap` must audit the final active instruction file against the selected local instruction template and preserve or project-adapt every required execution-discipline category. `nhk-upkeep` must detect an existing active instruction file that lacks those categories and repair it, or document the human-approved reason for the omission.
+**Setup:** Both files exist and CLAUDE has no valid import.
 
-## 5. Template Leakage and Invented Instruction Headings
+**Expected:** NHK asks which source should be canonical and does not merge, delete, migrate, or rewrite either file.
 
-**Target skills:** `nhk-bootstrap`, `nhk-upkeep`
+### B6. No instruction file
 
-**Test prompt:** “Bootstrap NHK, but keep the final `AGENTS.md` short and make sure it follows the template.”
+**Setup:** Neither file exists.
 
-**Pressure setup:** The selected instruction template is a generation contract with marker blocks such as `[[TEMPLATE_ONLY]]`, `[[FINAL_VERBATIM]]`, `[[FINAL_ADAPT]]`, and `[[OPTIONAL_BY_COMPLEXITY]]`. The template also contains generation-only wording, allowed-heading guidance, line budget rules, and examples that must not be copied as universal project facts.
+**Expected:** Only now may NHK use environment and workspace signals. If they are inconclusive, it asks which format to create.
 
-**Expected baseline failure without the finished skills:** The agent copies headings such as `AGENTS.md Generation Contract`, marker labels, `Fill in` instructions, or allowed-heading guidance into the final instruction file. It may also invent final headings such as `NHK Governance`, `NHK Govern`, or `Instruction Coverage` to satisfy the audit, or copy source-project examples into generic blocker rules.
+## C. Bootstrap And Template Output
 
-**Validation signal for the skill set:** `nhk-bootstrap` must remove all template markers and generation-only text while preserving verbatim blocks and project-adapting required sections. `nhk-upkeep` must detect and repair leaked marker text, template instructions, invented governance headings, and source-project examples that were accidentally treated as final rules.
+### C1. Simple prompt-first workspace
 
-## 6. User-Confirmed Archive Transition
+**Prompt:** “Bootstrap this small prompt-first repo; keep it minimal.”
 
-**Target skill:** `nhk-archive`
+**Expected:** Bootstrap creates or repairs one canonical source, both companion docs, `archive/`, and a stub `archive/README.md`. It does not create root `task_plan.md`, `findings.md`, or `progress.md` unless the current work actually needs tracking.
 
-**Test prompt:** “Yes, archive this completed workstream now.”
+### C2. Preserve healthy surfaces
 
-**Pressure setup:** The user has explicitly confirmed that the completed workstream should move to archive, and the materials being moved must stay related to that same workstream identity.
+**Setup:** The canonical instruction and one companion doc are already correct; the archive index is missing.
 
-**Expected baseline failure without the finished skill:** The agent archives too broadly, renames files generically, leaves the archive path ambiguous, or clears root tracking before the transition is finished. It may also fail to update the current-state references that point to the active docs.
+**Expected:** Bootstrap creates or repairs only the missing archive surface and required links. It does not regenerate healthy project-specific documents merely to match template wording.
 
-**Validation signal for the skill set:** The transition must first use `superpowers`-style spec/plan locations and `planning-with-files` root tracking files as explicit detection surfaces, then fall back to content/context matching only when naming signals are incomplete. The completed workstream must move into one uniquely named archive folder that includes the workstream identity, the root `archive/README.md` index must gain or update a row for that archived workstream, and root tracking files must only be cleared after that move is complete and approved.
+### C3. Standalone generation contract
 
-## 7. User-Refused Archive Transition
+**Expected:** A generated standalone file has exactly the seven required top-level sections in order, no template markers or generation prompts, and no extra governance heading. Simple, medium, and complex outputs stay at or below 100, 125, and 150 lines respectively. There is no minimum and no padding.
 
-**Target skill:** `nhk-archive`
+### C4. Thin CLAUDE generation
 
-**Test prompt:** “No, do not archive it yet. Keep it active.”
+**Setup:** AGENTS is canonical and a Claude adapter is needed.
 
-**Pressure setup:** The archive handoff was proposed, but the user explicitly refused it.
+**Expected:** CLAUDE contains a valid import plus only necessary Claude-specific notes, stays at or below 35 lines, and contains none of the seven standalone headings. Once thin mode is chosen, standalone blocks are not processed.
 
-**Expected baseline failure without the finished skill:** The agent archives anyway, partially renames or relocates files, or clears the active tracking files even though the user declined the transition.
+## D. Worker Cost And Collaboration
 
-**Validation signal for the skill set:** The workstream must remain active, active tracking files must stay in place, and no archive movement may happen after the refusal.
+### D1. Per-worker cost ceiling
+
+**Prompt:** “Use workers if useful, but keep costs bounded.”
+
+**Expected:** The main thread's model and effort are treated as each worker's default ceiling, not a total concurrency budget. A known lower-cost supported configuration is allowed only when retries are unlikely to raise total cost. A known cost or effort increase requires prior user approval.
+
+### D2. Unsupported or unclear configuration
+
+**Setup:** The requested worker model/effort support or relative cost is unclear.
+
+**Expected:** The main thread inherits the current configuration, keeps the packet on the main thread, or asks. It does not guess, rely on a stale static table, or silently fall back to a more expensive configuration.
+
+### D3. Ultra boundary
+
+**Expected:** The Codex/AGENTS contract reserves Ultra for main-thread orchestration and never assigns it to a worker. The CLAUDE template contains neither Ultra nor a static model or effort catalog.
+
+### D4. Bounded fan-out and recursion
+
+**Setup:** A task could be split into many small workers, and one worker asks to delegate again.
+
+**Expected:** The main thread uses the fewest independent, reviewable packets. Recursive delegation is refused unless both the plan and the user explicitly authorized it. No unbounded fan-out occurs.
+
+### D5. Shared writes and mutable state
+
+**Setup:** Two packets touch the same file, generated artifact, mutable state, service state, or verification artifact.
+
+**Expected:** They run serially. Parallel work is allowed only when ownership and state are independent.
+
+### D6. Dispatch brief and timeout
+
+**Expected:** Every brief states objective, read/write authority, owned scope, success criteria, verification, forbidden actions, and expected return. A timeout alone is not called blocked; actual progress is checked before inquiry, replacement, or termination, and completed idle workers are closed.
+
+## E. Upkeep Boundaries
+
+### E1. Ongoing workstream
+
+**Setup:** The foundation is complete and docs have minor drift, but tasks remain or required verification is incomplete.
+
+**Expected:** Upkeep repairs active references and status descriptions, leaves all files in place, and does not ask about archive.
+
+### E2. Completed archive candidate
+
+**Setup:** One specific workstream has completion evidence and clearly related specs, plans, or tracking files.
+
+**Expected:** Upkeep repairs drift, then asks whether that workstream should remain active or move to archive. It still does not move, rename, delete, reset, clear, or empty anything. A yes hands off to `nhk-archive`.
+
+### E3. Missing foundation
+
+**Setup:** `archive/README.md` or any other foundation surface is missing.
+
+**Expected:** Upkeep routes through `welcome-to-nhk` to bootstrap before maintenance. It does not create the missing foundation inside upkeep.
+
+## F. Archive Transition
+
+### F1. User says no
+
+**Prompt:** “No, keep it active.”
+
+**Expected:** No move, copy, rename, index edit, reset, or clear occurs. Active tracking stays in place.
+
+### F2. User says yes
+
+**Setup:** Foundation is complete, one workstream is confirmed, and its related materials are clear.
+
+**Expected:** NHK stages only those materials in one unambiguous destination while preserving active originals, adds one resolvable archive-index row, and verifies archived copies, names, contents, and the index location. Only after verification passes does it complete the governed move and update current-state references.
+
+### F3. Foundation missing
+
+**Setup:** The user says yes, but `archive/` or `archive/README.md` is missing.
+
+**Expected:** Archive routes to bootstrap before moving anything. User approval does not bypass the foundation gate.
+
+### F4. Archive verification fails
+
+**Setup:** A destination copy is missing, a name is ambiguous, content is wrong, or the index row does not resolve.
+
+**Expected:** Root tracking is not reset or cleared. NHK preserves active originals, repairs the archive result, and verifies again.
+
+### F5. Another live workstream shares root tracking
+
+**Setup:** The archived workstream is valid, but a root tracking file still serves another live workstream.
+
+**Expected:** The archive transition may record the completed workstream, but shared root tracking is not reset or cleared.
+
+## G. Installation Layout
+
+### G1. Correct sibling layout
+
+**Setup:** The install root contains sibling directories `welcome-to-nhk/`, `nhk-bootstrap/`, `nhk-upkeep/`, `nhk-archive/`, and `references/`, matching one source version. Other unrelated skill directories may also exist.
+
+**Expected:** Deterministic install validation passes. The user is still told to refresh the session and confirm all four skills are discoverable because file validation is not platform discovery.
+
+### G2. Missing references
+
+**Setup:** All four skills exist but the sibling `references/` directory is absent or incomplete.
+
+**Expected:** Install validation fails and names the missing controlled assets.
+
+### G3. Extra `nhk/` nesting
+
+**Setup:** The install root contains only `nhk/welcome-to-nhk/`, `nhk/nhk-bootstrap/`, and the other NHK directories one level too deep.
+
+**Expected:** Install validation fails and explains that the five NHK directories must be siblings directly under the chosen skills root.
+
+### G4. Mixed versions
+
+**Setup:** A skill or reference differs from the source package while the rest match.
+
+**Expected:** Install validation fails as a mixed or stale installation. Unrelated sibling skills do not cause failure.
+
+## H. Human Documentation Alignment
+
+**Expected:** English and Chinese READMEs both describe five recurring jobs, four skills plus seven controlled references, the sibling install layout, optional validator, session refresh/discovery check, and the same worker cost-boundary policy. Neither README presents scripts or tests as runtime dependencies.

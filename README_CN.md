@@ -8,7 +8,7 @@ NHK 是一个面向 Codex 和 Claude Code 的 prompt-first 懒人包，专门给
 
 ## NHK 是什么
 
-NHK 主要解决几类很快就会反复出现的问题：
+NHK 主要解决下面 5 类很快就会反复出现的问题：
 
 - 先把真正有用的工作流工具接进来，尤其是 `superpowers` 和 `planning-with-files`
 - 在当前环境里懒一点但别乱来地初始化 `AGENTS.md` 还是 `CLAUDE.md`
@@ -58,7 +58,7 @@ NHK 是刻意把“写给人看”和“写给 agent 看”的文档拆开的：
 
 | 层 | 文件 | 作用 |
 | --- | --- | --- |
-| 指令层 | `AGENTS.md` 或 `CLAUDE.md` | 稳定执行规则、验证纪律、协作规则 |
+| 指令层 | canonical `AGENTS.md` 或 standalone `CLAUDE.md`，可再带一个 thin Claude adapter | 稳定执行规则、验证纪律、协作规则 |
 | 路由层 | `coding-agent-guide.md` | 快速任务分流、入口文件、packet 落点、第一轮验证 |
 | 治理层 | `documentation-governance.md` | active/archive 规则、命名规则、加载顺序、归档转换规则 |
 | 活跃工作层 | active `specs/`、active `plans/`，以及按需启用的根目录 `task_plan.md` / `progress.md` / `findings.md` | 只放正在进行的工作 |
@@ -66,7 +66,7 @@ NHK 是刻意把“写给人看”和“写给 agent 看”的文档拆开的：
 
 NHK 在这里是故意有主张的：
 
-- 每个 NHK-managed workspace 都应该至少有指令层、路由层、治理层
+- 每个 NHK-managed workspace 都应该至少有指令层、路由层、治理层和根级 archive surface
 - 根目录 tracking 文件是按需启用，不是默认永远存在
 - active 文档和 archive 文档不能混着放
 - archive 转换必须有人类确认
@@ -92,16 +92,38 @@ NHK 默认把下面两个工作流系统视为并列依赖：
 - `planning-with-files` 给记忆一个落在模型外部的稳定位置
 - NHK 则用这两者去把 `AGENTS.md` / `CLAUDE.md` 初始化、日常维护、active/archive 判断这几件事做得更不拍脑袋
 
-如果缺了其中一个，NHK 不应该装作没事继续跑，而是应该停下来问你：是要安装、启用，还是只是手动 adopt 它的工作流约定。对应说明在 [`references/dependency-setup.md`](references/dependency-setup.md)。
+如果缺了其中一个，NHK 不应该装作没事继续跑，而是应该停下来问你：是要安装、启用，还是明确授权只在本次 NHK 运行里手动 adopt 它的工作流约定。Adopt 不等于安装，也不会自动延续到下一次运行，最后应如实说明。对应边界在 [`references/dependency-setup.md`](references/dependency-setup.md)。
 
 ## 怎么安装
 
 NHK 本质上是一个文件型 skill bundle，没有什么要编译的东西。
 
-1. 把整个 `nhk/` 目录复制到你当前 agent 环境使用的本地 skills 目录里。
-2. 保持目录结构原样，不要把 `references/` 和各个 skill 文件夹拆散。
-3. 确保 `superpowers` 和 `planning-with-files` 可用；如果暂时不可用，也至少知道自己是要安装、启用，还是手动 adopt。
-4. 到目标 workspace 里，从 `welcome-to-nhk` 开始，让 NHK 懒一点但别瞎猜地初始化 `AGENTS.md` 或 `CLAUDE.md`。
+把四个 skill 目录和同级 `references/` 直接放进当前 agent 环境使用的 skills root：
+
+```text
+<skills-root>/
+├── welcome-to-nhk/
+├── nhk-bootstrap/
+├── nhk-upkeep/
+├── nhk-archive/
+└── references/
+```
+
+从这个 repo 复制时，等价命令是：
+
+```bash
+cp -R welcome-to-nhk nhk-bootstrap nhk-upkeep nhk-archive references <skills-root>/
+```
+
+请把 `<skills-root>` 换成当前环境的真实 skills 路径，不要再额外套一层 `nhk/`。
+
+Repo 里的 `scripts/` 和 `tests/` 只供维护者使用，不属于运行时安装内容；Python 也不是 NHK 依赖。这个零第三方依赖的 validator 是可选工具，本机刚好有 Python 3 时可以用它检查文件布局：
+
+```bash
+python3 -B scripts/validate_nhk.py --install-root <skills-root>
+```
+
+Validator 只能核对文件和版本，不能冒充平台的 skill discovery。复制和验证后仍要刷新 agent 会话，并确认四个 skill 都可发现，再到目标 workspace 里从 `welcome-to-nhk` 开始。
 
 如果你是第一次配这种环境，不确定依赖有没有装好，这非常正常。NHK 的设计本来就是在这种地方先停下来问，而不是装懂。
 
@@ -112,7 +134,7 @@ NHK 本质上是一个文件型 skill bundle，没有什么要编译的东西。
 1. 先从 `welcome-to-nhk` 开始。
 2. 让它判断现在应该进入 `nhk-bootstrap`、`nhk-upkeep` 还是 `nhk-archive`。
 3. 用 `nhk-bootstrap` 去建立或适配主 instruction file、两个强制 companion docs，以及根级 archive surface（`archive/` 加 `archive/README.md`）。
-4. 正常开发周期走完后，用 `nhk-upkeep` 修正漂移，并确认当前 workstream 还该不该继续保持 active。
+4. 正常开发周期走完后，用 `nhk-upkeep` 修正漂移；只有一个具体 workstream 同时具备完成证据和相关材料时，它才会询问是否归档。
 5. 只有在用户明确说“这个 workstream 完成了，可以归档”之后，才进入 `nhk-archive`。
 
 如果你完全不知道先点哪个 skill，NHK 的态度是故意有点专断的：先走 `welcome-to-nhk`，让入口路由来当现场最清醒的那个人。
@@ -122,9 +144,13 @@ NHK 本质上是一个文件型 skill bundle，没有什么要编译的东西。
 NHK 同时兼容这两个方向：
 
 - Codex 型 workspace 通常以 `AGENTS.md` 为核心
-- Claude Code 型 workspace 通常以 `CLAUDE.md` 为核心
+- Claude Code 型 workspace 可以使用 standalone `CLAUDE.md`，也可以用 thin `CLAUDE.md` 导入 canonical `AGENTS.md`
 
-NHK 不会在这件事上瞎猜。如果仓库里已经有其中一个，就保留它；如果两个都有，就问人类谁才是 active，而不是擅自当皇帝判案。
+NHK 不会在这件事上瞎猜。如果两个文件都在，而 CLAUDE 在正文里有一行严格等于 `@AGENTS.md` 或 `@./AGENTS.md` 的真实 import，AGENTS 就是 canonical，不必多问。只有导入行却没有 AGENTS 的 CLAUDE 是 broken adapter；两个互相独立的文件才是真歧义，需要人来选。
+
+## Worker 成本规则
+
+NHK 不会冻结一份很快过期的型号目录。用户选择的主线程 model 和 reasoning effort 构成每个 worker 的默认成本上限；已确认支持、且不容易因为重试反而更贵的低成本配置可以使用，任何已知升级都要先问人。精确 pin 只作为项目级、经人工确认的例外。
 
 ## 仓库自身的维护
 
