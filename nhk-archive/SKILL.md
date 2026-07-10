@@ -1,84 +1,69 @@
 ---
 name: nhk-archive
-description: Use when an NHK-managed workspace is at the formal archive handoff for one completed workstream.
+description: Use when an NHK-managed workspace is at the human-approved archive handoff for one completed workstream.
 ---
 
 # NHK Archive
 
-Use `nhk-archive` only for the active-to-archive transition of one completed workstream.
+Use this skill only for the active-to-archive transition of one completed workstream.
 
-## Archive Gate
+## Prerequisite Order
 
-- If the current context does not already include a clear yes, ask the user explicitly whether this workstream should move to archive now.
-- Do not move, rename, reset, or clear anything until the user gives a clear yes.
-- If the user declines or stays ambiguous, keep the workstream active, keep active tracking files in place, and stop.
+1. Confirm `superpowers` and `planning-with-files` are installed, enabled, or explicitly adopted for this NHK run. Adopt is temporary manual authorization, not installation.
+2. Resolve the canonical instruction topology. A valid thin import is a non-quoted, non-comment, non-fenced line exactly `@AGENTS.md` or `@./AGENTS.md` after trimming.
+3. Confirm `coding-agent-guide.md`, `documentation-governance.md`, `archive/`, and `archive/README.md` all exist.
 
-## Workstream Identity
+If instruction topology is ambiguous or broken, ask for the required choice and route through `welcome-to-nhk`. If any foundation surface is missing, route through `welcome-to-nhk` to `nhk-bootstrap`. Do not begin archive movement first.
 
-Define the workstream identity before selecting materials.
+## Human Archive Gate
 
-- Prefer a stable identity already present in the active materials, such as a date-plus-topic slug, plan or spec name, initiative name, or an explicit user-provided workstream name.
-- If multiple identities are plausible, ask the user which workstream is being archived.
-- Use the chosen workstream identity to decide both relatedness and archive naming.
+- If the current context does not already contain a clear yes for this specific workstream, ask whether to archive it now.
+- Do not move, rename, copy into archive, reset, or clear anything before that yes.
+- If the user declines or remains ambiguous, keep the workstream active and stop.
 
-## Detection Priority
+## Workstream Identity And Materials
 
-Determine related materials in this order:
+Choose one stable identity already supported by the active materials, such as a dated topic slug, plan/spec name, initiative, or user-provided name. If multiple identities remain plausible, ask.
 
-1. Look for active spec/plan surfaces that follow `superpowers`-style naming and placement conventions, such as `docs/specs/`, `docs/plans/`, `specs/`, or `plans/`.
-2. Look for active root tracking files that follow `planning-with-files` conventions, especially root `task_plan.md`, `progress.md`, and `findings.md`.
-3. Use the established workstream identity to match filenames, directory names, and obvious date-plus-topic slugs.
-4. If naming or placement signals are incomplete, fall back to content and context: read enough of the candidate files to determine whether they primarily describe the same workstream.
-5. If filename signals, document contents, and current conversation context still do not converge on one clear set of related materials, ask the user before archiving.
+Select related materials in this order:
 
-## Related Materials
+1. active spec and plan surfaces used by the installed or explicitly adopted planning workflow
+2. active root tracking such as `task_plan.md`, `progress.md`, and `findings.md`
+3. filenames, directories, dates, and topic slugs matching the chosen identity
+4. file content and current context when naming signals are incomplete
 
-Archive only materials that belong to the same workstream identity.
+Archive only materials that clearly belong to that identity. Do not archive unrelated live plans, shared instruction or governance docs, or tracking still used by another workstream.
 
-Related materials normally include:
+## Naming And Index Contract
 
-- completed specs and plans whose names, locations, or contents point to the same workstream
-- root `task_plan.md`, `progress.md`, and `findings.md` only when their names or active contents primarily track that same workstream
-- workstream-specific folders or notes already scoped to that identity
+- Prefer one unique archive container such as `archive/<date>-<topic>/`.
+- If files share a flat archive directory, include the workstream identity in every archived plan, spec, and tracking filename.
+- Never accumulate indistinguishable generic tracking filenames in a shared archive.
+- Add or update exactly one resolvable row in `archive/README.md` with identity, date, location, included materials, and an optional short note.
 
-Do not archive:
+## Transition And Verification Order
 
-- unrelated active plans, specs, or tracking files for another live workstream
-- the active instruction file, `coding-agent-guide.md`, or `documentation-governance.md` themselves
-- shared docs that still describe live work, except for updating their current-state references after the transition
+1. Record the confirmed workstream identity and exact related-material set.
+2. Create the uniquely named archive destination and stage copies of the selected completed materials without removing the active originals.
+3. Update the archive index row.
+4. Verify every expected archived copy exists, is readable, belongs to the workstream, and uses an unambiguous name.
+5. Verify the index row resolves to the real archive location and accurately lists the included materials.
+6. Verify no other live workstream depends on any active original or root tracking file selected for transition.
+7. Only after steps 4-6 pass, complete the governed move by removing active originals when required, then update current-state references in `coding-agent-guide.md` and `documentation-governance.md` while keeping historical records intact.
+8. Only after that verified move may root tracking for this workstream be reset or cleared, and only when workspace governance calls for reuse.
 
-## Naming Rules
+If archive copy, naming, content, or index verification fails, preserve every active original and root tracking file, repair the archive result, and rerun verification first. Never remove an active original before the staged archive and index have passed verification.
 
-- Archive the workstream into one uniquely named container, preferably a workstream folder such as `<date>-<topic>/`.
-- If the archive layout does not use a workstream folder, rename every archived spec, plan, and tracking file to include the workstream identity, such as `<workstream>-spec.md`, `<workstream>-plan.md`, `<workstream>-task-plan.md`, `<workstream>-progress.md`, and `<workstream>-findings.md`.
-- Never leave archived tracking files under indistinguishable generic names in a shared archive collection.
+## Delivery
 
-## Transition Order
-
-1. Ask for and receive explicit user confirmation to archive this workstream.
-2. Resolve the workstream identity.
-3. Gather only the related materials for that identity.
-4. Move the completed specs, plans, and related tracking records into the uniquely named archive container.
-5. Ensure `archive/README.md` exists and add or update one row for the archived workstream.
-6. The root archive index row should record:
-   - workstream identity
-   - archival date
-   - archive location
-   - main included materials
-   - a short note only if needed
-7. Update `coding-agent-guide.md` current execution state so it no longer presents the archived workstream as active and so it points to the remaining active surface, if any.
-8. Update `documentation-governance.md` current-state or active-versus-archive references so the archive location and active/archive boundary remain accurate.
-9. Only after the archive move is complete and the archived copies are named clearly may root `task_plan.md`, `progress.md`, and `findings.md` be cleared or reset.
-10. Clear root tracking files only when they were the active surface for the archived workstream and no other live workstream still depends on them.
+Report the confirmed identity, archived location, included materials, index update, verification performed, current active surface, and whether root tracking was reset. If a dependency was adopted, say it was not installed and was followed manually for this NHK run.
 
 ## Local References
 
-Use local references to keep the transition aligned:
-
 - `../references/validation-scenarios.md`
+- `../references/AGENTS-template.md`
+- `../references/CLAUDE-template.md`
 - `../references/coding-agent-guide-template.md`
 - `../references/documentation-governance-template.md`
 - `../references/archive-readme-template.md`
 - `../references/dependency-setup.md`
-
-These references are local alignment aids, not blind copy targets.

@@ -25,7 +25,8 @@ Template usage rules:
 
 Document this boundary clearly in the final project file:
 
-- The workspace instruction file, such as `AGENTS.md` or `CLAUDE.md`, defines stable execution rules, verification rules, and collaboration discipline.
+- The canonical instruction source, either `AGENTS.md` or a standalone `CLAUDE.md`, defines stable execution rules, verification rules, and collaboration discipline.
+- A thin `CLAUDE.md` may import canonical `AGENTS.md`; it is an adapter and must not become a second authority.
 - `coding-agent-guide.md` defines quick task routing, packet landing zones, and first-pass verification.
 - `documentation-governance.md` defines documentation lifecycle, active/archive boundaries, naming rules, and loading discipline.
 - `docs/codemaps/` or equivalent provide deeper module and system structure only when routing docs are insufficient.
@@ -33,8 +34,8 @@ Document this boundary clearly in the final project file:
 - `archive/` stores completed or historical documentation that is no longer an active execution source.
 - `archive/README.md` is the root archive index for archived workstreams.
 
-Recommended reference:
-- For `specs/` and `plans/` naming conventions, refer to `$using-superpowers`.
+Workflow reference:
+- For specs, plans, and tracking conventions, use the relevant peer workflow only when it is installed or explicitly adopted for the current run.
 
 ## Core Governance Rules
 
@@ -57,22 +58,24 @@ The final project file should define rules equivalent to the following.
 
 - Do not archive active docs automatically.
 - Do not assume a workstream is finished just because implementation appears complete.
-- Before archiving any active plan, spec, `task_plan.md`, `progress.md`, or `findings.md`, the agent must explicitly ask the human whether the work is truly complete and ready to archive.
+- Ask about archival only when there is one specific workstream, concrete completion evidence, and materials clearly related to that workstream.
+- Before archiving any active plan, spec, `task_plan.md`, `progress.md`, or `findings.md`, the agent must receive explicit human confirmation for that workstream.
 - If the human does not confirm completion, leave the materials in the active area.
 
 This rule is important. Humans may consider a workstream still active even when an implementation slice appears done.
 
 ### 4. Completed Tracking Files Must Archive Together With Their Related Work
 
-- If a workstream is confirmed complete, archive its tracking files together with the corresponding completed specs and plans.
-- Do not archive plans without the related tracking files.
+- If a confirmed-complete workstream has related tracking files, archive them together with the corresponding completed specs and plans.
+- Do not omit related tracking files that exist, but do not make tracking files a prerequisite for a simple workspace that never needed them.
 - Do not archive tracking files without the related plans/specs unless the project explicitly documents that exception.
 
 ### 5. Active Root Tracking Files May Be Reset Only After Human-Approved Archival
 
 - Root-level `task_plan.md`, `progress.md`, and `findings.md` are active tracking files only.
-- They may be reset or cleared only after the related work has been explicitly confirmed complete by the human and archived appropriately.
+- They may be reset or cleared only after the related work is explicitly confirmed complete, the archived copies and names are verified, the archive index resolves correctly, and no other live workstream depends on them.
 - Do not clear active tracking files early just to reduce clutter.
+- Upkeep may correct active references and status descriptions, but it must not delete, move, rename, archive, reset, clear, or empty files.
 
 ## Active Documentation Surfaces
 
@@ -91,8 +94,8 @@ For each active surface, document:
 - what kind of content is allowed there
 - what kind of content should not remain there after completion
 
-Recommended reference:
-- For root tracking files such as `task_plan.md`, `progress.md`, and `findings.md`, refer to `$planning-with-files-zh`.
+Workflow reference:
+- For root tracking conventions, use the relevant peer workflow only when it is installed or explicitly adopted for the current run.
 
 ## Key Paths and Document Map
 
@@ -102,7 +105,8 @@ Recommended shape:
 
 | What | Where |
 | --- | --- |
-| Workspace instruction file | `...` |
+| Canonical instruction source | `...` |
+| Thin Claude adapter, if any | `...` |
 | Routing guide | `...` |
 | Documentation governance | `...` |
 | Active specs | `...` |
@@ -113,7 +117,7 @@ Recommended shape:
 
 Rules:
 - In simple workspaces, this map may be very short.
-- In complex workspaces, prefer keeping the full key-path and document-surface inventory here instead of expanding `AGENTS.md` or `CLAUDE.md`.
+- In complex workspaces, prefer keeping the full key-path and document-surface inventory here instead of expanding the canonical instruction source.
 - Keep the emphasis on document surfaces, active versus archived locations, and the paths that affect loading discipline and CLI retrieval.
 - Leave code entry maps and production-file navigation to `coding-agent-guide.md`.
 
@@ -148,7 +152,7 @@ The final project file should define naming rules clearly.
 
 - Active specs and plans should follow a consistent naming scheme.
 - The naming scheme should make active work easy to sort and scan from the CLI.
-- For spec and plan naming conventions, refer to `$using-superpowers`.
+- Use the installed or explicitly adopted peer planning workflow's naming conventions when applicable; otherwise document the project's real convention.
 
 ### 2. Archived Tracking Files Must Be Renamed
 
@@ -156,9 +160,9 @@ The final project file should define naming rules clearly.
 - Rename archived tracking files to include workstream identity so CLI search results remain usable.
 
 Recommended examples:
-- `archive-task-plan.md`
-- `archive-progress.md`
-- `archive-findings.md`
+- `<workstream>-task-plan.md`
+- `<workstream>-progress.md`
+- `<workstream>-findings.md`
 
 If the archive layout groups files by workstream directory, the project may choose a similarly clear naming pattern, but the names must still avoid producing large numbers of indistinguishable generic results in CLI workflows.
 
@@ -196,18 +200,24 @@ Document how a workstream moves from active to archived state.
 
 The final project file should make the transition explicit:
 
-1. Work reaches an apparent completion point.
-2. Agent asks the human whether the workstream is actually complete and ready to archive.
+1. Identify one specific workstream, concrete completion evidence, and the related material set.
+2. Agent asks the human whether that workstream is actually complete and ready to archive.
 3. Only after explicit human confirmation:
-   - archive completed specs and plans
-   - archive related tracking files
-   - reset or clear active root tracking files if appropriate
-4. Update any routing or governance docs if the active surface has changed.
+   - stage archived copies of completed specs, plans, and any related tracking files without removing active originals
+   - update `archive/README.md` with one resolvable row
+4. Verify archived copies, names, contents, and index location.
+5. Only after verification passes, complete the governed move and update current-state routing or governance references.
+6. Reset or clear active root tracking only when the move is complete and no other live workstream depends on it.
 
 If the human says the work is not complete:
 - keep the workstream active
 - do not archive
 - do not clear root tracking files
+
+If archive verification fails:
+- preserve all root tracking and active originals
+- repair the archive result
+- rerun verification before any reset
 
 ## Suggested Sections For The Final File
 

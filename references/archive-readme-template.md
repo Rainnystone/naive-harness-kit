@@ -50,5 +50,7 @@ Write each row so a coding agent can quickly decide whether to open that archive
 ## Maintenance Rule
 
 - `nhk-bootstrap` should create this file as part of the standard archive surface.
-- `nhk-archive` should add or update one row after each human-approved archive transition.
+- `nhk-archive` should add or update one row for each human-approved workstream transition.
+- Every indexed location must resolve to the real, uniquely named archive destination, and the included-materials field must match the verified archived copies.
+- A missing, inaccurate, or unresolvable index row blocks any reset of root tracking for that workstream.
 - Keep this file as a flat index. Do not grow it into an archive policy doc or a narrative history.

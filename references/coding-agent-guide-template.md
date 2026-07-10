@@ -10,7 +10,7 @@ Its job is to help a manager thread or subagent answer these questions quickly:
 - where should the first implementation packet land
 - what verification should I run first
 
-This file is not a replacement for the workspace instruction file such as `AGENTS.md` or `CLAUDE.md`.
+This file is not a replacement for the canonical instruction source: `AGENTS.md` or a standalone `CLAUDE.md`.
 This file is not a full architecture spec.
 This file is not a changelog, roadmap, or archive summary.
 
@@ -28,16 +28,17 @@ Template usage rules:
 
 Document this boundary clearly in the final project guide:
 
-- The workspace instruction file, such as `AGENTS.md` or `CLAUDE.md`, defines stable execution rules, verification discipline, and collaboration rules.
+- The canonical instruction source, either `AGENTS.md` or a standalone `CLAUDE.md`, defines stable execution rules, verification discipline, and collaboration rules.
+- A thin `CLAUDE.md` may import canonical `AGENTS.md`; it is an adapter, not a second authority.
 - `coding-agent-guide.md` defines quick task routing, entry files, packet landing zones, and first-pass verification.
 - `documentation-governance.md` defines documentation lifecycle, active/archive boundaries, naming rules, archival rules, and loading discipline.
 - `docs/codemaps/` or equivalent explain deeper module relationships when routing alone is not enough.
 - active `specs/` and `plans/` describe work that is still in progress.
 - `archive/` stores completed plans, completed specs, and completed tracking records.
 
-Recommended reference:
-- For `task_plan.md`, `findings.md`, and `progress.md`, refer to `$planning-with-files-zh`.
-- For active `specs/` and `plans/` workflow conventions, refer to `$using-superpowers`.
+Workflow reference:
+- For tracking, specs, and plans, use the relevant peer workflow only when it is installed or explicitly adopted for the current run.
+- Record the workspace's actual paths and conventions instead of assuming one environment-specific workflow name.
 
 ## Suggested Sections For The Final Guide
 
@@ -57,7 +58,7 @@ Keep this short. Its purpose is orientation.
 List the first-pass reading order for a new coding agent.
 
 Include:
-- the workspace instruction file such as `AGENTS.md` or `CLAUDE.md`
+- the canonical instruction source and, when present, its thin `CLAUDE.md` adapter
 - this `coding-agent-guide.md`
 - `documentation-governance.md`
 - current active tracking files
@@ -78,7 +79,7 @@ Document the current execution state of the workspace.
 Examples:
 - which previous phases or initiatives are already complete and archived
 - what the current active tracking surface is
-- whether the current workstream is still active or already human-confirmed for archival
+- whether a specific workstream is active or has completion evidence, related materials, and human confirmation for archival
 - whether any previously important docs are no longer active execution entry points
 
 This section exists to stop agents from treating old plans as active work.
@@ -127,13 +128,16 @@ Keep this practical. It should help packet planning immediately.
 Document what a valid implementation packet must declare in this project.
 
 Recommended checklist:
-- `Packet Goal`
-- `Owned Files`
+- `Objective`
+- `Read/Write Authority`
+- `Owned Scope`
+- `Success Criteria`
 - `Verification`
-- `Parallel?`
-- `Reviewer Focus`
+- `Forbidden Actions`
+- `Expected Return`
+- `State/Artifact Overlap` when parallel work is being considered
 
-If the project has stronger packet rules, summarize them here and point to the workspace instruction file, such as `AGENTS.md` or `CLAUDE.md`, for the stable execution discipline.
+If the project has stronger packet rules, summarize them here and point to the canonical instruction source for stable execution discipline.
 
 This section should answer: what must be clear before dispatch or implementation begins.
 
@@ -225,7 +229,7 @@ The final project `coding-agent-guide.md` should follow these principles:
 ## Companion Doc Guidance
 
 If the project is simple:
-- the workspace instruction file, `coding-agent-guide.md`, and `documentation-governance.md` should still exist.
+- the canonical instruction source, `coding-agent-guide.md`, `documentation-governance.md`, `archive/`, and `archive/README.md` should still exist; a thin `CLAUDE.md` adapter is optional.
 - `coding-agent-guide.md` can stay very short.
 
 If the project is medium complexity:
@@ -238,7 +242,7 @@ If the project is complex:
 - maintain `docs/codemaps/` or equivalent deeper maps
 - maintain active `specs/` and `plans/`
 - maintain active root tracking files if the workflow requires them
-- archive completed plans, specs, and tracking records together
+- archive a specific completed workstream only after its evidence, related materials, and human approval are all clear
 
 Do not let this guide become a second architecture manual.
 Its job is to shorten the path from task description to correct first action.

@@ -1,55 +1,66 @@
 ---
 name: nhk-upkeep
-description: Use when an NHK-managed workspace has completed or advanced through a work cycle and its instruction, routing, governance, or tracking surfaces may need drift repair.
+description: Use when an NHK-managed workspace has advanced through a work cycle and its instruction, routing, governance, archive-index, or tracking descriptions may need drift repair.
 ---
 
 # NHK Upkeep
 
-Use `nhk-upkeep` only for maintenance after NHK already exists.
+Use this skill only after the NHK foundation exists. It repairs active references and state descriptions; it does not bootstrap missing surfaces or perform an archive transition.
 
-- If the workspace does not already have one active instruction file plus `coding-agent-guide.md` and `documentation-governance.md`, route back through `welcome-to-nhk` so the workspace can be sent to `nhk-bootstrap`.
-- Do not use `nhk-upkeep` to bootstrap missing NHK foundations.
-- Do not use `nhk-upkeep` to perform the archive transition itself.
+## Prerequisite And Topology Check
+
+Confirm that `superpowers` and `planning-with-files` are installed, enabled, or explicitly adopted for this NHK run. A temporary adopt is not installation and creates no persistent marker.
+
+Resolve the canonical instruction topology before maintenance:
+
+- only `AGENTS.md`: AGENTS is canonical
+- only ordinary `CLAUDE.md`: CLAUDE is standalone canonical
+- both, with a real non-quoted, non-comment, non-fenced line exactly `@AGENTS.md` or `@./AGENTS.md` after trimming: AGENTS is canonical and CLAUDE is thin; do not ask
+- only CLAUDE with such an import: broken adapter; ask restore AGENTS versus convert to standalone
+- both without such an import: real ambiguity; ask and do not modify either file
+- neither: route through `welcome-to-nhk` to `nhk-bootstrap`
+
+Then confirm all four foundation surfaces exist: `coding-agent-guide.md`, `documentation-governance.md`, `archive/`, and `archive/README.md`. If any is missing, route through `welcome-to-nhk` to `nhk-bootstrap` before doing upkeep.
 
 ## Maintenance Pass
 
-1. Determine which instruction file is active in the workspace root.
-2. Check that file against current workspace state.
-3. Check `coding-agent-guide.md` against current routing reality.
-4. Check `documentation-governance.md` against current active-versus-archive reality.
-5. Inspect root tracking surfaces such as `task_plan.md`, `progress.md`, and `findings.md`.
-6. After drift is repaired, ask the user whether the completed workstream should remain active or move to archive.
+1. Compare the canonical instruction source and any thin adapter with the live workspace and selected local template.
+2. Compare `coding-agent-guide.md` with current task routing, entry points, and verification reality.
+3. Compare `documentation-governance.md` with actual active/archive boundaries, naming, and loading rules.
+4. Verify `archive/README.md` remains a resolvable index of existing archived workstreams.
+5. Inspect existing plans, task lists, `task_plan.md`, `progress.md`, and `findings.md` as active surfaces, not permanent assumptions.
+6. Repair inaccurate active references and status descriptions, then verify cross-links and instruction structure.
 
-## Core Rules
+## Repair Boundaries
 
-- Check the active instruction file against the live workspace and current execution sources.
-- If exactly one of `AGENTS.md` or `CLAUDE.md` exists, preserve it as the active instruction file unless the user explicitly asks to migrate.
-- If both files exist, stop and ask the user which file is active. Do not guess, merge, delete, or rewrite either file without explicit direction.
-- If neither file exists, stop and route back through `welcome-to-nhk` for `nhk-bootstrap` instead of inventing a new instruction surface inside `nhk-upkeep`.
-- Check `coding-agent-guide.md` against current routing reality, not just against its previous wording.
-- Check `documentation-governance.md` against the actual active/archive layout and the current naming and loading rules.
-- Treat `documentation-governance.md` as the workspace lifecycle contract, and repair it when the live workspace no longer matches its documented rules.
-- Check whether the active instruction file still covers the required execution-discipline categories from the matching local template.
-- If categories such as subagent delegation, implementation packet discipline, verification, archive check, or documentation governance are missing, repair them or document the human-approved reason for omission.
-- If the matching instruction template uses `[[FINAL_VERBATIM]]`, `[[FINAL_ADAPT]]`, `[[OPTIONAL_BY_COMPLEXITY]]`, or `[[TEMPLATE_ONLY]]` markers, check that no marker text leaked into the active instruction file.
-- Repair leftover template wording such as `Fill in`, `Suggested`, `Document:`, `Template usage`, or `Generation Contract` when it appears as final instruction text.
-- Repair invented instruction headings such as `NHK Governance`, `NHK Govern`, or `Instruction Coverage` unless the human explicitly approved them for that workspace.
-- Check that project-adapted sections do not preserve source-template examples as universal project rules.
-- Inspect root `task_plan.md`, `progress.md`, and `findings.md` as live surfaces, not permanent assumptions.
-- Repair stale statements about active repositories, branches, dependencies, entry docs, routing, verification, active/archive boundaries, and loading order.
-- Remove or demote docs that are no longer active execution entry points, and reflect when root tracking files are no longer active surfaces.
-- Treat root `task_plan.md`, `progress.md`, and `findings.md` as conditional surfaces. If they look stale or complete, mark them as archive candidates and ask the user instead of clearing or renaming them here.
-- When the docs and tracking surfaces suggest a workstream may be complete, ask the user whether it should remain active or move to archive.
-- Do not archive, relocate, rename, or clear active tracking files from `nhk-upkeep`. If the user confirms archive readiness, hand off to `nhk-archive`; otherwise leave the workstream active.
+- Preserve the canonical source and a valid thin adapter; do not turn them back into a false two-file ambiguity.
+- Restore missing required instruction categories, remove leaked template markers or generation prompts, and enforce the selected final line limit without inventing new headings.
+- Update stale repository, branch, dependency, entry-doc, routing, verification, active/archive, and loading-order statements.
+- Update existing tracking status when it no longer reflects reality.
+- Never delete, move, rename, archive, reset, clear, or empty a file in `nhk-upkeep`.
+- Never demote a document by removing it from the workspace; only correct whether active docs describe it as an active execution source.
+- If archive is appropriate, hand off to `nhk-archive`; do not perform any part of that transition here.
+
+## Conditional Archive Question
+
+Ask whether to archive only when all three are present:
+
+1. one specific, identifiable workstream
+2. concrete completion evidence, including its required verification or other declared completion gate
+3. specs, plans, tracking files, or other materials that clearly belong to that workstream
+
+If the workstream is ongoing, completion evidence is missing, or related materials are unclear, keep it active and do not ask the archive question. When all three are present, ask whether it should remain active or move to archive. A yes hands off to `nhk-archive`; a no leaves every file in place.
+
+## Delivery
+
+Report the repaired surfaces, verification performed, and whether a workstream met the archive-question gate. If a dependency was adopted, state that it was not installed and its conventions were followed manually for this NHK run.
 
 ## Local References
-
-Use local frozen references where they help repair drift:
 
 - `../references/validation-scenarios.md`
 - `../references/AGENTS-template.md`
 - `../references/CLAUDE-template.md`
 - `../references/coding-agent-guide-template.md`
 - `../references/documentation-governance-template.md`
-
-These references help re-align active docs. They are not blind copy targets and do not replace checking the live workspace first.
+- `../references/archive-readme-template.md`
+- `../references/dependency-setup.md`

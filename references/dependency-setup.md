@@ -30,17 +30,18 @@ Use this when the dependency already exists somewhere in the environment, but it
 
 ### 3. Adopt
 
-Use this when the user does not want installation or cannot install right now, but still wants the workspace to follow the workflow conventions manually.
+Use this only when the user explicitly authorizes NHK to follow the missing workflow's conventions manually for the current NHK run.
 
 For NHK, `adopt` means:
 
-- manually following the `superpowers` workflow shape for brainstorm/spec/plan discipline
-- manually following `planning-with-files` conventions for root tracking files and recovery behavior
-- being explicit that the dependency is not actually installed, only imitated by documented process
+- follow the relevant `superpowers` or `planning-with-files` conventions manually for this run
+- do not create a persistent adoption marker or treat later runs as pre-authorized
+- report clearly that the dependency was not installed and its conventions were followed manually
 
 ## Safety Rules
 
 - Do not auto-install anything.
 - Do not claim a dependency is installed if the environment only adopted the workflow conventions manually.
+- Do not infer adopt from the user's willingness to continue; it must be an explicit choice.
 - If the user declines install, enable, and adopt, stop the NHK bootstrap or upkeep flow and state which capability is missing.
 - Prefer the upstream repository instructions over ad hoc local guesses.
