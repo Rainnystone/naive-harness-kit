@@ -25,17 +25,19 @@ Then confirm all four foundation surfaces exist: `coding-agent-guide.md`, `docum
 ## Maintenance Pass
 
 1. Compare the canonical instruction source and any thin adapter with the live workspace and selected local template.
-2. Compare `coding-agent-guide.md` with current task routing, entry points, and verification reality.
-3. Compare `documentation-governance.md` with actual active/archive boundaries, naming, and loading rules.
+2. Compare the single Task Routing table in `coding-agent-guide.md` with current task routes, likely change surfaces, and targeted verification; keep the file at or below 80 lines.
+3. Compare `documentation-governance.md` with actual document roles, active surfaces, workspace/document map, lifecycle, naming/loading rules, and archive invariants; keep it at or below 100 lines.
 4. Verify `archive/README.md` remains a resolvable index of existing archived workstreams.
 5. Inspect existing plans, task lists, `task_plan.md`, `progress.md`, and `findings.md` as active surfaces, not permanent assumptions.
-6. Repair inaccurate active references and status descriptions, then verify cross-links and instruction structure.
+6. Repair inaccurate active references and status descriptions, replace any Claude companion `@` import with a literal on-demand path, then verify cross-links and instruction structure.
 
 ## Repair Boundaries
 
 - Preserve the canonical source and a valid thin adapter; do not turn them back into a false two-file ambiguity.
 - Restore missing required instruction categories, remove leaked template markers or generation prompts, and enforce the selected final line limit without inventing new headings.
-- Update stale repository, branch, dependency, entry-doc, routing, verification, active/archive, and loading-order statements.
+- Update stale repository, dependency, routing, verification, active/archive, and loading-order statements.
+- Do not recreate separate current-state, packet-routing, packet-checklist, code-map, default-verification, or anti-detour sections in `coding-agent-guide.md`; the routing table owns that job.
+- Keep production-code navigation out of `documentation-governance.md`, and keep detailed archive execution in `nhk-archive`.
 - Update existing tracking status when it no longer reflects reality.
 - Never delete, move, rename, archive, reset, clear, or empty a file in `nhk-upkeep`.
 - Never demote a document by removing it from the workspace; only correct whether active docs describe it as an active execution source.

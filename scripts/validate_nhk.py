@@ -60,7 +60,52 @@ SOURCE_TEMPLATE_LIMITS = {
     "CLAUDE-template.md": 200,
 }
 
+COMPANION_SOURCE_LIMITS = {
+    "coding-agent-guide-template.md": 140,
+    "documentation-governance-template.md": 160,
+}
+
 FINAL_LIMITS = {"simple": 100, "medium": 125, "complex": 150}
+
+COMPANION_FINAL_LIMITS = {
+    "coding-guide": 80,
+    "doc-governance": 100,
+}
+
+TASK_ROUTING_COLUMNS = (
+    "Task or Symptom",
+    "Read First",
+    "Likely Change Surface",
+    "Targeted Verification",
+)
+
+CODING_GUIDE_HEADINGS = (
+    "Task Routing",
+    "Shared Entry Points",
+    "Search and Boundary Hints",
+)
+
+DOC_GOVERNANCE_HEADINGS = (
+    "Document Roles",
+    "Active Documentation Surfaces",
+    "Workspace and Document Map",
+    "Lifecycle Rules",
+    "Naming and Loading",
+    "Archive Transition Invariants",
+)
+
+LEGACY_CODING_GUIDE_HEADINGS = {
+    "Current Execution State",
+    "High-Frequency Packet Routing",
+    "Implementation Packet Checklist",
+    "Code Entry Map",
+    "Default Verification",
+    "Anti-Detour Advice",
+}
+
+COMPANION_IMPORT_RE = re.compile(
+    r"@(?:\./)?(?:coding-agent-guide|documentation-governance)\.md\b"
+)
 
 COMMON_VERBATIM_HEADINGS = {
     "Execution Rules",
@@ -85,6 +130,11 @@ INSTALL_COMMAND = (
 
 VALIDATOR_INSTALL_COMMAND = (
     "python3 -B scripts/validate_nhk.py --install-root <skills-root>"
+)
+
+VALIDATOR_COMPANION_COMMANDS = (
+    "python3 -B scripts/validate_nhk.py --final <coding-agent-guide.md> --kind coding-guide",
+    "python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance",
 )
 
 
@@ -170,6 +220,40 @@ def valid_import_lines(text: str) -> list[int]:
             continue
         if trimmed in {"@AGENTS.md", "@./AGENTS.md"}:
             imports.append(number)
+
+    return imports
+
+
+def active_companion_imports(text: str) -> list[tuple[int, str]]:
+    imports: list[tuple[int, str]] = []
+    fence_char: str | None = None
+    fence_width = 0
+    in_comment = False
+
+    for number, raw_line in enumerate(text.splitlines(), 1):
+        stripped = raw_line.lstrip()
+        fence = re.match(r"(`{3,}|~{3,})", stripped)
+        if fence_char is not None:
+            closing = re.fullmatch(
+                rf"{re.escape(fence_char)}{{{fence_width},}}[ \t]*", stripped
+            )
+            if closing:
+                fence_char = None
+                fence_width = 0
+            continue
+        if fence:
+            fence_char = fence.group(1)[0]
+            fence_width = len(fence.group(1))
+            continue
+
+        visible, in_comment = strip_html_comments(raw_line, in_comment)
+        if not visible.strip() or visible.lstrip().startswith(">"):
+            continue
+        visible = re.sub(r"`+[^`\n]*`+", "", visible)
+        imports.extend(
+            (number, match.group(0))
+            for match in COMPANION_IMPORT_RE.finditer(visible)
+        )
 
     return imports
 
@@ -448,6 +532,14 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         issues.append("README.md: optional install-validator command is missing")
     if normalized_validator not in normalize_space(chinese):
         issues.append("README_CN.md: optional install-validator command is missing")
+    for command in VALIDATOR_COMPANION_COMMANDS:
+        normalized = normalize_space(command)
+        if normalized not in normalize_space(english):
+            issues.append(f"README.md: companion-validator command is missing: {command}")
+        if normalized not in normalize_space(chinese):
+            issues.append(
+                f"README_CN.md: companion-validator command is missing: {command}"
+            )
 
     for token in ("scripts/", "tests/", "not runtime", "optional", "refresh", "discover"):
         require_text(english, token, "README.md", issues, case_sensitive=False)
@@ -460,6 +552,20 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
     for token in ("round five", "systematic-debugging", "No sixth patch"):
         require_text(english, token, "README.md", issues, case_sensitive=False)
     for token in ("第五轮", "systematic-debugging", "第六块补丁"):
+        require_text(chinese, token, "README_CN.md", issues, case_sensitive=False)
+    for token in (
+        "routing table is the shallow code map",
+        "Thin CLAUDE imports only AGENTS",
+        "backticked literal paths",
+        "load on demand",
+    ):
+        require_text(english, token, "README.md", issues, case_sensitive=False)
+    for token in (
+        "路由表就是新手需要的浅层 code map",
+        "thin CLAUDE 只 import AGENTS",
+        "反引号普通路径",
+        "按需读取",
+    ):
         require_text(chinese, token, "README_CN.md", issues, case_sensitive=False)
 
     old_layout_patterns = (
@@ -588,6 +694,45 @@ def validate_source(root: Path) -> list[str]:
             issues,
         )
 
+    for name, limit in COMPANION_SOURCE_LIMITS.items():
+        path = root / "references" / name
+        text = read_text(path, issues, f"references/{name}")
+        if text is None:
+            continue
+        count = line_count(text)
+        if count > limit:
+            issues.append(
+                f"{name}: {count} lines exceeds source-template limit {limit}"
+            )
+
+    coding_template = read_text(
+        root / "references" / "coding-agent-guide-template.md",
+        issues,
+        "references/coding-agent-guide-template.md",
+    )
+    if coding_template is not None:
+        for token in (*TASK_ROUTING_COLUMNS, "80 lines"):
+            require_text(
+                coding_template,
+                token,
+                "coding-agent-guide-template.md",
+                issues,
+            )
+
+    governance_template = read_text(
+        root / "references" / "documentation-governance-template.md",
+        issues,
+        "references/documentation-governance-template.md",
+    )
+    if governance_template is not None:
+        for token in (*DOC_GOVERNANCE_HEADINGS, "100 lines"):
+            require_text(
+                governance_template,
+                token,
+                "documentation-governance-template.md",
+                issues,
+            )
+
     validate_readmes(root, issues)
     validate_repo_split(root, issues)
     validate_forbidden_legacy(root, issues)
@@ -631,7 +776,7 @@ def validate_install(install_root: Path, source_root: Path) -> list[str]:
 
 
 def validate_final(
-    path: Path, kind: str, mode: str, complexity: str | None
+    path: Path, kind: str, mode: str | None, complexity: str | None
 ) -> list[str]:
     issues: list[str] = []
     text = read_text(path, issues, str(path))
@@ -675,7 +820,103 @@ def validate_final(
         if title in forbidden_heading_names:
             issues.append(f"final file contains invented governance heading {title!r}")
 
+    if kind in COMPANION_FINAL_LIMITS:
+        count = line_count(text)
+        limit = COMPANION_FINAL_LIMITS[kind]
+        if count > limit:
+            issues.append(f"{kind} final file has {count} lines; limit is {limit}")
+
+        h1_headings = [
+            match.group(1).strip()
+            for line in text.splitlines()
+            if (match := re.match(r"^#(?!#)\s+(.+?)\s*$", line))
+        ]
+        expected_h1 = (
+            "Coding Agent Guide"
+            if kind == "coding-guide"
+            else "Documentation Governance"
+        )
+        if h1_headings != [expected_h1]:
+            issues.append(
+                f"{kind} final file must have exactly one '# {expected_h1}' heading"
+            )
+
+        if kind == "coding-guide":
+            if "Task Routing" not in headings:
+                issues.append("coding-guide final file is missing 'Task Routing'")
+            header_rows = [
+                tuple(cell.strip() for cell in line.strip().strip("|").split("|"))
+                for line in text.splitlines()
+                if line.strip().startswith("|")
+            ]
+            if TASK_ROUTING_COLUMNS not in header_rows:
+                issues.append(
+                    "coding-guide Task Routing table must use columns: "
+                    + ", ".join(TASK_ROUTING_COLUMNS)
+                )
+            expected_headings = tuple(
+                heading for heading in CODING_GUIDE_HEADINGS if heading in headings
+            )
+            if tuple(headings) != expected_headings:
+                unexpected = next(
+                    (
+                        heading
+                        for heading in headings
+                        if heading not in CODING_GUIDE_HEADINGS
+                    ),
+                    None,
+                )
+                if unexpected is not None:
+                    issues.append(
+                        f"coding-guide final file contains unexpected section {unexpected!r}"
+                    )
+                else:
+                    issues.append(
+                        "coding-guide final sections must follow Task Routing, "
+                        "Shared Entry Points, Search and Boundary Hints order"
+                    )
+            for heading in headings:
+                if heading in LEGACY_CODING_GUIDE_HEADINGS:
+                    issues.append(
+                        f"coding-guide final file contains legacy section {heading!r}"
+                    )
+        else:
+            if tuple(headings[: len(DOC_GOVERNANCE_HEADINGS)]) != DOC_GOVERNANCE_HEADINGS:
+                issues.append(
+                    "doc-governance final headings must begin with: "
+                    + ", ".join(DOC_GOVERNANCE_HEADINGS)
+                )
+            allowed_headings = set(DOC_GOVERNANCE_HEADINGS) | {
+                "Project-Specific Exceptions"
+            }
+            for heading in headings:
+                if heading not in allowed_headings:
+                    issues.append(
+                        f"doc-governance final file contains unexpected section {heading!r}"
+                    )
+            invariant_tokens = (
+                "human approval",
+                "copy",
+                "archive index",
+                "verification fails",
+                "preserve every active original",
+                "no other live workstream",
+                "reset",
+            )
+            for token in invariant_tokens:
+                if token not in lower:
+                    issues.append(
+                        f"doc-governance archive invariants are missing {token!r}"
+                    )
+        return issues
+
     imports = valid_import_lines(text)
+    companion_imports = active_companion_imports(text) if kind == "claude" else []
+    for number, imported in companion_imports:
+        issues.append(
+            f"Claude final file auto-imports companion {imported!r} at line {number}; "
+            "use a backticked literal path and load it on demand"
+        )
     count = line_count(text)
     if mode == "thin":
         if count > 35:
@@ -699,6 +940,11 @@ def validate_final(
         )
     if imports:
         issues.append("standalone final file mixes in a thin AGENTS import")
+    for companion in ("coding-agent-guide.md", "documentation-governance.md"):
+        if f"`{companion}`" not in text:
+            issues.append(
+                f"standalone final file must route to `{companion}` by literal path"
+            )
     return issues
 
 
@@ -710,7 +956,9 @@ def build_parser() -> argparse.ArgumentParser:
     modes.add_argument("--root", type=Path, help="validate an NHK source repository")
     modes.add_argument("--install-root", type=Path, help="validate an installed skills root")
     modes.add_argument("--final", type=Path, help="validate one generated instruction file")
-    parser.add_argument("--kind", choices=("agents", "claude"))
+    parser.add_argument(
+        "--kind", choices=("agents", "claude", "coding-guide", "doc-governance")
+    )
     parser.add_argument("--mode", choices=("standalone", "thin"))
     parser.add_argument("--complexity", choices=tuple(FINAL_LIMITS))
     return parser
@@ -732,8 +980,17 @@ def main(argv: list[str] | None = None) -> int:
     source_root = Path(__file__).resolve().parents[1]
 
     if args.final is not None:
-        if args.kind is None or args.mode is None:
-            parser.error("--final requires --kind and --mode")
+        if args.kind is None:
+            parser.error("--final requires --kind")
+        if args.kind in COMPANION_FINAL_LIMITS:
+            if args.mode is not None or args.complexity is not None:
+                parser.error(
+                    "companion --kind does not accept --mode or --complexity"
+                )
+            issues = validate_final(args.final.resolve(), args.kind, None, None)
+            return report(f"final {args.final}", issues)
+        if args.mode is None:
+            parser.error("instruction --kind requires --mode")
         if args.mode == "thin" and args.kind != "claude":
             parser.error("thin mode is valid only for --kind claude")
         if args.mode == "thin" and args.complexity is not None:

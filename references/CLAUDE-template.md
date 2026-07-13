@@ -7,10 +7,12 @@ Thin mode:
 - Use thin mode when `AGENTS.md` is the canonical instruction source and Claude Code supports importing it.
 - Write `@AGENTS.md` or `@./AGENTS.md` as its own nonblank line, outside code fences, quotes, and comments.
 - Add only necessary Claude-specific notes and keep the entire final file at or below 35 lines.
+- Do not `@` import `coding-agent-guide.md` or `documentation-governance.md`; canonical AGENTS routes to their literal paths on demand.
 - Then stop. Do not read, adapt, or copy any standalone final-producing block below.
 
 Standalone mode:
 - Use standalone mode when `CLAUDE.md` is the canonical instruction source.
+- Do not import AGENTS or either companion doc. Refer to companion docs with backticked literal paths and load them only when the task requires.
 - Process the final-producing blocks below and follow the standalone contract.
 
 This source is a generation contract, not a final instruction file.
@@ -53,12 +55,12 @@ Final cleanup:
 [[FINAL_ADAPT:BEGIN]]
 ## Project Map
 
-Replace this guidance with the shortest useful map of the actual workspace:
-- purpose, active repository, canonical branch, and implementation or content type
-- first-read paths and the source of truth for the current task
-- only the subsystem, write, generated-artifact, and active/archive boundaries needed for safe work
+Write two to four bullets:
+- identify the project in one sentence
+- state that `coding-agent-guide.md` is the canonical route from task or symptom to code entry and first-pass verification
+- add at most two safety-critical boundaries that must be known before opening files
 
-Point to `coding-agent-guide.md` for detail. Do not turn this section into a product brief or full file inventory.
+Do not include a directory tree, module inventory, active branch or workstream, inferable stack facts, or a separate codemap.
 [[FINAL_ADAPT:END]]
 
 [[FINAL_VERBATIM:BEGIN]]
@@ -73,11 +75,11 @@ Point to `coding-agent-guide.md` for detail. Do not turn this section into a pro
 - Five failed fix–verify or fix–review rounds on the same acceptance gap trigger a mandatory stop. Invoke or restart `systematic-debugging`, count those rounds as failed fixes, and forbid a sixth fix until root-cause and architecture reassessment is complete.
 [[FINAL_VERBATIM:END]]
 
-[[FINAL_ADAPT:BEGIN]]
-### Project-specific Boundaries
+[[OPTIONAL_BY_COMPLEXITY:BEGIN]]
+### Additional Project Boundaries
 
-Replace this guidance with only the real data, state, module, dependency, write-path, or deterministic-versus-heuristic rules for this workspace. Omit rules that do not apply and route deeper architecture detail to `coding-agent-guide.md`.
-[[FINAL_ADAPT:END]]
+Include only when the selected medium or complex workspace has a safety boundary that cannot fit in the two Project Map slots. Keep it operational and route task-specific detail to `coding-agent-guide.md`.
+[[OPTIONAL_BY_COMPLEXITY:END]]
 
 [[FINAL_VERBATIM:BEGIN]]
 ## Context and Documentation
@@ -90,12 +92,6 @@ Replace this guidance with only the real data, state, module, dependency, write-
 - Use planning or execution workflows only when they are installed or explicitly adopted for the current run.
 - Consider archive only for a specific workstream with completion evidence and related materials; ask before archiving and never archive automatically.
 [[FINAL_VERBATIM:END]]
-
-[[OPTIONAL_BY_COMPLEXITY:BEGIN]]
-### Additional Context for Medium or Complex Workspaces
-
-Name only the active plans, specs, codemaps, recovery files, or environment guides that actually exist and materially improve routing. Keep their lifecycle rules in `documentation-governance.md`.
-[[OPTIONAL_BY_COMPLEXITY:END]]
 
 [[FINAL_VERBATIM:BEGIN]]
 ## Subagents and Packets

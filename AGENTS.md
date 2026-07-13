@@ -80,6 +80,6 @@ Before claiming the repo is updated:
 - run `python3 -B scripts/validate_nhk.py`
 - run `git diff --check` and inspect `git status --short`
 
-When installation layout or final instruction validation changes, also run representative positive and negative smoke cases for `--install-root` or `--final`. The validator is optional maintainer tooling, not a hook, generator, runtime dependency, or substitute for platform skill discovery.
+When installation layout or final instruction/companion validation changes, also run representative positive and negative smoke cases for `--install-root` or `--final`. The validator is optional maintainer tooling, not a hook, generator, runtime dependency, or substitute for platform skill discovery.
 
 Prefer the smallest change that keeps the package self-consistent.

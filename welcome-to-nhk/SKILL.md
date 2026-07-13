@@ -22,6 +22,8 @@ Treat `superpowers` and `planning-with-files` as peer dependencies.
 
 A valid thin import is a line whose trimmed content is exactly `@AGENTS.md` or `@./AGENTS.md`, outside fenced code, Markdown blockquotes, and comments. Mentions in prose, examples, quoted text, code fences, or comments do not count.
 
+Claude `@` imports of `coding-agent-guide.md` or `documentation-governance.md` are not topology signals and are not valid NHK routing. Both companion docs must be named by literal path and loaded only when the task requires them.
+
 Apply this order:
 
 1. Only `AGENTS.md` exists: it is canonical.

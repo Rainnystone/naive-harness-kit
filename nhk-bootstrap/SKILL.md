@@ -48,6 +48,8 @@ Once the canonical source is known:
 - create `archive/` when missing and add or repair `archive/README.md` from `../references/archive-readme-template.md`
 - connect the canonical instruction source, companion docs, and archive index with concise, accurate references
 
+Use backticked literal paths for both companion docs. In Claude Code, only a thin adapter may import canonical AGENTS; neither thin nor standalone CLAUDE may `@` import a companion doc.
+
 Never overwrite correct project-specific content merely to match template wording.
 
 ## Root Tracking Is Conditional
@@ -66,6 +68,8 @@ Use `../references/AGENTS-template.md` or `../references/CLAUDE-template.md` as 
 - Remove every marker, generation instruction, placeholder, and template-only heading.
 - Do not compress away execution, context, worker, approval, testing, or delivery discipline.
 - Do not expand project detail past the line budget; route it to the companion docs.
+- Keep `coding-agent-guide.md` at or below 80 lines with one Task Routing table using `Task or Symptom`, `Read First`, `Likely Change Surface`, and `Targeted Verification`.
+- Keep `documentation-governance.md` at or below 100 lines and limited to document roles, active surfaces, the workspace/document map, lifecycle, naming/loading, and archive invariants.
 
 ## Foundation Verification
 
@@ -73,6 +77,7 @@ Before finishing:
 
 - confirm the canonical source and any thin adapter match the topology rules
 - confirm both companion docs, `archive/`, and the archive index exist and cross-references resolve
+- confirm companion docs meet their 80/100-line limits and CLAUDE does not auto-import them
 - confirm generated instruction content meets its selected structure and line limit
 - confirm no existing healthy surface was unnecessarily replaced
 - if root tracking exists, record the audit there; otherwise report it in the delivery note

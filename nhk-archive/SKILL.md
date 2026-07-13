@@ -49,7 +49,7 @@ Archive only materials that clearly belong to that identity. Do not archive unre
 4. Verify every expected archived copy exists, is readable, belongs to the workstream, and uses an unambiguous name.
 5. Verify the index row resolves to the real archive location and accurately lists the included materials.
 6. Verify no other live workstream depends on any active original or root tracking file selected for transition.
-7. Only after steps 4-6 pass, complete the governed move by removing active originals when required, then update current-state references in `coding-agent-guide.md` and `documentation-governance.md` while keeping historical records intact.
+7. Only after steps 4-6 pass, complete the governed move by removing active originals when required, then update active documentation and `documentation-governance.md` while keeping historical records intact. Update `coding-agent-guide.md` only when a real Task Routing row points to material that moved.
 8. Only after that verified move may root tracking for this workstream be reset or cleared, and only when workspace governance calls for reuse.
 
 If archive copy, naming, content, or index verification fails, preserve every active original and root tracking file, repair the archive result, and rerun verification first. Never remove an active original before the staged archive and index have passed verification.

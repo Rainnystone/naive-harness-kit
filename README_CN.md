@@ -59,8 +59,8 @@ NHK 是刻意把“写给人看”和“写给 agent 看”的文档拆开的：
 | 层 | 文件 | 作用 |
 | --- | --- | --- |
 | 指令层 | canonical `AGENTS.md` 或 standalone `CLAUDE.md`，可再带一个 thin Claude adapter | 稳定执行规则、验证纪律、协作规则 |
-| 路由层 | `coding-agent-guide.md` | 快速任务分流、入口文件、packet 落点、第一轮验证 |
-| 治理层 | `documentation-governance.md` | active/archive 规则、命名规则、加载顺序、归档转换规则 |
+| 路由层 | `coding-agent-guide.md` | 从任务或症状找到首读文件、可能修改面和针对性验证 |
+| 治理层 | `documentation-governance.md` | 文档角色、active/archive surfaces、命名与加载、归档不变量 |
 | 活跃工作层 | active `specs/`、active `plans/`，以及按需启用的根目录 `task_plan.md` / `progress.md` / `findings.md` | 只放正在进行的工作 |
 | 归档层 | `archive/` 加根级 `archive/README.md` | 已完成的 spec、plan、tracking，以及历史参考材料 |
 
@@ -71,6 +71,8 @@ NHK 在这里是故意有主张的：
 - active 文档和 archive 文档不能混着放
 - archive 转换必须有人类确认
 - 已归档 workstream 应通过根级 `archive/README.md` 保持可检索
+
+对 NHK 面向的新手项目来说，路由表就是新手需要的浅层 code map。再另做一张 codemap，多半只是让第一次进仓库的人同时迷路在两张地图里，未免有点用力过猛。
 
 治理层的直接依据就是 `references/documentation-governance-template.md`。NHK 不认为文档生命周期应该靠默认脑补解决，而是要求这些规则在目标 workspace 里明确写出来。
 
@@ -125,6 +127,13 @@ python3 -B scripts/validate_nhk.py --install-root <skills-root>
 
 Validator 只能核对文件和版本，不能冒充平台的 skill discovery。复制和验证后仍要刷新 agent 会话，并确认四个 skill 都可发现，再到目标 workspace 里从 `welcome-to-nhk` 开始。
 
+维护者也可以检查生成后的 companion docs，但这不会把 validator 变成运行时依赖：
+
+```bash
+python3 -B scripts/validate_nhk.py --final <coding-agent-guide.md> --kind coding-guide
+python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance
+```
+
 如果你是第一次配这种环境，不确定依赖有没有装好，这非常正常。NHK 的设计本来就是在这种地方先停下来问，而不是装懂。
 
 ## 怎么用
@@ -147,6 +156,8 @@ NHK 同时兼容这两个方向：
 - Claude Code 型 workspace 可以使用 standalone `CLAUDE.md`，也可以用 thin `CLAUDE.md` 导入 canonical `AGENTS.md`
 
 NHK 不会在这件事上瞎猜。如果两个文件都在，而 CLAUDE 在正文里有一行严格等于 `@AGENTS.md` 或 `@./AGENTS.md` 的真实 import，AGENTS 就是 canonical，不必多问。只有导入行却没有 AGENTS 的 CLAUDE 是 broken adapter；两个互相独立的文件才是真歧义，需要人来选。
+
+thin CLAUDE 只 import AGENTS。两份 companion docs 始终使用反引号普通路径并按需读取；如果用 `@` 把它们展开，每次会话都得先把整张地图背一遍，再看看今天到底用不用得上。
 
 ## Worker 成本规则
 
