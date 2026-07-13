@@ -116,6 +116,12 @@ For import detection, only a trimmed line exactly equal to `@AGENTS.md` or `@./A
 
 **Expected:** Every brief states objective, read/write authority, owned scope, success criteria, verification, forbidden actions, and expected return. A timeout alone is not called blocked; actual progress is checked before inquiry, replacement, or termination, and completed idle workers are closed.
 
+### D7. Non-converging fix loop
+
+**Setup:** The same acceptance gap remains unresolved after five fix–verify or fix–review rounds.
+
+**Expected:** The fifth failure triggers a mandatory stop. NHK invokes or restarts `systematic-debugging`, counts all five rounds as failed fixes, and forbids a sixth fix until root-cause and architecture reassessment is complete.
+
 ## E. Upkeep Boundaries
 
 ### E1. Ongoing workstream

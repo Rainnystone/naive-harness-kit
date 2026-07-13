@@ -38,6 +38,13 @@ FINAL_HEADINGS = (
     "Git and Delivery",
 )
 
+CONVERGENCE_BACKSTOP = (
+    "Five failed fix–verify or fix–review rounds on the same acceptance gap "
+    "trigger a mandatory stop. Invoke or restart `systematic-debugging`, count "
+    "those rounds as failed fixes, and forbid a sixth fix until root-cause and "
+    "architecture reassessment is complete."
+)
+
 INSTALL_COMMAND = (
     "cp -R welcome-to-nhk nhk-bootstrap nhk-upkeep nhk-archive references "
     "<skills-root>/"
@@ -77,6 +84,8 @@ After validation, refresh the session and confirm that all four skills are disco
 
 NHK does not freeze a model catalog. The user's main-thread model and effort set each
 worker's cost ceiling. Exact pinning is a project-level, human-approved exception.
+If the same gap remains after round five, invoke systematic-debugging. No sixth patch
+is allowed before root-cause and architecture reassessment.
 """
 
 
@@ -103,6 +112,7 @@ Python validator 是可选、零第三方依赖的检查工具：
 
 NHK 不冻结型号目录；用户选择的主线程 model 和 effort 是每个 worker 的成本上限。
 精确 pin 只应作为项目级、经人工确认的例外。
+同一个 gap 到第五轮仍未解决时，调用 systematic-debugging；根因和架构重审前不准贴第六块补丁。
 """
 
 
@@ -201,6 +211,20 @@ class SourceValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("shared verbatim", result.stdout.lower())
 
+    def test_missing_convergence_backstop_fails(self) -> None:
+        root = self.make_source_fixture()
+        for name in ("AGENTS-template.md", "CLAUDE-template.md"):
+            path = root / "references" / name
+            path.write_text(
+                path.read_text(encoding="utf-8").replace(
+                    f"- {CONVERGENCE_BACKSTOP}\n", ""
+                ),
+                encoding="utf-8",
+            )
+        result = run_cli("--root", root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("convergence backstop", result.stdout.lower())
+
     def test_template_source_line_limit_fails(self) -> None:
         root = self.make_source_fixture()
         path = root / "references" / "AGENTS-template.md"
@@ -256,6 +280,20 @@ class SourceValidationTests(ValidatorTestCase):
         result = run_cli("--root", root)
         self.assertEqual(result.returncode, 1)
         self.assertIn("five recurring jobs", result.stdout.lower())
+
+    def test_readme_convergence_guidance_drift_fails(self) -> None:
+        root = self.make_source_fixture()
+        for name in ("README.md", "README_CN.md"):
+            path = root / name
+            path.write_text(
+                path.read_text(encoding="utf-8").replace(
+                    "systematic-debugging", "ordinary debugging"
+                ),
+                encoding="utf-8",
+            )
+        result = run_cli("--root", root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("systematic-debugging", result.stdout.lower())
 
 
 class InstallValidationTests(ValidatorTestCase):

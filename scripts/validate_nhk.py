@@ -71,6 +71,13 @@ COMMON_VERBATIM_HEADINGS = {
     "Git and Delivery",
 }
 
+CONVERGENCE_BACKSTOP = (
+    "Five failed fix–verify or fix–review rounds on the same acceptance gap "
+    "trigger a mandatory stop. Invoke or restart `systematic-debugging`, count "
+    "those rounds as failed fixes, and forbid a sixth fix until root-cause and "
+    "architecture reassessment is complete."
+)
+
 INSTALL_COMMAND = (
     "cp -R welcome-to-nhk nhk-bootstrap nhk-upkeep nhk-archive references "
     "<skills-root>/"
@@ -342,6 +349,10 @@ def validate_shared_templates(
         if token not in worker_block:
             issues.append(f"templates: shared worker contract is missing {token!r}")
 
+    execution_block = agents.get("Execution Rules", "")
+    if f"- {CONVERGENCE_BACKSTOP}" not in execution_block:
+        issues.append("templates: shared Execution Rules are missing the convergence backstop")
+
     if agent_text.count("Ultra") != 1:
         issues.append("AGENTS-template.md: Ultra must appear only in its platform boundary")
 
@@ -446,6 +457,10 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         require_text(english, token, "README.md", issues, case_sensitive=False)
     for token in ("型号目录", "成本上限"):
         require_text(chinese, token, "README_CN.md", issues)
+    for token in ("round five", "systematic-debugging", "No sixth patch"):
+        require_text(english, token, "README.md", issues, case_sensitive=False)
+    for token in ("第五轮", "systematic-debugging", "第六块补丁"):
+        require_text(chinese, token, "README_CN.md", issues, case_sensitive=False)
 
     old_layout_patterns = (
         r"<skills-root>/nhk(?:/|\b)",

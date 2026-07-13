@@ -152,6 +152,10 @@ NHK does not guess recklessly. When both files exist and CLAUDE has a real impor
 
 NHK does not freeze a model catalog that will go stale with the next release. The user's main-thread model and reasoning effort form the default per-worker cost ceiling. A known lower-cost configuration is fine when it is supported and unlikely to create expensive retries; a known increase needs human approval. Exact model pinning remains a project-level, human-approved exception.
 
+## When Fixes Start Going In Circles
+
+Most gaps should close within five honest fix–verify or fix–review rounds. If the same one is still sitting there after round five, NHK stops pretending patch number six is bound to be the clever one: work must stop, `systematic-debugging` must be invoked or restarted, and those five rounds count as failed fixes. No sixth patch is allowed until root-cause and architecture reassessment is complete.
+
 ## Repo Maintenance
 
 This repository itself includes both `AGENTS.md` and `CLAUDE.md`.

@@ -70,6 +70,7 @@ Point to `coding-agent-guide.md` for detail. Do not turn this section into a pro
 - Preserve the project's declared sources of truth and do not hand-edit generated artifacts unless the project explicitly requires it.
 - When instructions, implementation, tests, and active docs disagree, resolve intended behavior first, then bring them back into sync.
 - Reuse an installed or explicitly adopted peer workflow when it fits; do not pretend an unavailable workflow is installed.
+- Five failed fix–verify or fix–review rounds on the same acceptance gap trigger a mandatory stop. Invoke or restart `systematic-debugging`, count those rounds as failed fixes, and forbid a sixth fix until root-cause and architecture reassessment is complete.
 [[FINAL_VERBATIM:END]]
 
 [[FINAL_ADAPT:BEGIN]]
