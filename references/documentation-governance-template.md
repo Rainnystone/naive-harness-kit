@@ -1,248 +1,73 @@
 # Documentation Governance Template
 
-## What This Document Is For
+## Purpose
 
-This document defines workspace-level documentation governance.
+Use this template to create `documentation-governance.md`, the workspace contract for where active documentation lives, how it is loaded, and when completed material may move to archive.
 
-Its job is to make these boundaries explicit:
-- what counts as active documentation
-- what counts as archived documentation
-- where active planning and tracking files live
-- when documents may move into archive
-- how active and archived materials should be named
-- what agents should read first and what they should avoid loading unless needed
+This file maps documentation surfaces, not production modules. Coding routes belong in `coding-agent-guide.md`; detailed archive execution belongs to `nhk-archive` when that skill is available or explicitly adopted.
 
-This file is not a task-routing guide.
-This file is not a full architecture spec.
-This file is not a changelog.
+## Template Contract
 
-Template usage rules:
-- This file is a template, not a final `documentation-governance.md`.
-- Instructional text such as `Document`, `Recommended`, `Suggested`, and similar template guidance should not remain in the final project file.
-- The final project file should define the real workspace rules clearly and operationally.
+- Final file hard limit: 100 lines. There is no minimum.
+- Replace examples with real workspace paths and remove all template guidance.
+- Keep durable rules and current document surfaces; do not copy active task status or an archive log into this file.
+- Name this file from canonical instructions with a backticked literal path. Never use a Claude `@` import for it.
 
-## Relationship To Other Docs
+## Relationship to Other Files
 
-Document this boundary clearly in the final project file:
+- Canonical `AGENTS.md` or standalone `CLAUDE.md` defines stable working rules.
+- A thin `CLAUDE.md` may import canonical AGENTS; it does not import this document.
+- `coding-agent-guide.md` routes coding tasks to code and targeted verification.
+- Active plans, specs, and optional root tracking hold work in progress.
+- `archive/` stores historical material, and `archive/README.md` is its resolvable index.
 
-- The canonical instruction source, either `AGENTS.md` or a standalone `CLAUDE.md`, defines stable execution rules, verification rules, and collaboration discipline.
-- A thin `CLAUDE.md` may import canonical `AGENTS.md`; it is an adapter and must not become a second authority.
-- `coding-agent-guide.md` defines quick task routing, packet landing zones, and first-pass verification.
-- `documentation-governance.md` defines documentation lifecycle, active/archive boundaries, naming rules, and loading discipline.
-- `docs/codemaps/` or equivalent provide deeper module and system structure only when routing docs are insufficient.
-- active `specs/` and `plans/` document work still in progress.
-- `archive/` stores completed or historical documentation that is no longer an active execution source.
-- `archive/README.md` is the root archive index for archived workstreams.
+## Required Final Shape
 
-Workflow reference:
-- For specs, plans, and tracking conventions, use the relevant peer workflow only when it is installed or explicitly adopted for the current run.
+Start with `# Documentation Governance`, then use the following second-level headings in order.
 
-## Core Governance Rules
+### Document Roles
 
-The final project file should define rules equivalent to the following.
+Define the canonical instruction source, routing guide, this governance file, active work surfaces, archive root, and archive index in a compact table or list. State that ordinary companion paths are loaded on demand rather than imported into Claude startup context.
 
-### 1. Active and Archived Documentation Must Be Kept Separate
+### Active Documentation Surfaces
 
-- Active documentation and archived documentation must not be mixed in the same working area.
-- Active root tracking files should contain active work only.
-- Active spec and plan directories should contain active work only.
-- Archived materials should move into a dedicated archive area.
+List only active specs, plans, tracking, recovery, or environment docs that really exist. For each surface, state its purpose and what must leave it after human-approved archival. Root tracking remains optional.
 
-### 2. Archive Is Not An Active Execution Source
+### Workspace and Document Map
 
-- Agents should prefer active docs first.
-- Archive should be read only when historical context is actually needed.
-- Archived materials are reference records, not default execution entry points.
+Map only instruction, routing, active documentation, optional tracking, archive, and archive-index paths. Do not list production modules, entry files, or a repository tree.
 
-### 3. Archival Is Never Automatic
+### Lifecycle Rules
 
-- Do not archive active docs automatically.
-- Do not assume a workstream is finished just because implementation appears complete.
-- Ask about archival only when there is one specific workstream, concrete completion evidence, and materials clearly related to that workstream.
-- Before archiving any active plan, spec, `task_plan.md`, `progress.md`, or `findings.md`, the agent must receive explicit human confirmation for that workstream.
-- If the human does not confirm completion, leave the materials in the active area.
+- Keep active and archived documentation separate.
+- Prefer current implementation, tests, and active docs; archive is not a default execution source.
+- Never infer completion or archive automatically.
+- Ask about archive only for one identifiable workstream with completion evidence and related materials.
+- Upkeep may repair descriptions and links but never move, rename, delete, clear, reset, or archive files.
 
-This rule is important. Humans may consider a workstream still active even when an implementation slice appears done.
+### Naming and Loading
 
-### 4. Completed Tracking Files Must Archive Together With Their Related Work
+- Give active specs and plans a consistent, searchable naming scheme.
+- Archived containers and tracking copies include a workstream identity; do not accumulate indistinguishable generic filenames.
+- Load the smallest active context that safely answers the task.
+- Start historical lookup at `archive/README.md`, then open only the relevant archive location.
 
-- If a confirmed-complete workstream has related tracking files, archive them together with the corresponding completed specs and plans.
-- Do not omit related tracking files that exist, but do not make tracking files a prerequisite for a simple workspace that never needed them.
-- Do not archive tracking files without the related plans/specs unless the project explicitly documents that exception.
+### Archive Transition Invariants
 
-### 5. Active Root Tracking Files May Be Reset Only After Human-Approved Archival
+The final file must preserve these rules without expanding them into an operating manual:
 
-- Root-level `task_plan.md`, `progress.md`, and `findings.md` are active tracking files only.
-- They may be reset or cleared only after the related work is explicitly confirmed complete, the archived copies and names are verified, the archive index resolves correctly, and no other live workstream depends on them.
-- Do not clear active tracking files early just to reduce clutter.
-- Upkeep may correct active references and status descriptions, but it must not delete, move, rename, archive, reset, clear, or empty files.
+- Explicit human approval is required before archiving the named workstream.
+- Copy the selected materials and update the archive index before verification and before removing active originals.
+- If verification fails, preserve every active original and repair the staged archive first.
+- Reset or clear tracking only when the verified move is complete and no other live workstream depends on it.
 
-## Active Documentation Surfaces
+### Project-Specific Exceptions
 
-Document the active documentation surfaces for the real project.
+Include this optional final section only for a real exception that changes the rules above. Name who or what authorizes the exception; never invent one to make cleanup easier.
 
-Typical examples:
-- root `task_plan.md`
-- root `progress.md`
-- root `findings.md`
-- active `docs/specs/`
-- active `docs/plans/`
-- active codemaps or routing docs
+## Final Check
 
-For each active surface, document:
-- what it is for
-- what kind of content is allowed there
-- what kind of content should not remain there after completion
-
-Workflow reference:
-- For root tracking conventions, use the relevant peer workflow only when it is installed or explicitly adopted for the current run.
-
-## Key Paths and Document Map
-
-Document the highest-value workspace paths that agents need in order to find the active document system and major execution surfaces.
-
-Recommended shape:
-
-| What | Where |
-| --- | --- |
-| Canonical instruction source | `...` |
-| Thin Claude adapter, if any | `...` |
-| Routing guide | `...` |
-| Documentation governance | `...` |
-| Active specs | `...` |
-| Active plans | `...` |
-| Root tracking files | `...` |
-| Codemaps | `...` |
-| Archive | `...` |
-
-Rules:
-- In simple workspaces, this map may be very short.
-- In complex workspaces, prefer keeping the full key-path and document-surface inventory here instead of expanding the canonical instruction source.
-- Keep the emphasis on document surfaces, active versus archived locations, and the paths that affect loading discipline and CLI retrieval.
-- Leave code entry maps and production-file navigation to `coding-agent-guide.md`.
-
-## Archive Structure
-
-Document the archive structure for the real project.
-
-At minimum, define:
-- the root archive index location
-- where completed specs go
-- where completed plans go
-- where completed tracking files go
-- whether there are special archive areas for recovery snapshots, tracks, or legacy documentation
-
-The root archive index should support retrieval and discoverability.
-It should not replace the lifecycle rules in `documentation-governance.md`.
-Do not turn `documentation-governance.md` into an archive log; keep archived-workstream listings in `archive/README.md`.
-
-If the project has multiple archive categories, document the difference between them.
-
-Good examples:
-- completed specs and plans
-- archived root tracking snapshots
-- legacy design materials
-- superseded recovery records
-
-## Naming Rules
-
-The final project file should define naming rules clearly.
-
-### 1. Active Specs and Plans
-
-- Active specs and plans should follow a consistent naming scheme.
-- The naming scheme should make active work easy to sort and scan from the CLI.
-- Use the installed or explicitly adopted peer planning workflow's naming conventions when applicable; otherwise document the project's real convention.
-
-### 2. Archived Tracking Files Must Be Renamed
-
-- Archived copies of `task_plan.md`, `progress.md`, and `findings.md` must not keep the same generic filenames in archive collections where many workstreams accumulate.
-- Rename archived tracking files to include workstream identity so CLI search results remain usable.
-
-Recommended examples:
-- `<workstream>-task-plan.md`
-- `<workstream>-progress.md`
-- `<workstream>-findings.md`
-
-If the archive layout groups files by workstream directory, the project may choose a similarly clear naming pattern, but the names must still avoid producing large numbers of indistinguishable generic results in CLI workflows.
-
-### 3. Archived Workstream Containers Should Be Distinguishable
-
-If the project archives by workstream folder, the folder name should make the workstream easy to identify.
-
-Good examples:
-- date + topic
-- date + initiative name
-- date + implementation track
-
-The goal is simple CLI retrieval, not aesthetic naming.
-
-## Read Order and Loading Discipline
-
-Document the loading discipline for the real project.
-
-At minimum, define:
-- what active docs should be read first
-- when active tracking files must be read
-- when codemaps should be loaded
-- when archive may be consulted
-- what not to load by default
-
-Recommended rules to adapt:
-- Start with active execution docs first.
-- Load archive only when current docs are insufficient.
-- Do not load historical specs or archives just because they exist.
-- Keep loading scoped to the task at hand.
-
-## Transition Rules
-
-Document how a workstream moves from active to archived state.
-
-The final project file should make the transition explicit:
-
-1. Identify one specific workstream, concrete completion evidence, and the related material set.
-2. Agent asks the human whether that workstream is actually complete and ready to archive.
-3. Only after explicit human confirmation:
-   - stage archived copies of completed specs, plans, and any related tracking files without removing active originals
-   - update `archive/README.md` with one resolvable row
-4. Verify archived copies, names, contents, and index location.
-5. Only after verification passes, complete the governed move and update current-state routing or governance references.
-6. Reset or clear active root tracking only when the move is complete and no other live workstream depends on it.
-
-If the human says the work is not complete:
-- keep the workstream active
-- do not archive
-- do not clear root tracking files
-
-If archive verification fails:
-- preserve all root tracking and active originals
-- repair the archive result
-- rerun verification before any reset
-
-## Suggested Sections For The Final File
-
-The final project `documentation-governance.md` should usually contain these sections:
-
-1. What This Document Is For
-2. Relationship To Other Docs
-3. Active vs Archive Rules
-4. Active Documentation Surfaces
-5. Key Paths and Document Map
-6. Archive Structure
-7. Naming Rules
-8. Read Order and Loading Discipline
-9. Transition Rules
-10. Optional Project-Specific Exceptions
-
-## Writing Principles
-
-The final project file should follow these principles:
-
-- Keep the rules operational and unambiguous.
-- Separate lifecycle rules from routing guidance.
-- Prefer explicit naming and storage rules over vague guidance.
-- Treat archive as a deliberate human-approved state, not an automatic cleanup mechanism.
-- Optimize for CLI discoverability and low-friction retrieval.
-- If a rule affects searchability, naming, or context loading, write it explicitly.
-- Keep archive listings in `archive/README.md` rather than letting this governance file grow into an archive catalog.
-- In complex workspaces, absorb file-map and document-surface detail here rather than allowing the workspace instruction file to grow past its line budget.
+- The file is at most 100 lines and uses the required headings in order.
+- Every documented surface exists or is explicitly conditional.
+- Active/archive links resolve, names remain distinguishable, and the archive index is not duplicated here.
+- No production code map, detailed archive procedure, template prompt, placeholder, or stale workstream status remains.

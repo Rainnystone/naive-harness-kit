@@ -1,41 +1,34 @@
 ---
 name: nhk-upkeep
-description: Use when an NHK-managed workspace has advanced through a work cycle and its instruction, routing, governance, archive-index, or tracking descriptions may need drift repair.
+description: Repair NHK drift when an established workspace's instruction, routing, governance, archive index, or tracking descriptions no longer match reality.
 ---
 
 # NHK Upkeep
 
 Use this skill only after the NHK foundation exists. It repairs active references and state descriptions; it does not bootstrap missing surfaces or perform an archive transition.
 
-## Prerequisite And Topology Check
+## Router Handoff
 
-Confirm that `superpowers` and `planning-with-files` are installed, enabled, or explicitly adopted for this NHK run. A temporary adopt is not installation and creates no persistent marker.
+Reuse a `welcome-to-nhk` handoff only when it is for the current workspace and current NHK run, and its **Route** selects this skill. If the handoff is absent, unresolved, or stale, run `welcome-to-nhk` first. If it selects another route, hand off and do not continue upkeep.
 
-Resolve the canonical instruction topology before maintenance:
-
-- only `AGENTS.md`: AGENTS is canonical
-- only ordinary `CLAUDE.md`: CLAUDE is standalone canonical
-- both, with a real non-quoted, non-comment, non-fenced line exactly `@AGENTS.md` or `@./AGENTS.md` after trimming: AGENTS is canonical and CLAUDE is thin; do not ask
-- only CLAUDE with such an import: broken adapter; ask restore AGENTS versus convert to standalone
-- both without such an import: real ambiguity; ask and do not modify either file
-- neither: route through `welcome-to-nhk` to `nhk-bootstrap`
-
-Then confirm all four foundation surfaces exist: `coding-agent-guide.md`, `documentation-governance.md`, `archive/`, and `archive/README.md`. If any is missing, route through `welcome-to-nhk` to `nhk-bootstrap` before doing upkeep.
+Use the handoff's dependency, instruction, topology, and complete-foundation state as the maintenance input. Do not persist the handoff or repeat the topology decision inside upkeep.
 
 ## Maintenance Pass
 
-1. Compare the canonical instruction source and any thin adapter with the live workspace and selected local template.
-2. Compare `coding-agent-guide.md` with current task routing, entry points, and verification reality.
-3. Compare `documentation-governance.md` with actual active/archive boundaries, naming, and loading rules.
-4. Verify `archive/README.md` remains a resolvable index of existing archived workstreams.
+1. Compare the canonical instruction source and any thin adapter with the live workspace. If its structure needs repair, open only the matching `../references/AGENTS-template.md` or `../references/CLAUDE-template.md`.
+2. Compare the single Task Routing table in `coding-agent-guide.md` with current task routes, likely change surfaces, and targeted verification; keep the file at or below 80 lines. Open `../references/coding-agent-guide-template.md` only when this surface needs structural repair.
+3. Compare `documentation-governance.md` with actual document roles, active surfaces, workspace/document map, lifecycle, naming/loading rules, and archive invariants; keep it at or below 100 lines. Open `../references/documentation-governance-template.md` only when this surface needs structural repair.
+4. Verify `archive/README.md` remains a resolvable index of existing archived workstreams. Open `../references/archive-readme-template.md` only when its shape or row contract needs repair.
 5. Inspect existing plans, task lists, `task_plan.md`, `progress.md`, and `findings.md` as active surfaces, not permanent assumptions.
-6. Repair inaccurate active references and status descriptions, then verify cross-links and instruction structure.
+6. Repair inaccurate active references and status descriptions, replace any Claude companion `@` import with a literal on-demand path, then verify cross-links and instruction structure.
 
 ## Repair Boundaries
 
 - Preserve the canonical source and a valid thin adapter; do not turn them back into a false two-file ambiguity.
 - Restore missing required instruction categories, remove leaked template markers or generation prompts, and enforce the selected final line limit without inventing new headings.
-- Update stale repository, branch, dependency, entry-doc, routing, verification, active/archive, and loading-order statements.
+- Update stale repository, dependency, routing, verification, active/archive, and loading-order statements.
+- Do not recreate separate current-state, packet-routing, packet-checklist, code-map, default-verification, or anti-detour sections in `coding-agent-guide.md`; the routing table owns that job.
+- Keep production-code navigation out of `documentation-governance.md`, and keep detailed archive execution in `nhk-archive`.
 - Update existing tracking status when it no longer reflects reality.
 - Never delete, move, rename, archive, reset, clear, or empty a file in `nhk-upkeep`.
 - Never demote a document by removing it from the workspace; only correct whether active docs describe it as an active execution source.
@@ -54,13 +47,3 @@ If the workstream is ongoing, completion evidence is missing, or related materia
 ## Delivery
 
 Report the repaired surfaces, verification performed, and whether a workstream met the archive-question gate. If a dependency was adopted, state that it was not installed and its conventions were followed manually for this NHK run.
-
-## Local References
-
-- `../references/validation-scenarios.md`
-- `../references/AGENTS-template.md`
-- `../references/CLAUDE-template.md`
-- `../references/coding-agent-guide-template.md`
-- `../references/documentation-governance-template.md`
-- `../references/archive-readme-template.md`
-- `../references/dependency-setup.md`

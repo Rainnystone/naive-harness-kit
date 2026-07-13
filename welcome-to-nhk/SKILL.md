@@ -1,6 +1,6 @@
 ---
 name: welcome-to-nhk
-description: Use when starting NHK work in a workspace and needing the first-stop router for dependency readiness, instruction topology, foundation state, or lifecycle stage.
+description: Route NHK work when dependency readiness, instruction topology, foundation state, or lifecycle stage is unresolved.
 ---
 
 # Welcome To NHK
@@ -21,6 +21,8 @@ Treat `superpowers` and `planning-with-files` as peer dependencies.
 ## 2. Identify The Canonical Instruction Source
 
 A valid thin import is a line whose trimmed content is exactly `@AGENTS.md` or `@./AGENTS.md`, outside fenced code, Markdown blockquotes, and comments. Mentions in prose, examples, quoted text, code fences, or comments do not count.
+
+Claude `@` imports of `coding-agent-guide.md` or `documentation-governance.md` are not topology signals and are not valid NHK routing. Both companion docs must be named by literal path and loaded only when the task requires them.
 
 Apply this order:
 
@@ -50,16 +52,17 @@ Only after the foundation is complete:
 - Route to `nhk-upkeep` when instruction, routing, governance, archive-index, or active tracking descriptions may have drifted.
 - If nothing needs setup, repair, or archive handling, report that the foundation is ready and stop.
 
-Hand off after deciding. Do not implement another NHK skill inside this router.
+## Router Handoff
 
-## Local References
+After every decision above is resolved, return one compact handoff with exactly these fields:
 
-- `../references/validation-scenarios.md`
-- `../references/AGENTS-template.md`
-- `../references/CLAUDE-template.md`
-- `../references/coding-agent-guide-template.md`
-- `../references/documentation-governance-template.md`
-- `../references/archive-readme-template.md`
-- `../references/dependency-setup.md`
+- **Dependencies** — the installed, enabled, or current-run adopted state of each peer workflow
+- **Instruction** — the canonical source and standalone/thin topology
+- **Foundation** — which of the four required surfaces are present or missing
+- **Route** — `bootstrap`, `upkeep`, `archive`, or `ready`
 
-These are local controlled references, not blind copy targets.
+The handoff exists only in conversation for the current workspace and current NHK run. Do not write it to a file or reuse it after its dependency state, instruction topology, foundation state, lifecycle intent, or workspace changes. If a human choice remains unresolved, do not emit a complete handoff; stop at that choice.
+
+Hand off only after all four fields are accurate. Do not implement another NHK skill inside this router.
+
+When maintaining or evaluating NHK itself, read `../references/validation-scenarios.md`. Do not load that maintainer reference during ordinary workspace routing.

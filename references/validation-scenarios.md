@@ -2,6 +2,8 @@
 
 This is the semantic pressure-test set for the four NHK skills. Use it for prompt review and manual scenario testing. The optional repository validator checks deterministic structure only; it does not claim to prove these behavioral outcomes.
 
+**Contents:** [Dependencies](#a-dependency-decisions) · [Instruction topology](#b-six-instruction-topologies) · [Bootstrap](#c-bootstrap-and-template-output) · [Workers](#d-worker-cost-and-collaboration) · [Upkeep](#e-upkeep-boundaries) · [Archive](#f-archive-transition) · [Installation](#g-installation-layout) · [Handoff and loading](#h-router-handoff-and-reference-loading) · [Human docs](#i-human-documentation-alignment)
+
 ## A. Dependency Decisions
 
 ### A1. Missing dependency, no decision
@@ -20,7 +22,7 @@ This is the semantic pressure-test set for the four NHK skills. Use it for promp
 
 ## B. Six Instruction Topologies
 
-For import detection, only a trimmed line exactly equal to `@AGENTS.md` or `@./AGENTS.md` counts. The line must be outside fenced code, Markdown blockquotes, and comments.
+For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@./AGENTS.md` counts. The line must be outside fenced code, Markdown blockquotes, and comments. Claude `@` imports of either companion doc are invalid routing, not topology signals.
 
 ### B1. Only AGENTS
 
@@ -64,7 +66,7 @@ For import detection, only a trimmed line exactly equal to `@AGENTS.md` or `@./A
 
 **Prompt:** “Bootstrap this small prompt-first repo; keep it minimal.”
 
-**Expected:** Bootstrap creates or repairs one canonical source, both companion docs, `archive/`, and a stub `archive/README.md`. It does not create root `task_plan.md`, `findings.md`, or `progress.md` unless the current work actually needs tracking.
+**Expected:** Bootstrap creates or repairs one canonical source, both companion docs, `archive/`, and a stub `archive/README.md`. The coding guide stays within 80 lines, governance stays within 100, and no codemap is created. Bootstrap does not create root `task_plan.md`, `findings.md`, or `progress.md` unless the current work actually needs tracking.
 
 ### C2. Preserve healthy surfaces
 
@@ -74,13 +76,27 @@ For import detection, only a trimmed line exactly equal to `@AGENTS.md` or `@./A
 
 ### C3. Standalone generation contract
 
-**Expected:** A generated standalone file has exactly the seven required top-level sections in order, no template markers or generation prompts, and no extra governance heading. Simple, medium, and complex outputs stay at or below 100, 125, and 150 lines respectively. There is no minimum and no padding.
+**Expected:** A generated standalone file has exactly the seven required top-level sections in order, no template markers or generation prompts, and no extra governance heading. Simple, medium, and complex outputs stay at or below 100, 125, and 150 lines respectively. There is no minimum and no padding. Project Map identifies the project, routes to the literal `coding-agent-guide.md` path, and names no directory tree, volatile workstream state, or separate codemap; Context routes to the literal `documentation-governance.md` path.
 
 ### C4. Thin CLAUDE generation
 
 **Setup:** AGENTS is canonical and a Claude adapter is needed.
 
-**Expected:** CLAUDE contains a valid import plus only necessary Claude-specific notes, stays at or below 35 lines, and contains none of the seven standalone headings. Once thin mode is chosen, standalone blocks are not processed.
+**Expected:** CLAUDE contains a valid AGENTS import plus only necessary Claude-specific notes, stays at or below 35 lines, and contains none of the seven standalone headings. It does not `@` import either companion doc. Once thin mode is chosen, standalone blocks are not processed.
+
+### C5. Claude companion loading
+
+**Setup:** A thin or standalone CLAUDE names `coding-agent-guide.md` or `documentation-governance.md` in prose, inline code, a blockquote, comment, fence, or active `@` import.
+
+**Expected:** Backticked literal paths and non-active examples remain valid and load on demand. An active inline or standalone companion `@` import fails final validation because it would expand the document into every Claude session.
+
+### C6. Routing guide is the shallow code map
+
+**Expected:** `coding-agent-guide.md` has one Task Routing table with `Task or Symptom`, `Read First`, `Likely Change Surface`, and `Targeted Verification`, stays within 80 lines, and does not add separate current-state, packet, code-map, default-verification, or anti-detour sections.
+
+### C7. Documentation governance stays on documents
+
+**Expected:** `documentation-governance.md` stays within 100 lines and covers document roles, active surfaces, workspace/document map, lifecycle, naming/loading, and archive invariants. It contains no production-code map or step-by-step archive manual.
 
 ## D. Worker Cost And Collaboration
 
@@ -128,7 +144,7 @@ For import detection, only a trimmed line exactly equal to `@AGENTS.md` or `@./A
 
 **Setup:** The foundation is complete and docs have minor drift, but tasks remain or required verification is incomplete.
 
-**Expected:** Upkeep repairs active references and status descriptions, leaves all files in place, and does not ask about archive.
+**Expected:** Upkeep repairs active references and status descriptions, restores the single routing table and 80/100-line companion limits, replaces Claude companion imports with literal paths, leaves all files in place, and does not ask about archive.
 
 ### E2. Completed archive candidate
 
@@ -154,7 +170,7 @@ For import detection, only a trimmed line exactly equal to `@AGENTS.md` or `@./A
 
 **Setup:** Foundation is complete, one workstream is confirmed, and its related materials are clear.
 
-**Expected:** NHK stages only those materials in one unambiguous destination while preserving active originals, adds one resolvable archive-index row, and verifies archived copies, names, contents, and the index location. Only after verification passes does it complete the governed move and update current-state references.
+**Expected:** NHK stages only those materials in one unambiguous destination while preserving active originals, adds one resolvable archive-index row, and verifies archived copies, names, contents, and the index location. Only after verification passes does it complete the governed move and update active documentation and governance. It updates the coding guide only when a real Task Routing row points to moved material.
 
 ### F3. Foundation missing
 
@@ -200,6 +216,22 @@ For import detection, only a trimmed line exactly equal to `@AGENTS.md` or `@./A
 
 **Expected:** Install validation fails as a mixed or stale installation. Unrelated sibling skills do not cause failure.
 
-## H. Human Documentation Alignment
+## H. Router Handoff And Reference Loading
 
-**Expected:** English and Chinese READMEs both describe five recurring jobs, four skills plus seven controlled references, the sibling install layout, optional validator, session refresh/discovery check, and the same worker cost-boundary policy. Neither README presents scripts or tests as runtime dependencies.
+### H1. Completed current-run handoff
+
+**Expected:** After dependency, instruction, foundation, and lifecycle decisions resolve, `welcome-to-nhk` returns Dependencies, Instruction, Foundation, and Route. The handoff remains in conversation only, applies only to the current workspace and current NHK run, and is not emitted while a human choice remains unresolved.
+
+### H2. Direct leaf invocation and changed foundation
+
+**Setup:** Bootstrap, upkeep, or archive is invoked without a current matching handoff, with a handoff from another workspace, or after bootstrap changed the foundation.
+
+**Expected:** The leaf runs `welcome-to-nhk` first. It continues only when the refreshed Route selects that skill; otherwise it hands off and stops. Bootstrap reruns the router before any earlier upkeep or archive intent resumes.
+
+### H3. Branch-specific reference loading
+
+**Expected:** A dependency decision reads only `dependency-setup.md`. Creating or structurally repairing a surface reads only its matching template. Archive reads `archive-readme-template.md` only for index or naming work. Ordinary workspace routing does not load `validation-scenarios.md`; that reference is reserved for maintaining or evaluating NHK itself.
+
+## I. Human Documentation Alignment
+
+**Expected:** English and Chinese READMEs both describe five recurring jobs, four skills plus seven controlled references, the sibling install layout, optional validator, session refresh/discovery check, worker cost boundary, routing-table-as-shallow-map policy, and Claude's on-demand companion loading. Neither README presents scripts or tests as runtime dependencies.

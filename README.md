@@ -59,8 +59,8 @@ For an NHK-managed workspace, the expected document system is layered:
 | Layer | File(s) | Job |
 | --- | --- | --- |
 | Instruction layer | canonical `AGENTS.md` or standalone `CLAUDE.md`, plus an optional thin Claude adapter | stable execution rules, verification discipline, collaboration rules |
-| Routing layer | `coding-agent-guide.md` | quick task routing, entry files, packet landing zones, first-pass verification |
-| Governance layer | `documentation-governance.md` | active vs archive rules, naming rules, loading discipline, archival transition rules |
+| Routing layer | `coding-agent-guide.md` | task or symptom to first reads, likely change surfaces, and targeted verification |
+| Governance layer | `documentation-governance.md` | document roles, active/archive surfaces, naming/loading, and archive invariants |
 | Active work layer | active `specs/`, active `plans/`, optional root `task_plan.md` / `progress.md` / `findings.md` | work in progress only |
 | Archive layer | `archive/` plus root `archive/README.md` | completed specs, completed plans, completed tracking files, historical reference only |
 
@@ -71,6 +71,8 @@ NHK is opinionated here on purpose:
 - active docs and archive docs should not be mixed
 - archive transitions require human confirmation
 - archived workstreams should stay discoverable through a root `archive/README.md` index
+
+For the beginner-sized projects NHK is built for, the routing table is the shallow code map. A second codemap would mostly give newcomers two maps to get lost between, which feels ambitious in the wrong direction.
 
 The direct source for the governance layer is `references/documentation-governance-template.md`. NHK does not treat documentation lifecycle as an implicit side effect. It expects those rules to be written down explicitly in the target workspace.
 
@@ -125,6 +127,13 @@ python3 -B scripts/validate_nhk.py --install-root <skills-root>
 
 The validator confirms files and versions; it cannot confirm platform skill discovery. After copying and validating, refresh the agent session and confirm that all four skills are discoverable. Then start in the target workspace with `welcome-to-nhk`.
 
+Maintainers can also check generated companion docs without turning the validator into a runtime dependency:
+
+```bash
+python3 -B scripts/validate_nhk.py --final <coding-agent-guide.md> --kind coding-guide
+python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance
+```
+
 If you are installing NHK into a new environment and are not sure whether the dependencies are already present, that is normal. NHK is designed to stop and ask before pretending everything is ready.
 
 ## How To Use It
@@ -147,6 +156,8 @@ NHK is designed to work with both:
 - Claude Code workspaces may use standalone `CLAUDE.md`, or a thin `CLAUDE.md` that imports canonical `AGENTS.md`
 
 NHK does not guess recklessly. When both files exist and CLAUDE has a real import line exactly equal to `@AGENTS.md` or `@./AGENTS.md`, AGENTS is canonical and NHK does not ask a needless question. A lone importing CLAUDE is a broken adapter; two independent files are real ambiguity and still require a human choice.
+
+Thin CLAUDE imports only AGENTS. The two companion docs stay as backticked literal paths and load on demand; importing them with `@` would charge every session for the full map before anyone knows whether it is needed.
 
 ## Worker Cost Policy
 

@@ -18,6 +18,13 @@ SKILLS = (
     "nhk-archive",
 )
 
+SKILL_DESCRIPTION_LEADS = {
+    "welcome-to-nhk": "Route",
+    "nhk-bootstrap": "Bootstrap",
+    "nhk-upkeep": "Repair",
+    "nhk-archive": "Archive",
+}
+
 REFERENCES = (
     "AGENTS-template.md",
     "CLAUDE-template.md",
@@ -38,6 +45,22 @@ FINAL_HEADINGS = (
     "Git and Delivery",
 )
 
+TASK_ROUTING_COLUMNS = (
+    "Task or Symptom",
+    "Read First",
+    "Likely Change Surface",
+    "Targeted Verification",
+)
+
+DOC_GOVERNANCE_HEADINGS = (
+    "Document Roles",
+    "Active Documentation Surfaces",
+    "Workspace and Document Map",
+    "Lifecycle Rules",
+    "Naming and Loading",
+    "Archive Transition Invariants",
+)
+
 CONVERGENCE_BACKSTOP = (
     "Five failed fix–verify or fix–review rounds on the same acceptance gap "
     "trigger a mandatory stop. Invoke or restart `systematic-debugging`, count "
@@ -49,6 +72,9 @@ INSTALL_COMMAND = (
     "cp -R welcome-to-nhk nhk-bootstrap nhk-upkeep nhk-archive references "
     "<skills-root>/"
 )
+
+COMPANION_VALIDATOR_COMMANDS = """python3 -B scripts/validate_nhk.py --final <coding-agent-guide.md> --kind coding-guide
+python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance"""
 
 
 def run_cli(*args: object) -> subprocess.CompletedProcess[str]:
@@ -81,11 +107,15 @@ Install the five sibling directories directly under one skills root:
 The Python validator is optional and has no third-party dependencies:
 `python3 -B scripts/validate_nhk.py --install-root <skills-root>`.
 After validation, refresh the session and confirm that all four skills are discoverable.
+Maintainers can validate generated companion docs:
+{COMPANION_VALIDATOR_COMMANDS}
 
 NHK does not freeze a model catalog. The user's main-thread model and effort set each
 worker's cost ceiling. Exact pinning is a project-level, human-approved exception.
 If the same gap remains after round five, invoke systematic-debugging. No sixth patch
 is allowed before root-cause and architecture reassessment.
+For beginner-sized projects, the routing table is the shallow code map.
+Thin CLAUDE imports only AGENTS; companion docs use backticked literal paths and load on demand.
 """
 
 
@@ -109,10 +139,14 @@ NHK 用四个 prompt-first skill 处理 5 类反复出现的工作。
 Python validator 是可选、零第三方依赖的检查工具：
 `python3 -B scripts/validate_nhk.py --install-root <skills-root>`。
 验证后仍要刷新会话，并确认四个 skill 都可发现。
+维护者可以验证生成后的 companion docs：
+{COMPANION_VALIDATOR_COMMANDS}
 
 NHK 不冻结型号目录；用户选择的主线程 model 和 effort 是每个 worker 的成本上限。
 精确 pin 只应作为项目级、经人工确认的例外。
 同一个 gap 到第五轮仍未解决时，调用 systematic-debugging；根因和架构重审前不准贴第六块补丁。
+对新手项目来说，路由表就是新手需要的浅层 code map。
+thin CLAUDE 只 import AGENTS；companion docs 使用反引号普通路径并按需读取。
 """
 
 
@@ -120,6 +154,50 @@ def standalone_text(extra_lines: int = 0) -> str:
     lines: list[str] = []
     for heading in FINAL_HEADINGS:
         lines.extend((f"## {heading}", "", f"- Project rule for {heading}.", ""))
+        if heading == "Project Map":
+            lines.extend(
+                (
+                    "- Use `coding-agent-guide.md` for task routing.",
+                    "- Use `documentation-governance.md` for document lifecycle rules.",
+                    "",
+                )
+            )
+    lines.extend(f"- extra {index}" for index in range(extra_lines))
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def coding_guide_text(extra_lines: int = 0) -> str:
+    lines = [
+        "# Coding Agent Guide",
+        "",
+        "Use this guide to route coding tasks without loading a full repository map.",
+        "",
+        "## Task Routing",
+        "",
+        "| Task or Symptom | Read First | Likely Change Surface | Targeted Verification |",
+        "| --- | --- | --- | --- |",
+        "| UI behavior | `src/ui/` | `src/ui/` | `npm test -- ui` |",
+    ]
+    lines.extend(f"- extra {index}" for index in range(extra_lines))
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def doc_governance_text(extra_lines: int = 0) -> str:
+    sections = {
+        "Document Roles": "Instructions govern behavior; the routing guide routes coding work.",
+        "Active Documentation Surfaces": "Active plans and tracking contain active work only.",
+        "Workspace and Document Map": "Use `AGENTS.md`, the routing guide, active docs, and `archive/README.md`.",
+        "Lifecycle Rules": "Archive is historical reference, not the default execution source.",
+        "Naming and Loading": "Use distinct names and load only task-relevant documents.",
+        "Archive Transition Invariants": (
+            "Explicit human approval is required before archiving. Copy materials and update "
+            "the archive index before verification. If verification fails, preserve every "
+            "active original. Reset tracking only when no other live workstream depends on it."
+        ),
+    }
+    lines = ["# Documentation Governance", ""]
+    for heading, body in sections.items():
+        lines.extend((f"## {heading}", "", body, ""))
     lines.extend(f"- extra {index}" for index in range(extra_lines))
     return "\n".join(lines).rstrip() + "\n"
 
@@ -182,6 +260,109 @@ class SourceValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("frontmatter", result.stdout.lower())
 
+    def test_skill_description_leading_words_fail(self) -> None:
+        for skill, leading_word in SKILL_DESCRIPTION_LEADS.items():
+            with self.subTest(skill=skill):
+                root = self.make_source_fixture()
+                path = root / skill / "SKILL.md"
+                lines = path.read_text(encoding="utf-8").splitlines()
+                description = next(
+                    index
+                    for index, line in enumerate(lines)
+                    if line.startswith("description:")
+                )
+                lines[description] = "description: Use when NHK work needs attention."
+                path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(leading_word, result.stdout)
+
+    def test_router_handoff_contract_fails(self) -> None:
+        cases = (
+            ("**Dependencies**", "**Tools**"),
+            ("only in conversation", "available temporarily"),
+            ("current workspace", "selected workspace"),
+            (
+                "dependency state, instruction topology, foundation state, "
+                "lifecycle intent, or workspace changes",
+                "workspace changes",
+            ),
+            ("human choice remains unresolved", "a choice is pending"),
+        )
+        for required, replacement in cases:
+            with self.subTest(required=required):
+                root = self.make_source_fixture()
+                path = root / "welcome-to-nhk" / "SKILL.md"
+                path.write_text(
+                    path.read_text(encoding="utf-8").replace(required, replacement, 1),
+                    encoding="utf-8",
+                )
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("handoff", result.stdout.lower())
+
+    def test_leaf_router_handoff_contract_fails(self) -> None:
+        cases = (
+            ("## Router Handoff", "## Entry Check"),
+            ("absent, unresolved, or stale", "unavailable"),
+            ("If it selects another route", "If routing differs"),
+        )
+        for skill in ("nhk-bootstrap", "nhk-upkeep", "nhk-archive"):
+            for required, replacement in cases:
+                with self.subTest(skill=skill, required=required):
+                    root = self.make_source_fixture()
+                    path = root / skill / "SKILL.md"
+                    path.write_text(
+                        path.read_text(encoding="utf-8").replace(
+                            required, replacement, 1
+                        ),
+                        encoding="utf-8",
+                    )
+                    result = run_cli("--root", root)
+                    self.assertEqual(result.returncode, 1)
+                    self.assertIn("handoff", result.stdout.lower())
+
+    def test_bootstrap_handoff_and_instruction_loading_contract_fails(self) -> None:
+        cases = (
+            (
+                "After bootstrap changes the foundation, rerun `welcome-to-nhk`",
+                "After bootstrap changes the foundation, continue",
+            ),
+            (
+                "If bootstrap is creating or structurally repairing the "
+                "instruction surface",
+                "For the instruction surface",
+            ),
+            (
+                "Do not load an instruction template when only a companion or "
+                "archive surface is missing.",
+                "Use the matching template.",
+            ),
+        )
+        for required, replacement in cases:
+            with self.subTest(required=required):
+                root = self.make_source_fixture()
+                path = root / "nhk-bootstrap" / "SKILL.md"
+                path.write_text(
+                    path.read_text(encoding="utf-8").replace(required, replacement, 1),
+                    encoding="utf-8",
+                )
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("bootstrap", result.stdout.lower())
+
+    def test_flat_local_reference_inventory_fails(self) -> None:
+        root = self.make_source_fixture()
+        path = root / "welcome-to-nhk" / "SKILL.md"
+        path.write_text(
+            path.read_text(encoding="utf-8")
+            + "\n## Local References\n\n- `../references/validation-scenarios.md`\n",
+            encoding="utf-8",
+        )
+        result = run_cli("--root", root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("conditional context pointer", result.stdout.lower())
+
     def test_nested_marker_and_outside_text_fail(self) -> None:
         root = self.make_source_fixture()
         path = root / "references" / "AGENTS-template.md"
@@ -234,6 +415,26 @@ class SourceValidationTests(ValidatorTestCase):
         result = run_cli("--root", root)
         self.assertEqual(result.returncode, 1)
         self.assertIn("190", result.stdout)
+
+    def test_companion_source_line_limits_fail(self) -> None:
+        cases = (
+            ("coding-agent-guide-template.md", 140),
+            ("documentation-governance-template.md", 160),
+            ("archive-readme-template.md", 40),
+        )
+        for name, limit in cases:
+            with self.subTest(name=name):
+                root = self.make_source_fixture()
+                path = root / "references" / name
+                path.write_text(
+                    path.read_text(encoding="utf-8") + "\n".join(
+                        f"extra {index}" for index in range(200)
+                    ),
+                    encoding="utf-8",
+                )
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(str(limit), result.stdout)
 
     def test_forbidden_legacy_rule_fails(self) -> None:
         root = self.make_source_fixture()
@@ -294,6 +495,22 @@ class SourceValidationTests(ValidatorTestCase):
         result = run_cli("--root", root)
         self.assertEqual(result.returncode, 1)
         self.assertIn("systematic-debugging", result.stdout.lower())
+
+    def test_readme_routing_and_claude_loading_drift_fails(self) -> None:
+        root = self.make_source_fixture()
+        replacements = (
+            ("README.md", "routing table is the shallow code map"),
+            ("README_CN.md", "路由表就是新手需要的浅层 code map"),
+        )
+        for name, fact in replacements:
+            path = root / name
+            path.write_text(
+                path.read_text(encoding="utf-8").replace(fact, "routing details"),
+                encoding="utf-8",
+            )
+        result = run_cli("--root", root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("shallow code map", result.stdout.lower())
 
 
 class InstallValidationTests(ValidatorTestCase):
@@ -356,6 +573,20 @@ class FinalValidationTests(ValidatorTestCase):
         )
         self.assertEqual(result.returncode, 1)
         self.assertIn("100", result.stdout)
+
+    def test_standalone_requires_literal_companion_routes(self) -> None:
+        content = standalone_text()
+        content = content.replace("`coding-agent-guide.md`", "coding guide")
+        content = content.replace(
+            "`documentation-governance.md`", "documentation governance"
+        )
+        path = self.write_final(content)
+        result = run_cli(
+            "--final", path, "--kind", "claude", "--mode", "standalone"
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("coding-agent-guide.md", result.stdout)
+        self.assertIn("documentation-governance.md", result.stdout)
 
     def test_missing_heading_and_marker_leak_fail(self) -> None:
         content = standalone_text().replace("## Project Map", "## Project Overview", 1)
@@ -421,6 +652,109 @@ class FinalValidationTests(ValidatorTestCase):
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_valid_companion_files_pass(self) -> None:
+        cases = (
+            ("coding-guide", coding_guide_text()),
+            ("doc-governance", doc_governance_text()),
+        )
+        for kind, content in cases:
+            with self.subTest(kind=kind):
+                path = self.write_final(content)
+                result = run_cli("--final", path, "--kind", kind)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_companion_line_limits_fail(self) -> None:
+        cases = (
+            ("coding-guide", coding_guide_text(extra_lines=80), 80),
+            ("doc-governance", doc_governance_text(extra_lines=100), 100),
+        )
+        for kind, content, limit in cases:
+            with self.subTest(kind=kind):
+                path = self.write_final(content)
+                result = run_cli("--final", path, "--kind", kind)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(str(limit), result.stdout)
+
+    def test_coding_guide_requires_routing_columns(self) -> None:
+        content = coding_guide_text().replace("Likely Change Surface", "Change Here")
+        path = self.write_final(content)
+        result = run_cli("--final", path, "--kind", "coding-guide")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Likely Change Surface", result.stdout)
+
+    def test_coding_guide_rejects_legacy_sections(self) -> None:
+        for heading in (
+            "Current Execution State",
+            "High-Frequency Packet Routing",
+            "Implementation Packet Checklist",
+            "Code Entry Map",
+            "Default Verification",
+            "Anti-Detour Advice",
+        ):
+            with self.subTest(heading=heading):
+                path = self.write_final(coding_guide_text() + f"\n## {heading}\n")
+                result = run_cli("--final", path, "--kind", "coding-guide")
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(heading, result.stdout)
+
+    def test_coding_guide_rejects_unexpected_sections(self) -> None:
+        path = self.write_final(coding_guide_text() + "\n## Architecture Overview\n")
+        result = run_cli("--final", path, "--kind", "coding-guide")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Architecture Overview", result.stdout)
+
+    def test_doc_governance_requires_headings_and_archive_invariants(self) -> None:
+        for heading in DOC_GOVERNANCE_HEADINGS:
+            with self.subTest(heading=heading):
+                content = doc_governance_text().replace(f"## {heading}\n", "", 1)
+                path = self.write_final(content)
+                result = run_cli("--final", path, "--kind", "doc-governance")
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(heading, result.stdout)
+
+        content = doc_governance_text().replace(
+            "Explicit human approval is required before archiving. ", ""
+        )
+        path = self.write_final(content)
+        result = run_cli("--final", path, "--kind", "doc-governance")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("human approval", result.stdout.lower())
+
+    def test_claude_rejects_companion_auto_imports(self) -> None:
+        cases = (
+            ("thin", "@AGENTS.md\n\nRead @coding-agent-guide.md before editing.\n"),
+            (
+                "standalone",
+                standalone_text()
+                + "\nRead @./documentation-governance.md before editing.\n",
+            ),
+        )
+        for mode, content in cases:
+            with self.subTest(mode=mode):
+                path = self.write_final(content)
+                result = run_cli(
+                    "--final", path, "--kind", "claude", "--mode", mode
+                )
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("companion", result.stdout.lower())
+
+    def test_claude_allows_non_active_companion_import_examples(self) -> None:
+        examples = (
+            "`@coding-agent-guide.md`",
+            "> @coding-agent-guide.md",
+            "<!-- @coding-agent-guide.md -->",
+            "```md\n@coding-agent-guide.md\n```",
+        )
+        for example in examples:
+            with self.subTest(example=example):
+                path = self.write_final(
+                    "@AGENTS.md\n\n# Claude Code Notes\n\n" + example + "\n"
+                )
+                result = run_cli(
+                    "--final", path, "--kind", "claude", "--mode", "thin"
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
 
 class CliContractTests(ValidatorTestCase):
     def test_mutually_exclusive_modes_return_two(self) -> None:
@@ -439,6 +773,24 @@ class CliContractTests(ValidatorTestCase):
         path = self.write_final(standalone_text())
         result = run_cli("--final", path)
         self.assertEqual(result.returncode, 2)
+
+    def test_instruction_kind_still_requires_mode(self) -> None:
+        path = self.write_final(standalone_text())
+        result = run_cli("--final", path, "--kind", "agents")
+        self.assertEqual(result.returncode, 2)
+
+    def test_companion_kind_rejects_mode_and_complexity(self) -> None:
+        path = self.write_final(coding_guide_text())
+        cases = (
+            ("--mode", "standalone"),
+            ("--complexity", "simple"),
+        )
+        for flag, value in cases:
+            with self.subTest(flag=flag):
+                result = run_cli(
+                    "--final", path, "--kind", "coding-guide", flag, value
+                )
+                self.assertEqual(result.returncode, 2)
 
 
 if __name__ == "__main__":

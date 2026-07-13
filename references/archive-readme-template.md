@@ -1,30 +1,12 @@
 # Archive Index Template
 
-## What This File Is For
+## Purpose
 
-This file is the root archive index for the workspace.
+Use this template to create `archive/README.md`, the retrieval index for completed workstreams. It is not an active execution source or an archive procedure.
 
-Its job is to make archived workstreams easy to find without turning `documentation-governance.md` or `coding-agent-guide.md` into archive catalogs.
+## Final Shape
 
-This file is not:
-- the active execution entrypoint
-- the full archive policy
-- a priority ranking of archived work
-
-Template usage rules:
-- This file is a template, not a final `archive/README.md`.
-- Instructional text such as `Document`, `Recommended`, and similar guidance should not remain in the final file.
-- Keep the final file short and index-oriented.
-
-## Recommended Bootstrap Stub
-
-The initial root archive README should already contain:
-
-- a title
-- one sentence stating that the file indexes archived workstreams and is not the active execution surface
-- the archived-workstreams table with headers in place
-
-Recommended minimum stub:
+Generate this minimum shape, then add verified rows as workstreams are archived:
 
 ```md
 # Archive
@@ -35,22 +17,11 @@ This file indexes archived workstreams. It is a retrieval surface, not the activ
 | --- | --- | --- | --- | --- |
 ```
 
-## Archived Workstreams
+## Row Contract
 
-Use a flat table rather than nested archive narration.
-
-Recommended shape:
-
-| Workstream | Archived On | Location | Included Materials | Notes |
-| --- | --- | --- | --- | --- |
-| `...` | `YYYY-MM-DD` | `archive/...` | `spec, plan, findings` | `optional short note` |
-
-Write each row so a coding agent can quickly decide whether to open that archived workstream.
-
-## Maintenance Rule
-
-- `nhk-bootstrap` should create this file as part of the standard archive surface.
-- `nhk-archive` should add or update one row for each human-approved workstream transition.
-- Every indexed location must resolve to the real, uniquely named archive destination, and the included-materials field must match the verified archived copies.
-- A missing, inaccurate, or unresolvable index row blocks any reset of root tracking for that workstream.
-- Keep this file as a flat index. Do not grow it into an archive policy doc or a narrative history.
+- Keep one resolvable row per archived workstream.
+- Use a stable workstream identity and a `YYYY-MM-DD` archive date.
+- Point `Location` to the real, uniquely named archive destination.
+- List only materials confirmed in the verified archive copy.
+- Keep `Notes` optional and short.
+- Do not duplicate archive policy, active status, cleanup steps, or narrative history here.
