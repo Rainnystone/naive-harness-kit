@@ -1,19 +1,17 @@
 ---
 name: nhk-archive
-description: Use when an NHK-managed workspace is at the human-approved archive handoff for one completed workstream.
+description: Archive one completed NHK workstream when the human has explicitly approved its active-to-archive transition.
 ---
 
 # NHK Archive
 
 Use this skill only for the active-to-archive transition of one completed workstream.
 
-## Prerequisite Order
+## Router Handoff
 
-1. Confirm `superpowers` and `planning-with-files` are installed, enabled, or explicitly adopted for this NHK run. Adopt is temporary manual authorization, not installation.
-2. Resolve the canonical instruction topology. A valid thin import is a non-quoted, non-comment, non-fenced line exactly `@AGENTS.md` or `@./AGENTS.md` after trimming.
-3. Confirm `coding-agent-guide.md`, `documentation-governance.md`, `archive/`, and `archive/README.md` all exist.
+Reuse a `welcome-to-nhk` handoff only when it is for the current workspace and current NHK run, and its **Route** selects this skill. If the handoff is absent, unresolved, or stale, run `welcome-to-nhk` first. If it selects another route, hand off and do not continue archive.
 
-If instruction topology is ambiguous or broken, ask for the required choice and route through `welcome-to-nhk`. If any foundation surface is missing, route through `welcome-to-nhk` to `nhk-bootstrap`. Do not begin archive movement first.
+Use the handoff's dependency, instruction, topology, and complete-foundation state as the archive input. Do not persist the handoff. A bootstrap route must finish and rerun `welcome-to-nhk` before archive may resume.
 
 ## Human Archive Gate
 
@@ -36,6 +34,8 @@ Archive only materials that clearly belong to that identity. Do not archive unre
 
 ## Naming And Index Contract
 
+When creating or repairing the archive index row, read `../references/archive-readme-template.md`. Do not load unrelated instruction or companion templates during archive.
+
 - Prefer one unique archive container such as `archive/<date>-<topic>/`.
 - If files share a flat archive directory, include the workstream identity in every archived plan, spec, and tracking filename.
 - Never accumulate indistinguishable generic tracking filenames in a shared archive.
@@ -57,13 +57,3 @@ If archive copy, naming, content, or index verification fails, preserve every ac
 ## Delivery
 
 Report the confirmed identity, archived location, included materials, index update, verification performed, current active surface, and whether root tracking was reset. If a dependency was adopted, say it was not installed and was followed manually for this NHK run.
-
-## Local References
-
-- `../references/validation-scenarios.md`
-- `../references/AGENTS-template.md`
-- `../references/CLAUDE-template.md`
-- `../references/coding-agent-guide-template.md`
-- `../references/documentation-governance-template.md`
-- `../references/archive-readme-template.md`
-- `../references/dependency-setup.md`

@@ -18,6 +18,45 @@ SKILLS = (
     "nhk-archive",
 )
 
+SKILL_DESCRIPTION_LEADS = {
+    "welcome-to-nhk": "Route",
+    "nhk-bootstrap": "Bootstrap",
+    "nhk-upkeep": "Repair",
+    "nhk-archive": "Archive",
+}
+
+ROUTER_HANDOFF_TOKENS = (
+    "## Router Handoff",
+    "**Dependencies**",
+    "**Instruction**",
+    "**Foundation**",
+    "**Route**",
+    "only in conversation",
+    "current workspace",
+    "current NHK run",
+    "dependency state, instruction topology, foundation state, lifecycle intent, "
+    "or workspace changes",
+    "human choice remains unresolved",
+)
+
+LEAF_HANDOFF_TOKENS = (
+    "## Router Handoff",
+    "`welcome-to-nhk`",
+    "current workspace",
+    "current NHK run",
+    "selects this skill",
+    "absent, unresolved, or stale",
+    "If it selects another route",
+    "do not continue",
+)
+
+BOOTSTRAP_HANDOFF_TOKENS = (
+    "After bootstrap changes the foundation, rerun `welcome-to-nhk`",
+    "If bootstrap is creating or structurally repairing the instruction surface",
+    "Do not load an instruction template when only a companion or archive surface "
+    "is missing.",
+)
+
 REFERENCES = (
     "AGENTS-template.md",
     "CLAUDE-template.md",
@@ -60,9 +99,10 @@ SOURCE_TEMPLATE_LIMITS = {
     "CLAUDE-template.md": 200,
 }
 
-COMPANION_SOURCE_LIMITS = {
+PLAIN_REFERENCE_SOURCE_LIMITS = {
     "coding-agent-guide-template.md": 140,
     "documentation-governance-template.md": 160,
+    "archive-readme-template.md": 40,
 }
 
 FINAL_LIMITS = {"simple": 100, "medium": 125, "complex": 150}
@@ -472,8 +512,31 @@ def validate_skill(root: Path, name: str, issues: list[str]) -> None:
                 f"{name}/SKILL.md: frontmatter name must be {name!r}, got "
                 f"{frontmatter.get('name')!r}"
             )
-        if not frontmatter.get("description"):
+        description = frontmatter.get("description")
+        if not description:
             issues.append(f"{name}/SKILL.md: frontmatter description is required")
+        else:
+            leading_word = SKILL_DESCRIPTION_LEADS[name]
+            if not description.startswith(f"{leading_word} "):
+                issues.append(
+                    f"{name}/SKILL.md: description must front-load leading word "
+                    f"{leading_word!r}"
+                )
+
+    if "## Local References" in text:
+        issues.append(
+            f"{name}/SKILL.md: replace the flat Local References inventory with "
+            "a conditional context pointer beside the branch that needs it"
+        )
+
+    handoff_tokens = (
+        ROUTER_HANDOFF_TOKENS if name == "welcome-to-nhk" else LEAF_HANDOFF_TOKENS
+    )
+    if name == "nhk-bootstrap":
+        handoff_tokens += BOOTSTRAP_HANDOFF_TOKENS
+    for token in handoff_tokens:
+        if token not in text:
+            issues.append(f"{name}/SKILL.md: router handoff is missing {token!r}")
 
     reference_root = (root / "references").resolve()
     for match in REFERENCE_RE.finditer(text):
@@ -694,7 +757,7 @@ def validate_source(root: Path) -> list[str]:
             issues,
         )
 
-    for name, limit in COMPANION_SOURCE_LIMITS.items():
+    for name, limit in PLAIN_REFERENCE_SOURCE_LIMITS.items():
         path = root / "references" / name
         text = read_text(path, issues, f"references/{name}")
         if text is None:

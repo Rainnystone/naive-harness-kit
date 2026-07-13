@@ -2,6 +2,8 @@
 
 This is the semantic pressure-test set for the four NHK skills. Use it for prompt review and manual scenario testing. The optional repository validator checks deterministic structure only; it does not claim to prove these behavioral outcomes.
 
+**Contents:** [Dependencies](#a-dependency-decisions) · [Instruction topology](#b-six-instruction-topologies) · [Bootstrap](#c-bootstrap-and-template-output) · [Workers](#d-worker-cost-and-collaboration) · [Upkeep](#e-upkeep-boundaries) · [Archive](#f-archive-transition) · [Installation](#g-installation-layout) · [Handoff and loading](#h-router-handoff-and-reference-loading) · [Human docs](#i-human-documentation-alignment)
+
 ## A. Dependency Decisions
 
 ### A1. Missing dependency, no decision
@@ -214,6 +216,22 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Expected:** Install validation fails as a mixed or stale installation. Unrelated sibling skills do not cause failure.
 
-## H. Human Documentation Alignment
+## H. Router Handoff And Reference Loading
+
+### H1. Completed current-run handoff
+
+**Expected:** After dependency, instruction, foundation, and lifecycle decisions resolve, `welcome-to-nhk` returns Dependencies, Instruction, Foundation, and Route. The handoff remains in conversation only, applies only to the current workspace and current NHK run, and is not emitted while a human choice remains unresolved.
+
+### H2. Direct leaf invocation and changed foundation
+
+**Setup:** Bootstrap, upkeep, or archive is invoked without a current matching handoff, with a handoff from another workspace, or after bootstrap changed the foundation.
+
+**Expected:** The leaf runs `welcome-to-nhk` first. It continues only when the refreshed Route selects that skill; otherwise it hands off and stops. Bootstrap reruns the router before any earlier upkeep or archive intent resumes.
+
+### H3. Branch-specific reference loading
+
+**Expected:** A dependency decision reads only `dependency-setup.md`. Creating or structurally repairing a surface reads only its matching template. Archive reads `archive-readme-template.md` only for index or naming work. Ordinary workspace routing does not load `validation-scenarios.md`; that reference is reserved for maintaining or evaluating NHK itself.
+
+## I. Human Documentation Alignment
 
 **Expected:** English and Chinese READMEs both describe five recurring jobs, four skills plus seven controlled references, the sibling install layout, optional validator, session refresh/discovery check, worker cost boundary, routing-table-as-shallow-map policy, and Claude's on-demand companion loading. Neither README presents scripts or tests as runtime dependencies.

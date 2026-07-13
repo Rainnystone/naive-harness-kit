@@ -18,6 +18,13 @@ SKILLS = (
     "nhk-archive",
 )
 
+SKILL_DESCRIPTION_LEADS = {
+    "welcome-to-nhk": "Route",
+    "nhk-bootstrap": "Bootstrap",
+    "nhk-upkeep": "Repair",
+    "nhk-archive": "Archive",
+}
+
 REFERENCES = (
     "AGENTS-template.md",
     "CLAUDE-template.md",
@@ -253,6 +260,109 @@ class SourceValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("frontmatter", result.stdout.lower())
 
+    def test_skill_description_leading_words_fail(self) -> None:
+        for skill, leading_word in SKILL_DESCRIPTION_LEADS.items():
+            with self.subTest(skill=skill):
+                root = self.make_source_fixture()
+                path = root / skill / "SKILL.md"
+                lines = path.read_text(encoding="utf-8").splitlines()
+                description = next(
+                    index
+                    for index, line in enumerate(lines)
+                    if line.startswith("description:")
+                )
+                lines[description] = "description: Use when NHK work needs attention."
+                path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(leading_word, result.stdout)
+
+    def test_router_handoff_contract_fails(self) -> None:
+        cases = (
+            ("**Dependencies**", "**Tools**"),
+            ("only in conversation", "available temporarily"),
+            ("current workspace", "selected workspace"),
+            (
+                "dependency state, instruction topology, foundation state, "
+                "lifecycle intent, or workspace changes",
+                "workspace changes",
+            ),
+            ("human choice remains unresolved", "a choice is pending"),
+        )
+        for required, replacement in cases:
+            with self.subTest(required=required):
+                root = self.make_source_fixture()
+                path = root / "welcome-to-nhk" / "SKILL.md"
+                path.write_text(
+                    path.read_text(encoding="utf-8").replace(required, replacement, 1),
+                    encoding="utf-8",
+                )
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("handoff", result.stdout.lower())
+
+    def test_leaf_router_handoff_contract_fails(self) -> None:
+        cases = (
+            ("## Router Handoff", "## Entry Check"),
+            ("absent, unresolved, or stale", "unavailable"),
+            ("If it selects another route", "If routing differs"),
+        )
+        for skill in ("nhk-bootstrap", "nhk-upkeep", "nhk-archive"):
+            for required, replacement in cases:
+                with self.subTest(skill=skill, required=required):
+                    root = self.make_source_fixture()
+                    path = root / skill / "SKILL.md"
+                    path.write_text(
+                        path.read_text(encoding="utf-8").replace(
+                            required, replacement, 1
+                        ),
+                        encoding="utf-8",
+                    )
+                    result = run_cli("--root", root)
+                    self.assertEqual(result.returncode, 1)
+                    self.assertIn("handoff", result.stdout.lower())
+
+    def test_bootstrap_handoff_and_instruction_loading_contract_fails(self) -> None:
+        cases = (
+            (
+                "After bootstrap changes the foundation, rerun `welcome-to-nhk`",
+                "After bootstrap changes the foundation, continue",
+            ),
+            (
+                "If bootstrap is creating or structurally repairing the "
+                "instruction surface",
+                "For the instruction surface",
+            ),
+            (
+                "Do not load an instruction template when only a companion or "
+                "archive surface is missing.",
+                "Use the matching template.",
+            ),
+        )
+        for required, replacement in cases:
+            with self.subTest(required=required):
+                root = self.make_source_fixture()
+                path = root / "nhk-bootstrap" / "SKILL.md"
+                path.write_text(
+                    path.read_text(encoding="utf-8").replace(required, replacement, 1),
+                    encoding="utf-8",
+                )
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("bootstrap", result.stdout.lower())
+
+    def test_flat_local_reference_inventory_fails(self) -> None:
+        root = self.make_source_fixture()
+        path = root / "welcome-to-nhk" / "SKILL.md"
+        path.write_text(
+            path.read_text(encoding="utf-8")
+            + "\n## Local References\n\n- `../references/validation-scenarios.md`\n",
+            encoding="utf-8",
+        )
+        result = run_cli("--root", root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("conditional context pointer", result.stdout.lower())
+
     def test_nested_marker_and_outside_text_fail(self) -> None:
         root = self.make_source_fixture()
         path = root / "references" / "AGENTS-template.md"
@@ -310,6 +420,7 @@ class SourceValidationTests(ValidatorTestCase):
         cases = (
             ("coding-agent-guide-template.md", 140),
             ("documentation-governance-template.md", 160),
+            ("archive-readme-template.md", 40),
         )
         for name, limit in cases:
             with self.subTest(name=name):
