@@ -244,8 +244,10 @@ def planning_guide_text(extra_lines: int = 0) -> str:
         ),
         "Plan Layers": "Separate the plan outcome and approach from executable tasks.",
         "Task Contract": (
-            "Each task declares Delivers, Blocked by, and Worker class. Worker class "
-            "is mechanical, standard, or judgment."
+            "Each task declares these fields:\n\n"
+            "**Delivers:** one observable, independently acceptable result\n"
+            "**Blocked by:** task identifiers or None\n"
+            "**Worker class:** mechanical | standard | judgment"
         ),
         "Dependencies and Execution": (
             "Blocked by records real dependencies; SDD implementation remains sequential."
@@ -579,6 +581,20 @@ class SourceValidationTests(ValidatorTestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertIn("worker routing", result.stdout.lower())
 
+    def test_policy_surfaces_reject_models_outside_ladder(self) -> None:
+        for model in ("GPT-9 max", "GPT-5.6 Orion max"):
+            with self.subTest(model=model):
+                root = self.make_source_fixture()
+                path = root / "README.md"
+                path.write_text(
+                    path.read_text(encoding="utf-8")
+                    + f"\nUse {model} for every worker.\n",
+                    encoding="utf-8",
+                )
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("unapproved versioned model", result.stdout.lower())
+
     def test_all_skills_require_the_planning_foundation(self) -> None:
         for skill in SKILLS:
             with self.subTest(skill=skill):
@@ -860,6 +876,25 @@ class FinalValidationTests(ValidatorTestCase):
                 result = run_cli("--final", path, "--kind", kind)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_standalone_allows_project_template_contract_language(self) -> None:
+        content = standalone_text().replace(
+            "- Project rule for Project Map.",
+            "- The email template contract is owned by `src/mail`.",
+            1,
+        )
+        path = self.write_final(content)
+        result = run_cli(
+            "--final",
+            path,
+            "--kind",
+            "agents",
+            "--mode",
+            "standalone",
+            "--complexity",
+            "simple",
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_companion_line_limits_fail(self) -> None:
         cases = (
             ("coding-guide", coding_guide_text(extra_lines=80), 80),
@@ -889,6 +924,38 @@ class FinalValidationTests(ValidatorTestCase):
                 result = run_cli("--final", path, "--kind", "planning-guide")
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(token, result.stdout)
+
+    def test_planning_guide_requires_field_syntax_in_task_contract(self) -> None:
+        content = planning_guide_text().replace(
+            "Each task declares these fields:\n\n"
+            "**Delivers:** one observable, independently acceptable result\n"
+            "**Blocked by:** task identifiers or None\n"
+            "**Worker class:** mechanical | standard | judgment",
+            "Do not use Delivers, Blocked by, or Worker class. "
+            "The forbidden worker classes are mechanical, standard, and judgment.",
+            1,
+        )
+        path = self.write_final(content)
+        result = run_cli("--final", path, "--kind", "planning-guide")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("field syntax", result.stdout.lower())
+
+    def test_planning_guide_scopes_superpowers_details_to_workflow_section(self) -> None:
+        content = planning_guide_text().replace(
+            "Keep the active Superpowers plan format, including Files, Interfaces, "
+            "TDD steps, commands, expected results, and necessary code.",
+            "Keep the active Superpowers plan format.",
+            1,
+        ).replace(
+            "Reject a task that cannot produce one observable result",
+            "Mention Files, Interfaces, TDD steps, commands, expected results, and "
+            "necessary code here. Reject a task that cannot produce one observable result",
+            1,
+        )
+        path = self.write_final(content)
+        result = run_cli("--final", path, "--kind", "planning-guide")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Workflow Compatibility", result.stdout)
 
     def test_planning_guide_rejects_generation_prompts_and_placeholders(self) -> None:
         cases = (

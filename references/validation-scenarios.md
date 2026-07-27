@@ -112,6 +112,12 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Expected:** The current Superpowers `task-brief` extracts the complete task section, including the added fields and all original execution detail. NHK adds no plugin dependency or alternate extractor.
 
+### C11. Validator checks the intended surface
+
+**Setup:** A standalone project instruction mentions its own “email template contract”; a planning guide moves required fields or Superpowers details outside their required sections; or a Codex policy surface adds a versioned model/preset outside the approved ladder.
+
+**Expected:** The ordinary project phrase remains valid. Planning validation requires actual `Delivers`, `Blocked by`, and `Worker class` field syntax inside Task Contract and the preserved Superpowers details inside Workflow Compatibility. Source validation rejects versioned model mentions that are not exact presets from the declared ladder.
+
 ## D. Worker Cost And Collaboration
 
 ### D1. Explicit Codex preset ladder
@@ -120,7 +126,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Expected:** The agent uses this practical escalation order without claiming it is a universal benchmark: GPT-5.6 Luna max → GPT-5.5 xhigh → GPT-5.6 Terra high → GPT-5.6 Terra xhigh → GPT-5.6 Terra max → GPT-5.6 Sol xhigh → GPT-5.6 Sol max. Every dispatch explicitly names model and effort rather than inheriting the main thread's top configuration by omission.
 
-### D2. GPT-5.5 fast path
+### D2. GPT-5.5 xhigh fast path
 
 **Setup:** A normal implementation or scoped review has a complete brief, clear boundaries, and ordinary integration risk while the main thread is running Sol max.
 

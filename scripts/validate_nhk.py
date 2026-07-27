@@ -146,18 +146,37 @@ PLANNING_GUIDE_HEADINGS = (
     "Plan Review",
 )
 
-PLANNING_GUIDE_TOKENS = (
-    "Delivers",
-    "Blocked by",
-    "Worker class",
+PLANNING_WORKFLOW_TOKENS = (
+    "Superpowers",
+    "Files",
+    "Interfaces",
+    "TDD steps",
+    "commands",
+    "expected results",
+    "necessary code",
+)
+
+PLANNING_TASK_CONTRACT_TOKENS = (
+    "None",
     "mechanical",
     "standard",
     "judgment",
+)
+
+PLANNING_WIDE_CHANGE_TOKENS = (
     "expand",
     "migrate",
     "contract",
     "integration branch",
 )
+
+PLANNING_FIELD_PATTERNS = {
+    field: re.compile(
+        rf"^[ \t]*(?:[-+]\s+)?\*\*{re.escape(field)}:\*\*[ \t]+\S",
+        re.IGNORECASE | re.MULTILINE,
+    )
+    for field in ("Delivers", "Blocked by", "Worker class")
+}
 
 LEGACY_CODING_GUIDE_HEADINGS = {
     "Current Execution State",
@@ -194,6 +213,8 @@ CODEX_PRESET_LADDER = (
     "GPT-5.6 Terra xhigh → GPT-5.6 Terra max → GPT-5.6 Sol xhigh → "
     "GPT-5.6 Sol max"
 )
+
+CODEX_PRESETS = tuple(CODEX_PRESET_LADDER.split(" → "))
 
 CODEX_WORKER_ROUTING_TOKENS = (
     CODEX_PRESET_LADDER,
@@ -258,6 +279,24 @@ def normalize_space(text: str) -> str:
 def heading_title(line: str) -> str | None:
     match = HEADING_RE.match(line)
     return match.group(2).strip() if match else None
+
+
+def second_level_sections(text: str) -> dict[str, str]:
+    sections: dict[str, str] = {}
+    current: str | None = None
+    body: list[str] = []
+    for line in text.splitlines():
+        match = TOP_HEADING_RE.match(line)
+        if match:
+            if current is not None:
+                sections[current] = "\n".join(body)
+            current = match.group(1).strip()
+            body = []
+        elif current is not None:
+            body.append(line)
+    if current is not None:
+        sections[current] = "\n".join(body)
+    return sections
 
 
 def strip_html_comments(line: str, in_comment: bool) -> tuple[str, bool]:
@@ -812,11 +851,27 @@ def validate_forbidden_legacy(root: Path, issues: list[str]) -> None:
         except (OSError, UnicodeError):
             continue
         relative = path.relative_to(root)
-        model_match = versioned_model.search(text)
-        if model_match and relative not in model_policy_surfaces:
+        model_matches = list(versioned_model.finditer(text))
+        if relative in model_policy_surfaces:
+            for model_match in model_matches:
+                suffix = text[model_match.start() :]
+                if not any(
+                    re.match(
+                        re.escape(preset) + r"(?![\w-])",
+                        suffix,
+                        re.IGNORECASE,
+                    )
+                    for preset in CODEX_PRESETS
+                ):
+                    issues.append(
+                        f"{relative}: unapproved versioned model on Codex policy "
+                        f"surface: {model_match.group(0)}"
+                    )
+                    break
+        elif model_matches:
             issues.append(
                 f"{relative}: forbidden versioned model outside Codex policy surfaces: "
-                f"{model_match.group(0)}"
+                f"{model_matches[0].group(0)}"
             )
         for label, pattern in patterns:
             match = pattern.search(text)
@@ -884,7 +939,14 @@ def validate_source(root: Path) -> list[str]:
         "references/implementation-planning-template.md",
     )
     if planning_template is not None:
-        for token in (*PLANNING_GUIDE_HEADINGS, *PLANNING_GUIDE_TOKENS, "80 lines"):
+        for token in (
+            *PLANNING_GUIDE_HEADINGS,
+            *PLANNING_WORKFLOW_TOKENS,
+            *PLANNING_FIELD_PATTERNS,
+            *PLANNING_TASK_CONTRACT_TOKENS,
+            *PLANNING_WIDE_CHANGE_TOKENS,
+            "80 lines",
+        ):
             require_text(
                 planning_template,
                 token,
@@ -966,7 +1028,6 @@ def validate_final(
         issues.append("final file contains a template marker")
     generation_leaks = (
         "generation contract",
-        "template contract",
         "replace this guidance",
         "replace explanatory examples",
         "source-template hard limit",
@@ -978,6 +1039,8 @@ def validate_final(
     for leak in generation_leaks:
         if leak in lower:
             issues.append(f"final file contains generation-only text: {leak!r}")
+    if kind == "planning-guide" and "template contract" in lower:
+        issues.append("final file contains generation-only text: 'template contract'")
     if kind == "planning-guide" and re.search(
         r"<(?:one observable|task identifiers|mechanical\s*\|\s*standard\s*\|\s*judgment)",
         text,
@@ -1072,10 +1135,30 @@ def validate_final(
                     "planning-guide final headings must be exactly: "
                     + ", ".join(PLANNING_GUIDE_HEADINGS)
                 )
-            for token in PLANNING_GUIDE_TOKENS:
-                if token.lower() not in lower:
+            sections = second_level_sections(text)
+            workflow = sections.get("Workflow Compatibility", "")
+            for token in PLANNING_WORKFLOW_TOKENS:
+                if token.lower() not in workflow.lower():
                     issues.append(
-                        f"planning-guide task contract is missing {token!r}"
+                        "planning-guide Workflow Compatibility is missing "
+                        + repr(token)
+                    )
+            task_contract = sections.get("Task Contract", "")
+            for field, pattern in PLANNING_FIELD_PATTERNS.items():
+                if not pattern.search(task_contract):
+                    issues.append(
+                        f"planning-guide Task Contract is missing field syntax for {field!r}"
+                    )
+            for token in PLANNING_TASK_CONTRACT_TOKENS:
+                if token.lower() not in task_contract.lower():
+                    issues.append(
+                        f"planning-guide Task Contract is missing {token!r}"
+                    )
+            wide_changes = sections.get("Wide Changes", "")
+            for token in PLANNING_WIDE_CHANGE_TOKENS:
+                if token.lower() not in wide_changes.lower():
+                    issues.append(
+                        f"planning-guide Wide Changes is missing {token!r}"
                     )
         else:
             if tuple(headings[: len(DOC_GOVERNANCE_HEADINGS)]) != DOC_GOVERNANCE_HEADINGS:
