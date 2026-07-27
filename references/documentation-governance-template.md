@@ -4,7 +4,7 @@
 
 Use this template to create `documentation-governance.md`, the workspace contract for where active documentation lives, how it is loaded, and when completed material may move to archive.
 
-This file maps documentation surfaces, not production modules. Coding routes belong in `coding-agent-guide.md`; detailed archive execution belongs to `nhk-archive` when that skill is available or explicitly adopted.
+This file maps documentation surfaces, not production modules. Coding routes belong in `coding-agent-guide.md`, implementation-plan sizing belongs in `implementation-planning.md`, and detailed archive execution belongs to `nhk-archive` when that skill is available or explicitly adopted.
 
 ## Template Contract
 
@@ -18,6 +18,7 @@ This file maps documentation surfaces, not production modules. Coding routes bel
 - Canonical `AGENTS.md` or standalone `CLAUDE.md` defines stable working rules.
 - A thin `CLAUDE.md` may import canonical AGENTS; it does not import this document.
 - `coding-agent-guide.md` routes coding tasks to code and targeted verification.
+- `implementation-planning.md` is the stable, on-demand packet contract for implementation plans.
 - Active plans, specs, and optional root tracking hold work in progress.
 - `archive/` stores historical material, and `archive/README.md` is its resolvable index.
 
@@ -27,7 +28,7 @@ Start with `# Documentation Governance`, then use the following second-level hea
 
 ### Document Roles
 
-Define the canonical instruction source, routing guide, this governance file, active work surfaces, archive root, and archive index in a compact table or list. State that ordinary companion paths are loaded on demand rather than imported into Claude startup context.
+Define the canonical instruction source, routing guide, implementation-planning guide, this governance file, active work surfaces, archive root, and archive index in a compact table or list. State that ordinary companion paths are loaded on demand rather than imported into Claude startup context.
 
 ### Active Documentation Surfaces
 
@@ -40,6 +41,7 @@ Map only instruction, routing, active documentation, optional tracking, archive,
 ### Lifecycle Rules
 
 - Keep active and archived documentation separate.
+- Keep the stable `implementation-planning.md` companion active; archive completed implementation plans, not the planning contract.
 - Prefer current implementation, tests, and active docs; archive is not a default execution source.
 - Never infer completion or archive automatically.
 - Ask about archive only for one identifiable workstream with completion evidence and related materials.

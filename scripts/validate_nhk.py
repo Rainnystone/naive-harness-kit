@@ -61,6 +61,7 @@ REFERENCES = (
     "AGENTS-template.md",
     "CLAUDE-template.md",
     "coding-agent-guide-template.md",
+    "implementation-planning-template.md",
     "documentation-governance-template.md",
     "archive-readme-template.md",
     "dependency-setup.md",
@@ -101,6 +102,7 @@ SOURCE_TEMPLATE_LIMITS = {
 
 PLAIN_REFERENCE_SOURCE_LIMITS = {
     "coding-agent-guide-template.md": 140,
+    "implementation-planning-template.md": 120,
     "documentation-governance-template.md": 160,
     "archive-readme-template.md": 40,
 }
@@ -109,6 +111,7 @@ FINAL_LIMITS = {"simple": 100, "medium": 125, "complex": 150}
 
 COMPANION_FINAL_LIMITS = {
     "coding-guide": 80,
+    "planning-guide": 80,
     "doc-governance": 100,
 }
 
@@ -134,6 +137,28 @@ DOC_GOVERNANCE_HEADINGS = (
     "Archive Transition Invariants",
 )
 
+PLANNING_GUIDE_HEADINGS = (
+    "Workflow Compatibility",
+    "Plan Layers",
+    "Task Contract",
+    "Dependencies and Execution",
+    "Wide Changes",
+    "Plan Review",
+)
+
+PLANNING_GUIDE_TOKENS = (
+    "Delivers",
+    "Blocked by",
+    "Worker class",
+    "mechanical",
+    "standard",
+    "judgment",
+    "expand",
+    "migrate",
+    "contract",
+    "integration branch",
+)
+
 LEGACY_CODING_GUIDE_HEADINGS = {
     "Current Execution State",
     "High-Frequency Packet Routing",
@@ -144,7 +169,8 @@ LEGACY_CODING_GUIDE_HEADINGS = {
 }
 
 COMPANION_IMPORT_RE = re.compile(
-    r"@(?:\./)?(?:coding-agent-guide|documentation-governance)\.md\b"
+    r"@(?:\./)?(?:coding-agent-guide|implementation-planning|"
+    r"documentation-governance)\.md\b"
 )
 
 COMMON_VERBATIM_HEADINGS = {
@@ -163,6 +189,28 @@ CONVERGENCE_BACKSTOP = (
     "architecture reassessment is complete."
 )
 
+CODEX_PRESET_LADDER = (
+    "GPT-5.6 Luna max → GPT-5.5 xhigh → GPT-5.6 Terra high → "
+    "GPT-5.6 Terra xhigh → GPT-5.6 Terra max → GPT-5.6 Sol xhigh → "
+    "GPT-5.6 Sol max"
+)
+
+CODEX_WORKER_ROUTING_TOKENS = (
+    CODEX_PRESET_LADDER,
+    "explicitly specify both model and effort",
+    "split the packet before escalating",
+    "above the main thread's model or effort",
+    "specific packet and current run",
+)
+
+IMPLEMENTATION_PLANNING_POINTERS = (
+    "Before writing, approving, or materially revising an implementation plan, "
+    "read `implementation-planning.md`; do not dispatch a task that fails its "
+    "packet contract.",
+    "Do not load `implementation-planning.md` for ordinary coding, review, or "
+    "debugging.",
+)
+
 INSTALL_COMMAND = (
     "cp -R welcome-to-nhk nhk-bootstrap nhk-upkeep nhk-archive references "
     "<skills-root>/"
@@ -174,6 +222,7 @@ VALIDATOR_INSTALL_COMMAND = (
 
 VALIDATOR_COMPANION_COMMANDS = (
     "python3 -B scripts/validate_nhk.py --final <coding-agent-guide.md> --kind coding-guide",
+    "python3 -B scripts/validate_nhk.py --final <implementation-planning.md> --kind planning-guide",
     "python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance",
 )
 
@@ -418,7 +467,6 @@ def verbatim_by_heading(blocks: Iterable[MarkerBlock]) -> dict[str, str]:
 def validate_shared_templates(
     agent_blocks: list[MarkerBlock],
     claude_blocks: list[MarkerBlock],
-    agent_text: str,
     claude_text: str,
     issues: list[str],
 ) -> None:
@@ -445,11 +493,26 @@ def validate_shared_templates(
         )
 
     codex_boundary = agents.get("Codex Worker Boundary", "")
-    if "Ultra" not in codex_boundary or "never be assigned to a worker" not in codex_boundary:
-        issues.append("AGENTS-template.md: Codex Worker Boundary must keep Ultra on the main thread")
+    for token in CODEX_WORKER_ROUTING_TOKENS:
+        if token not in codex_boundary:
+            issues.append(
+                "AGENTS-template.md: Codex worker routing is missing " + repr(token)
+            )
+    if "Ultra" not in codex_boundary or "recursive delegation" not in codex_boundary:
+        issues.append(
+            "AGENTS-template.md: Codex worker routing must keep Ultra behind "
+            "packet-specific approval and recursive-delegation authorization"
+        )
+    for block in agent_blocks:
+        if block.first_heading != "Codex Worker Boundary" and "Ultra" in block.content:
+            issues.append(
+                "AGENTS-template.md: Ultra may appear only in Codex Worker Boundary"
+            )
 
     forbidden_claude_models = re.search(
-        r"\b(?:Ultra|Sonnet|Opus|Haiku)\b|\bgpt-\d", claude_text, re.IGNORECASE
+        r"\b(?:Ultra|Luna|Terra|Sol|Sonnet|Opus|Haiku)\b|\bgpt-\d",
+        claude_text,
+        re.IGNORECASE,
     )
     if forbidden_claude_models:
         issues.append(
@@ -460,8 +523,9 @@ def validate_shared_templates(
     worker_block = agents.get("Subagents and Packets", "")
     worker_contract_tokens = (
         "fewest workers",
-        "default cost ceiling for each worker",
-        "lower-cost configuration",
+        "lowest-cost configuration",
+        "cost ceiling for each worker",
+        "split it before increasing",
         "human approval",
         "recursive delegation",
         "serially",
@@ -477,8 +541,13 @@ def validate_shared_templates(
     if f"- {CONVERGENCE_BACKSTOP}" not in execution_block:
         issues.append("templates: shared Execution Rules are missing the convergence backstop")
 
-    if agent_text.count("Ultra") != 1:
-        issues.append("AGENTS-template.md: Ultra must appear only in its platform boundary")
+    context_block = agents.get("Context and Documentation", "")
+    for token in IMPLEMENTATION_PLANNING_POINTERS:
+        if token not in context_block:
+            issues.append(
+                "templates: shared implementation-planning pointer is missing "
+                + repr(token)
+            )
 
 
 def parse_frontmatter(text: str) -> dict[str, str] | None:
@@ -537,6 +606,12 @@ def validate_skill(root: Path, name: str, issues: list[str]) -> None:
     for token in handoff_tokens:
         if token not in text:
             issues.append(f"{name}/SKILL.md: router handoff is missing {token!r}")
+
+    if "`implementation-planning.md`" not in text:
+        issues.append(
+            f"{name}/SKILL.md: planning foundation must name "
+            "`implementation-planning.md`"
+        )
 
     reference_root = (root / "references").resolve()
     for match in REFERENCE_RE.finditer(text):
@@ -608,10 +683,22 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         require_text(english, token, "README.md", issues, case_sensitive=False)
     for token in ("scripts/", "tests/", "不属于运行时", "可选", "刷新", "可发现"):
         require_text(chinese, token, "README_CN.md", issues, case_sensitive=False)
-    for token in ("model catalog", "cost ceiling"):
+    for token in (
+        "eight controlled references",
+        "five mandatory foundation surfaces",
+        "Superpowers overlay",
+        "cost ceiling",
+        CODEX_PRESET_LADDER,
+    ):
         require_text(english, token, "README.md", issues, case_sensitive=False)
-    for token in ("型号目录", "成本上限"):
-        require_text(chinese, token, "README_CN.md", issues)
+    for token in (
+        "八个受控 reference",
+        "五个强制 foundation surface",
+        "Superpowers overlay",
+        "成本上限",
+        CODEX_PRESET_LADDER,
+    ):
+        require_text(chinese, token, "README_CN.md", issues, case_sensitive=False)
     for token in ("round five", "systematic-debugging", "No sixth patch"):
         require_text(english, token, "README.md", issues, case_sensitive=False)
     for token in ("第五轮", "systematic-debugging", "第六块补丁"):
@@ -663,10 +750,6 @@ def validate_forbidden_legacy(root: Path, issues: list[str]) -> None:
     paths.extend(root / skill / "SKILL.md" for skill in SKILLS)
     paths.extend(root / "references" / name for name in REFERENCES)
     patterns = (
-        (
-            "static versioned model",
-            re.compile(r"\bgpt-\d[\w.-]*\b", re.IGNORECASE),
-        ),
         ("Opus 4.7", re.compile(r"\bOpus\s+4\.7\b", re.IGNORECASE)),
         (
             "model price table",
@@ -714,6 +797,13 @@ def validate_forbidden_legacy(root: Path, issues: list[str]) -> None:
             ),
         ),
     )
+    model_policy_surfaces = {
+        Path("README.md"),
+        Path("README_CN.md"),
+        Path("references/AGENTS-template.md"),
+        Path("references/validation-scenarios.md"),
+    }
+    versioned_model = re.compile(r"\bgpt-\d[\w.-]*\b", re.IGNORECASE)
     for path in paths:
         if not path.is_file():
             continue
@@ -721,10 +811,17 @@ def validate_forbidden_legacy(root: Path, issues: list[str]) -> None:
             text = path.read_text(encoding="utf-8")
         except (OSError, UnicodeError):
             continue
+        relative = path.relative_to(root)
+        model_match = versioned_model.search(text)
+        if model_match and relative not in model_policy_surfaces:
+            issues.append(
+                f"{relative}: forbidden versioned model outside Codex policy surfaces: "
+                f"{model_match.group(0)}"
+            )
         for label, pattern in patterns:
             match = pattern.search(text)
             if match:
-                issues.append(f"{path.relative_to(root)}: forbidden {label}: {match.group(0)}")
+                issues.append(f"{relative}: forbidden {label}: {match.group(0)}")
 
 
 def validate_source(root: Path) -> list[str]:
@@ -752,7 +849,6 @@ def validate_source(root: Path) -> list[str]:
         validate_shared_templates(
             parsed["AGENTS-template.md"],
             parsed["CLAUDE-template.md"],
-            texts["AGENTS-template.md"],
             texts["CLAUDE-template.md"],
             issues,
         )
@@ -782,13 +878,32 @@ def validate_source(root: Path) -> list[str]:
                 issues,
             )
 
+    planning_template = read_text(
+        root / "references" / "implementation-planning-template.md",
+        issues,
+        "references/implementation-planning-template.md",
+    )
+    if planning_template is not None:
+        for token in (*PLANNING_GUIDE_HEADINGS, *PLANNING_GUIDE_TOKENS, "80 lines"):
+            require_text(
+                planning_template,
+                token,
+                "implementation-planning-template.md",
+                issues,
+            )
+
     governance_template = read_text(
         root / "references" / "documentation-governance-template.md",
         issues,
         "references/documentation-governance-template.md",
     )
     if governance_template is not None:
-        for token in (*DOC_GOVERNANCE_HEADINGS, "100 lines"):
+        for token in (
+            *DOC_GOVERNANCE_HEADINGS,
+            "100 lines",
+            "`implementation-planning.md`",
+            "archive completed implementation plans",
+        ):
             require_text(
                 governance_template,
                 token,
@@ -851,7 +966,9 @@ def validate_final(
         issues.append("final file contains a template marker")
     generation_leaks = (
         "generation contract",
+        "template contract",
         "replace this guidance",
+        "replace explanatory examples",
         "source-template hard limit",
         "hard line limits for",
         "choose exactly one mode",
@@ -861,6 +978,12 @@ def validate_final(
     for leak in generation_leaks:
         if leak in lower:
             issues.append(f"final file contains generation-only text: {leak!r}")
+    if kind == "planning-guide" and re.search(
+        r"<(?:one observable|task identifiers|mechanical\s*\|\s*standard\s*\|\s*judgment)",
+        text,
+        re.IGNORECASE,
+    ):
+        issues.append("final file contains a generation-only planning placeholder")
 
     headings = [
         match.group(1).strip()
@@ -894,11 +1017,11 @@ def validate_final(
             for line in text.splitlines()
             if (match := re.match(r"^#(?!#)\s+(.+?)\s*$", line))
         ]
-        expected_h1 = (
-            "Coding Agent Guide"
-            if kind == "coding-guide"
-            else "Documentation Governance"
-        )
+        expected_h1 = {
+            "coding-guide": "Coding Agent Guide",
+            "planning-guide": "Implementation Planning",
+            "doc-governance": "Documentation Governance",
+        }[kind]
         if h1_headings != [expected_h1]:
             issues.append(
                 f"{kind} final file must have exactly one '# {expected_h1}' heading"
@@ -943,6 +1066,17 @@ def validate_final(
                     issues.append(
                         f"coding-guide final file contains legacy section {heading!r}"
                     )
+        elif kind == "planning-guide":
+            if tuple(headings) != PLANNING_GUIDE_HEADINGS:
+                issues.append(
+                    "planning-guide final headings must be exactly: "
+                    + ", ".join(PLANNING_GUIDE_HEADINGS)
+                )
+            for token in PLANNING_GUIDE_TOKENS:
+                if token.lower() not in lower:
+                    issues.append(
+                        f"planning-guide task contract is missing {token!r}"
+                    )
         else:
             if tuple(headings[: len(DOC_GOVERNANCE_HEADINGS)]) != DOC_GOVERNANCE_HEADINGS:
                 issues.append(
@@ -970,6 +1104,14 @@ def validate_final(
                 if token not in lower:
                     issues.append(
                         f"doc-governance archive invariants are missing {token!r}"
+                    )
+            for token in (
+                "implementation-planning.md",
+                "completed implementation plans",
+            ):
+                if token not in lower:
+                    issues.append(
+                        f"doc-governance planning lifecycle is missing {token!r}"
                     )
         return issues
 
@@ -1003,7 +1145,11 @@ def validate_final(
         )
     if imports:
         issues.append("standalone final file mixes in a thin AGENTS import")
-    for companion in ("coding-agent-guide.md", "documentation-governance.md"):
+    for companion in (
+        "coding-agent-guide.md",
+        "implementation-planning.md",
+        "documentation-governance.md",
+    ):
         if f"`{companion}`" not in text:
             issues.append(
                 f"standalone final file must route to `{companion}` by literal path"
@@ -1020,7 +1166,14 @@ def build_parser() -> argparse.ArgumentParser:
     modes.add_argument("--install-root", type=Path, help="validate an installed skills root")
     modes.add_argument("--final", type=Path, help="validate one generated instruction file")
     parser.add_argument(
-        "--kind", choices=("agents", "claude", "coding-guide", "doc-governance")
+        "--kind",
+        choices=(
+            "agents",
+            "claude",
+            "coding-guide",
+            "planning-guide",
+            "doc-governance",
+        ),
     )
     parser.add_argument("--mode", choices=("standalone", "thin"))
     parser.add_argument("--complexity", choices=tuple(FINAL_LIMITS))

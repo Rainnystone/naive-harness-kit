@@ -12,7 +12,7 @@ NHK helps with five recurring jobs that show up surprisingly fast once you start
 
 - getting the useful workflow tools in place, especially `superpowers` and `planning-with-files`
 - lazily but safely initializing the right workspace instruction file for the current agent environment
-- keeping `coding-agent-guide.md` and `documentation-governance.md` aligned with reality
+- keeping routing, implementation-planning, and documentation-governance companions aligned with reality
 - deciding whether a workstream should stay active or move to archive
 - doing all of that with explicit prompts instead of opaque hooks
 
@@ -29,11 +29,12 @@ NHK ships with four focused skills:
 - `nhk-upkeep`: day-to-day harness maintenance
 - `nhk-archive`: human-confirmed archive transition
 
-It also ships with frozen local references:
+It also ships with eight controlled references:
 
 - `AGENTS-template.md`
 - `CLAUDE-template.md`
 - `coding-agent-guide-template.md`
+- `implementation-planning-template.md`
 - `documentation-governance-template.md`
 - `archive-readme-template.md`
 - `dependency-setup.md`
@@ -60,13 +61,14 @@ For an NHK-managed workspace, the expected document system is layered:
 | --- | --- | --- |
 | Instruction layer | canonical `AGENTS.md` or standalone `CLAUDE.md`, plus an optional thin Claude adapter | stable execution rules, verification discipline, collaboration rules |
 | Routing layer | `coding-agent-guide.md` | task or symptom to first reads, likely change surfaces, and targeted verification |
+| Planning layer | `implementation-planning.md` | on-demand Superpowers-compatible task sizing, dependency edges, and wide-change structure |
 | Governance layer | `documentation-governance.md` | document roles, active/archive surfaces, naming/loading, and archive invariants |
 | Active work layer | active `specs/`, active `plans/`, optional root `task_plan.md` / `progress.md` / `findings.md` | work in progress only |
 | Archive layer | `archive/` plus root `archive/README.md` | completed specs, completed plans, completed tracking files, historical reference only |
 
 NHK is opinionated here on purpose:
 
-- every NHK-managed workspace should have the instruction, routing, governance, and root archive surfaces
+- after the canonical instruction is known, every NHK-managed workspace has five mandatory foundation surfaces: routing, implementation planning, governance, `archive/`, and `archive/README.md`
 - root tracking files are conditional, not automatic
 - active docs and archive docs should not be mixed
 - archive transitions require human confirmation
@@ -75,6 +77,8 @@ NHK is opinionated here on purpose:
 For the beginner-sized projects NHK is built for, the routing table is the shallow code map. A second codemap would mostly give newcomers two maps to get lost between, which feels ambitious in the wrong direction.
 
 The direct source for the governance layer is `references/documentation-governance-template.md`. NHK does not treat documentation lifecycle as an implicit side effect. It expects those rules to be written down explicitly in the target workspace.
+
+`implementation-planning.md` is deliberately narrower. It is a Superpowers overlay, not a competing planner: load it before writing, approving, or materially revising an implementation plan, then leave it closed for ordinary coding, review, and debugging. It keeps Superpowers' exact files, interfaces, TDD steps, commands, expected results, and necessary code while adding `Delivers`, `Blocked by`, and `Worker class` to make each task small enough for one fresh implementer context and one reviewer gate. NHK improves this through workspace documents; it does not patch the Superpowers plugin.
 
 ## Dependencies
 
@@ -131,6 +135,7 @@ Maintainers can also check generated companion docs without turning the validato
 
 ```bash
 python3 -B scripts/validate_nhk.py --final <coding-agent-guide.md> --kind coding-guide
+python3 -B scripts/validate_nhk.py --final <implementation-planning.md> --kind planning-guide
 python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance
 ```
 
@@ -142,7 +147,7 @@ The shortest path is:
 
 1. Start with `welcome-to-nhk`.
 2. Let it decide whether the workspace needs `nhk-bootstrap`, `nhk-upkeep`, or `nhk-archive`.
-3. Use `nhk-bootstrap` to create or adapt the workspace instruction file, the two mandatory companion docs, and the root archive surface (`archive/` plus `archive/README.md`).
+3. Use `nhk-bootstrap` to create or adapt the workspace instruction file, the three mandatory companion docs, and the root archive surface (`archive/` plus `archive/README.md`).
 4. Use `nhk-upkeep` after normal delivery cycles to repair drift; it asks about archive only when one specific workstream has completion evidence and related materials.
 5. Use `nhk-archive` only after the human clearly confirms that one workstream is done and should move to archive.
 
@@ -157,11 +162,17 @@ NHK is designed to work with both:
 
 NHK does not guess recklessly. When both files exist and CLAUDE has a real import line exactly equal to `@AGENTS.md` or `@./AGENTS.md`, AGENTS is canonical and NHK does not ask a needless question. A lone importing CLAUDE is a broken adapter; two independent files are real ambiguity and still require a human choice.
 
-Thin CLAUDE imports only AGENTS. The two companion docs stay as backticked literal paths and load on demand; importing them with `@` would charge every session for the full map before anyone knows whether it is needed.
+Thin CLAUDE imports only AGENTS. The three companion docs stay as backticked literal paths and load on demand; importing them with `@` would charge every session for the full map before anyone knows whether it is needed.
 
 ## Worker Cost Policy
 
-NHK does not freeze a model catalog that will go stale with the next release. The user's main-thread model and reasoning effort form the default per-worker cost ceiling. A known lower-cost configuration is fine when it is supported and unlikely to create expensive retries; a known increase needs human approval. Exact model pinning remains a project-level, human-approved exception.
+Leaving every worker to inherit the main thread turned out to be a wonderfully efficient way to buy premium reasoning for jobs that mostly needed competent typing. NHK therefore keeps one compact, practical Codex preset ladder. It is an escalation order for this kit, not a claim about universal model rankings:
+
+`GPT-5.6 Luna max → GPT-5.5 xhigh → GPT-5.6 Terra high → GPT-5.6 Terra xhigh → GPT-5.6 Terra max → GPT-5.6 Sol xhigh → GPT-5.6 Sol max`
+
+Mechanical work starts at Luna max; clear ordinary implementation and scoped review start at GPT-5.5 xhigh; multi-file integration starts at Terra high/xhigh; bounded difficult implementation, architecture, and final review use the upper rungs. Every dispatch names model and effort explicitly, unavailable rungs are skipped in order, and an oversized packet is split before capability rises. The main-thread model and effort remain each worker's cost ceiling. Sol max needs no special approval when it remains within that ceiling; any configuration above the main-thread ceiling needs the human's approval.
+
+Ultra stays outside the ordinary ladder. It reaches a worker only when the human approves one specific packet for the current run and simultaneously permits recursive delegation inside that packet. Claude standalone keeps the same lowest-cost-suitable and approval boundaries without carrying an OpenAI model list around like a tiny museum exhibit.
 
 ## When Fixes Start Going In Circles
 

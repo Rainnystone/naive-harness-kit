@@ -7,12 +7,12 @@ Thin mode:
 - Use thin mode when `AGENTS.md` is the canonical instruction source and Claude Code supports importing it.
 - Write `@AGENTS.md` or `@./AGENTS.md` as its own nonblank line, outside code fences, quotes, and comments.
 - Add only necessary Claude-specific notes and keep the entire final file at or below 35 lines.
-- Do not `@` import `coding-agent-guide.md` or `documentation-governance.md`; canonical AGENTS routes to their literal paths on demand.
+- Do not `@` import `coding-agent-guide.md`, `implementation-planning.md`, or `documentation-governance.md`; canonical AGENTS routes to their literal paths on demand.
 - Then stop. Do not read, adapt, or copy any standalone final-producing block below.
 
 Standalone mode:
 - Use standalone mode when `CLAUDE.md` is the canonical instruction source.
-- Do not import AGENTS or either companion doc. Refer to companion docs with backticked literal paths and load them only when the task requires.
+- Do not import AGENTS or any companion doc. Refer to companion docs with backticked literal paths and load them only when the task requires.
 - Process the final-producing blocks below and follow the standalone contract.
 
 This source is a generation contract, not a final instruction file.
@@ -84,8 +84,10 @@ Include only when the selected medium or complex workspace has a safety boundary
 [[FINAL_VERBATIM:BEGIN]]
 ## Context and Documentation
 
-- `coding-agent-guide.md`, `documentation-governance.md`, `archive/`, and `archive/README.md` are the stable NHK foundation.
+- `coding-agent-guide.md`, `implementation-planning.md`, `documentation-governance.md`, `archive/`, and `archive/README.md` are the stable NHK foundation.
 - Treat `documentation-governance.md` as the source of truth for documentation lifecycle rules.
+- Before writing, approving, or materially revising an implementation plan, read `implementation-planning.md`; do not dispatch a task that fails its packet contract.
+- Do not load `implementation-planning.md` for ordinary coding, review, or debugging.
 - Load the smallest active context that safely routes the task; prefer current implementation, tests, and active docs before historical material.
 - Treat archive as reference material, not a default execution source.
 - Keep existing plans, task lists, findings, and progress records aligned with actual status; create heavier tracking only when the work needs it.
@@ -97,10 +99,10 @@ Include only when the selected medium or complex workspace has a safety boundary
 ## Subagents and Packets
 
 - Dispatch only work that forms an independent, reviewable packet, and use the fewest workers needed to complete the task.
-- The main thread's model and reasoning effort are the default cost ceiling for each worker, not a combined concurrency budget.
-- A lower-cost configuration may be used only when it is known to support the task and is unlikely to increase total cost through retries.
-- Obtain human approval before any known increase in model cost or reasoning effort. If support or relative cost is unclear, inherit the current configuration, keep the work on the main thread, or ask; do not guess.
-- Do not allow recursive delegation unless both the plan and the human explicitly authorize it.
+- Choose the lowest-cost configuration that can reliably complete the packet; the main thread's model and effort remain the cost ceiling for each worker, not a combined concurrency budget.
+- If a packet contains more than one independently acceptable result, test cycle, or reviewer gate, split it before increasing worker capability.
+- Obtain human approval before assigning a worker above the main-thread ceiling. If support or relative capability is unclear, keep the work on the main thread or ask; do not guess.
+- Do not allow recursive delegation unless the plan and the human authorize it for a named packet.
 - Run packets serially when they overlap in files, generated artifacts, mutable state, service state, or verification artifacts.
 - Every dispatch brief must state the objective, read/write authority, owned scope, success criteria, verification method, forbidden actions, and expected return.
 - A timeout is not proof of a blocker. Check actual progress before asking, replacing, or ending a worker, and close idle workers after their work is complete.
