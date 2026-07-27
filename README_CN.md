@@ -12,7 +12,7 @@ NHK 主要解决下面 5 类很快就会反复出现的问题：
 
 - 先把真正有用的工作流工具接进来，尤其是 `superpowers` 和 `planning-with-files`
 - 在当前环境里懒一点但别乱来地初始化 `AGENTS.md` 还是 `CLAUDE.md`
-- 怎么让 `coding-agent-guide.md` 和 `documentation-governance.md` 始终和真实状态一致
+- 怎么让路由、implementation planning 和 documentation governance 三份 companion 始终和真实状态一致
 - 一个 workstream 到底该继续保持 active，还是该正式进入 archive
 - 整个过程尽量靠明确 prompt 驱动，而不是靠不透明的 hooks 偷偷做事
 
@@ -29,11 +29,12 @@ NHK 自带 4 个核心 skill：
 - `nhk-upkeep`：日常维护
 - `nhk-archive`：用户确认后的归档交接
 
-另外还带了几份冻结的本地 reference：
+另外还带了八个受控 reference：
 
 - `AGENTS-template.md`
 - `CLAUDE-template.md`
 - `coding-agent-guide-template.md`
+- `implementation-planning-template.md`
 - `documentation-governance-template.md`
 - `archive-readme-template.md`
 - `dependency-setup.md`
@@ -60,13 +61,14 @@ NHK 是刻意把“写给人看”和“写给 agent 看”的文档拆开的：
 | --- | --- | --- |
 | 指令层 | canonical `AGENTS.md` 或 standalone `CLAUDE.md`，可再带一个 thin Claude adapter | 稳定执行规则、验证纪律、协作规则 |
 | 路由层 | `coding-agent-guide.md` | 从任务或症状找到首读文件、可能修改面和针对性验证 |
+| 规划层 | `implementation-planning.md` | 按需加载的 Superpowers-compatible task sizing、依赖边和 wide-change 结构 |
 | 治理层 | `documentation-governance.md` | 文档角色、active/archive surfaces、命名与加载、归档不变量 |
 | 活跃工作层 | active `specs/`、active `plans/`，以及按需启用的根目录 `task_plan.md` / `progress.md` / `findings.md` | 只放正在进行的工作 |
 | 归档层 | `archive/` 加根级 `archive/README.md` | 已完成的 spec、plan、tracking，以及历史参考材料 |
 
 NHK 在这里是故意有主张的：
 
-- 每个 NHK-managed workspace 都应该至少有指令层、路由层、治理层和根级 archive surface
+- canonical instruction 确定后，每个 NHK-managed workspace 都有五个强制 foundation surface：路由、implementation planning、governance、`archive/` 和 `archive/README.md`
 - 根目录 tracking 文件是按需启用，不是默认永远存在
 - active 文档和 archive 文档不能混着放
 - archive 转换必须有人类确认
@@ -75,6 +77,8 @@ NHK 在这里是故意有主张的：
 对 NHK 面向的新手项目来说，路由表就是新手需要的浅层 code map。再另做一张 codemap，多半只是让第一次进仓库的人同时迷路在两张地图里，未免有点用力过猛。
 
 治理层的直接依据就是 `references/documentation-governance-template.md`。NHK 不认为文档生命周期应该靠默认脑补解决，而是要求这些规则在目标 workspace 里明确写出来。
+
+`implementation-planning.md` 的职责刻意更窄：它只是 Superpowers overlay，不是来抢班夺权的第二套 planner。只有在编写、批准或实质修改 implementation plan 前才加载；普通编码、review 和 debug 不用读。它保留 Superpowers 要求的精确文件、接口、TDD steps、命令、预期结果与必要代码，只增加 `Delivers`、`Blocked by` 和 `Worker class`，把每个 task 收到一个 fresh implementer context 和一个 reviewer gate 能稳妥接住的大小。NHK 只通过 workspace 文档做这层改良，不去 patch Superpowers 插件。
 
 ## 依赖
 
@@ -131,6 +135,7 @@ Validator 只能核对文件和版本，不能冒充平台的 skill discovery。
 
 ```bash
 python3 -B scripts/validate_nhk.py --final <coding-agent-guide.md> --kind coding-guide
+python3 -B scripts/validate_nhk.py --final <implementation-planning.md> --kind planning-guide
 python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance
 ```
 
@@ -142,7 +147,7 @@ python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind 
 
 1. 先从 `welcome-to-nhk` 开始。
 2. 让它判断现在应该进入 `nhk-bootstrap`、`nhk-upkeep` 还是 `nhk-archive`。
-3. 用 `nhk-bootstrap` 去建立或适配主 instruction file、两个强制 companion docs，以及根级 archive surface（`archive/` 加 `archive/README.md`）。
+3. 用 `nhk-bootstrap` 去建立或适配主 instruction file、三个强制 companion docs，以及根级 archive surface（`archive/` 加 `archive/README.md`）。
 4. 正常开发周期走完后，用 `nhk-upkeep` 修正漂移；只有一个具体 workstream 同时具备完成证据和相关材料时，它才会询问是否归档。
 5. 只有在用户明确说“这个 workstream 完成了，可以归档”之后，才进入 `nhk-archive`。
 
@@ -157,11 +162,17 @@ NHK 同时兼容这两个方向：
 
 NHK 不会在这件事上瞎猜。如果两个文件都在，而 CLAUDE 在正文里有一行严格等于 `@AGENTS.md` 或 `@./AGENTS.md` 的真实 import，AGENTS 就是 canonical，不必多问。只有导入行却没有 AGENTS 的 CLAUDE 是 broken adapter；两个互相独立的文件才是真歧义，需要人来选。
 
-thin CLAUDE 只 import AGENTS。两份 companion docs 始终使用反引号普通路径并按需读取；如果用 `@` 把它们展开，每次会话都得先把整张地图背一遍，再看看今天到底用不用得上。
+thin CLAUDE 只 import AGENTS。三份 companion docs 始终使用反引号普通路径并按需读取；如果用 `@` 把它们展开，每次会话都得先把整套说明背一遍，再看看今天到底用不用得上。
 
 ## Worker 成本规则
 
-NHK 不会冻结一份很快过期的型号目录。用户选择的主线程 model 和 reasoning effort 构成每个 worker 的默认成本上限；已确认支持、且不容易因为重试反而更贵的低成本配置可以使用，任何已知升级都要先问人。精确 pin 只作为项目级、经人工确认的例外。
+如果所有 worker 都默认继承主线程顶配，最后很容易出现一种微妙局面：模型认真思考了半天，完成了一项本来只需要靠谱打字的工作。于是 NHK 保留了一条短小、实践型的 Codex preset 阶梯；它只是本工具的升级顺序，不宣称是什么宇宙通用排行榜：
+
+`GPT-5.6 Luna max → GPT-5.5 xhigh → GPT-5.6 Terra high → GPT-5.6 Terra xhigh → GPT-5.6 Terra max → GPT-5.6 Sol xhigh → GPT-5.6 Sol max`
+
+机械任务从 Luna max 开始；规格清楚的普通实现和 scoped review 从 GPT-5.5 xhigh 开始；多文件集成从 Terra high/xhigh 开始；困难但边界明确的实现、架构判断和 final review 再用上层档位。每次派遣都显式写 model 和 effort，不可用档位按顺序跳过；packet 太大先拆，不能拿升档当切分工具。主线程 model 和 effort 仍是每个 worker 的成本上限。Sol max 只要没越过这个上限就不用额外批准；越级则先问人。
+
+Ultra 不在普通阶梯里。只有用户针对当前运行里的一个具体 packet 明确批准，并同时授权该 packet 内的递归派遣时，才可以下传。Claude standalone 沿用“满足任务的最低成本配置、越级先批准”的规则，但不随身背一张 OpenAI 型号表——毕竟它也不是来参观模型博物馆的。
 
 ## 修补开始原地打转时
 

@@ -29,6 +29,7 @@ REFERENCES = (
     "AGENTS-template.md",
     "CLAUDE-template.md",
     "coding-agent-guide-template.md",
+    "implementation-planning-template.md",
     "documentation-governance-template.md",
     "archive-readme-template.md",
     "dependency-setup.md",
@@ -61,6 +62,27 @@ DOC_GOVERNANCE_HEADINGS = (
     "Archive Transition Invariants",
 )
 
+PLANNING_GUIDE_HEADINGS = (
+    "Workflow Compatibility",
+    "Plan Layers",
+    "Task Contract",
+    "Dependencies and Execution",
+    "Wide Changes",
+    "Plan Review",
+)
+
+CODEX_PRESET_LADDER = (
+    "GPT-5.6 Luna max → GPT-5.5 xhigh → GPT-5.6 Terra high → "
+    "GPT-5.6 Terra xhigh → GPT-5.6 Terra max → GPT-5.6 Sol xhigh → "
+    "GPT-5.6 Sol max"
+)
+
+IMPLEMENTATION_PLANNING_POINTER = (
+    "Before writing, approving, or materially revising an implementation plan, "
+    "read `implementation-planning.md`; do not dispatch a task that fails its "
+    "packet contract."
+)
+
 CONVERGENCE_BACKSTOP = (
     "Five failed fix–verify or fix–review rounds on the same acceptance gap "
     "trigger a mandatory stop. Invoke or restart `systematic-debugging`, count "
@@ -74,6 +96,7 @@ INSTALL_COMMAND = (
 )
 
 COMPANION_VALIDATOR_COMMANDS = """python3 -B scripts/validate_nhk.py --final <coding-agent-guide.md> --kind coding-guide
+python3 -B scripts/validate_nhk.py --final <implementation-planning.md> --kind planning-guide
 python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance"""
 
 
@@ -110,8 +133,10 @@ After validation, refresh the session and confirm that all four skills are disco
 Maintainers can validate generated companion docs:
 {COMPANION_VALIDATOR_COMMANDS}
 
-NHK does not freeze a model catalog. The user's main-thread model and effort set each
-worker's cost ceiling. Exact pinning is a project-level, human-approved exception.
+NHK keeps eight controlled references and five mandatory foundation surfaces.
+Its implementation-planning companion is a Superpowers overlay loaded only for plan work.
+The practical Codex preset ladder is: {CODEX_PRESET_LADDER}.
+The user's main-thread model and effort set each worker's cost ceiling.
 If the same gap remains after round five, invoke systematic-debugging. No sixth patch
 is allowed before root-cause and architecture reassessment.
 For beginner-sized projects, the routing table is the shallow code map.
@@ -142,8 +167,10 @@ Python validator 是可选、零第三方依赖的检查工具：
 维护者可以验证生成后的 companion docs：
 {COMPANION_VALIDATOR_COMMANDS}
 
-NHK 不冻结型号目录；用户选择的主线程 model 和 effort 是每个 worker 的成本上限。
-精确 pin 只应作为项目级、经人工确认的例外。
+NHK 带有八个受控 reference 和五个强制 foundation surface。
+implementation-planning companion 是只在规划工作中加载的 Superpowers overlay。
+Codex 实践型 preset 阶梯是：{CODEX_PRESET_LADDER}。
+用户选择的主线程 model 和 effort 是每个 worker 的成本上限。
 同一个 gap 到第五轮仍未解决时，调用 systematic-debugging；根因和架构重审前不准贴第六块补丁。
 对新手项目来说，路由表就是新手需要的浅层 code map。
 thin CLAUDE 只 import AGENTS；companion docs 使用反引号普通路径并按需读取。
@@ -159,6 +186,7 @@ def standalone_text(extra_lines: int = 0) -> str:
                 (
                     "- Use `coding-agent-guide.md` for task routing.",
                     "- Use `documentation-governance.md` for document lifecycle rules.",
+                    "- Read `implementation-planning.md` only before plan work.",
                     "",
                 )
             )
@@ -184,10 +212,16 @@ def coding_guide_text(extra_lines: int = 0) -> str:
 
 def doc_governance_text(extra_lines: int = 0) -> str:
     sections = {
-        "Document Roles": "Instructions govern behavior; the routing guide routes coding work.",
+        "Document Roles": (
+            "Instructions govern behavior; the routing guide routes coding work; "
+            "`implementation-planning.md` owns stable task sizing."
+        ),
         "Active Documentation Surfaces": "Active plans and tracking contain active work only.",
         "Workspace and Document Map": "Use `AGENTS.md`, the routing guide, active docs, and `archive/README.md`.",
-        "Lifecycle Rules": "Archive is historical reference, not the default execution source.",
+        "Lifecycle Rules": (
+            "Keep `implementation-planning.md` active; archive completed "
+            "implementation plans with their workstreams."
+        ),
         "Naming and Loading": "Use distinct names and load only task-relevant documents.",
         "Archive Transition Invariants": (
             "Explicit human approval is required before archiving. Copy materials and update "
@@ -196,6 +230,38 @@ def doc_governance_text(extra_lines: int = 0) -> str:
         ),
     }
     lines = ["# Documentation Governance", ""]
+    for heading, body in sections.items():
+        lines.extend((f"## {heading}", "", body, ""))
+    lines.extend(f"- extra {index}" for index in range(extra_lines))
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def planning_guide_text(extra_lines: int = 0) -> str:
+    sections = {
+        "Workflow Compatibility": (
+            "Keep the active Superpowers plan format, including Files, Interfaces, "
+            "TDD steps, commands, expected results, and necessary code."
+        ),
+        "Plan Layers": "Separate the plan outcome and approach from executable tasks.",
+        "Task Contract": (
+            "Each task declares these fields:\n\n"
+            "**Delivers:** one observable, independently acceptable result\n"
+            "**Blocked by:** task identifiers or None\n"
+            "**Worker class:** mechanical | standard | judgment"
+        ),
+        "Dependencies and Execution": (
+            "Blocked by records real dependencies; SDD implementation remains sequential."
+        ),
+        "Wide Changes": (
+            "Use expand, migrate batches, then contract. Use an integration branch and "
+            "an integrate-and-verify task when a batch cannot stay green alone."
+        ),
+        "Plan Review": (
+            "Reject a task that cannot produce one observable result in one fresh context "
+            "with one test cycle and reviewer gate."
+        ),
+    }
+    lines = ["# Implementation Planning", ""]
     for heading, body in sections.items():
         lines.extend((f"## {heading}", "", body, ""))
     lines.extend(f"- extra {index}" for index in range(extra_lines))
@@ -246,6 +312,15 @@ class SourceValidationTests(ValidatorTestCase):
         result = run_cli("--root", root)
         self.assertEqual(result.returncode, 1)
         self.assertIn("dependency-setup.md", result.stdout)
+
+    def test_missing_planning_reference_fails(self) -> None:
+        root = self.make_source_fixture()
+        (root / "references" / "implementation-planning-template.md").unlink(
+            missing_ok=True
+        )
+        result = run_cli("--root", root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("implementation-planning-template.md", result.stdout)
 
     def test_bad_skill_frontmatter_fails(self) -> None:
         root = self.make_source_fixture()
@@ -406,6 +481,38 @@ class SourceValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("convergence backstop", result.stdout.lower())
 
+    def test_missing_on_demand_planning_pointer_fails(self) -> None:
+        root = self.make_source_fixture()
+        for name in ("AGENTS-template.md", "CLAUDE-template.md"):
+            path = root / "references" / name
+            path.write_text(
+                path.read_text(encoding="utf-8").replace(
+                    IMPLEMENTATION_PLANNING_POINTER,
+                    "Read the planning guide when useful.",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+        result = run_cli("--root", root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("implementation-planning pointer", result.stdout.lower())
+
+    def test_claude_template_rejects_openai_model_names(self) -> None:
+        root = self.make_source_fixture()
+        path = root / "references" / "CLAUDE-template.md"
+        path.write_text(
+            path.read_text(encoding="utf-8").replace(
+                "Choose the lowest-cost configuration",
+                "Choose GPT-5.6 Luna max as the lowest-cost configuration",
+                1,
+            ),
+            encoding="utf-8",
+        )
+        result = run_cli("--root", root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("CLAUDE-template.md", result.stdout)
+        self.assertIn("model", result.stdout.lower())
+
     def test_template_source_line_limit_fails(self) -> None:
         root = self.make_source_fixture()
         path = root / "references" / "AGENTS-template.md"
@@ -419,6 +526,7 @@ class SourceValidationTests(ValidatorTestCase):
     def test_companion_source_line_limits_fail(self) -> None:
         cases = (
             ("coding-agent-guide-template.md", 140),
+            ("implementation-planning-template.md", 120),
             ("documentation-governance-template.md", 160),
             ("archive-readme-template.md", 40),
         )
@@ -435,6 +543,73 @@ class SourceValidationTests(ValidatorTestCase):
                 result = run_cli("--root", root)
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(str(limit), result.stdout)
+
+    def test_planning_template_requires_final_contract(self) -> None:
+        for token in (*PLANNING_GUIDE_HEADINGS, "80 lines"):
+            with self.subTest(token=token):
+                mutated = self.make_source_fixture()
+                mutated_path = (
+                    mutated / "references" / "implementation-planning-template.md"
+                )
+                mutated_path.write_text(
+                    planning_guide_text().replace(token, "missing contract", 1),
+                    encoding="utf-8",
+                )
+                result = run_cli("--root", mutated)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(token, result.stdout)
+
+    def test_codex_worker_routing_contract_fails(self) -> None:
+        mutations = (
+            (CODEX_PRESET_LADDER, "GPT-5.6 Luna max → GPT-5.6 Sol max"),
+            ("explicitly specify both model and effort", "use a suitable worker"),
+            ("split the packet before escalating", "escalate when useful"),
+            ("above the main thread's model or effort", "uses more capacity"),
+            ("specific packet and current run", "current project"),
+        )
+        for required, replacement in mutations:
+            with self.subTest(required=required):
+                root = self.make_source_fixture()
+                path = root / "references" / "AGENTS-template.md"
+                path.write_text(
+                    path.read_text(encoding="utf-8").replace(
+                        required, replacement, 1
+                    ),
+                    encoding="utf-8",
+                )
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("worker routing", result.stdout.lower())
+
+    def test_policy_surfaces_reject_models_outside_ladder(self) -> None:
+        for model in ("GPT-9 max", "GPT-5.6 Orion max"):
+            with self.subTest(model=model):
+                root = self.make_source_fixture()
+                path = root / "README.md"
+                path.write_text(
+                    path.read_text(encoding="utf-8")
+                    + f"\nUse {model} for every worker.\n",
+                    encoding="utf-8",
+                )
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("unapproved versioned model", result.stdout.lower())
+
+    def test_all_skills_require_the_planning_foundation(self) -> None:
+        for skill in SKILLS:
+            with self.subTest(skill=skill):
+                root = self.make_source_fixture()
+                path = root / skill / "SKILL.md"
+                path.write_text(
+                    path.read_text(encoding="utf-8").replace(
+                        "`implementation-planning.md`",
+                        "`missing-planning.md`",
+                    ),
+                    encoding="utf-8",
+                )
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("planning foundation", result.stdout.lower())
 
     def test_forbidden_legacy_rule_fails(self) -> None:
         root = self.make_source_fixture()
@@ -512,6 +687,30 @@ class SourceValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("shallow code map", result.stdout.lower())
 
+    def test_readme_planning_and_worker_policy_drift_fails(self) -> None:
+        cases = (
+            ("README.md", "eight controlled references", "several references"),
+            ("README.md", "five mandatory foundation surfaces", "the foundation"),
+            ("README.md", "Superpowers overlay", "planning helper"),
+            ("README.md", CODEX_PRESET_LADDER, "choose a suitable worker"),
+            ("README_CN.md", "八个受控 reference", "几份 reference"),
+            ("README_CN.md", "五个强制 foundation surface", "基础文档"),
+            ("README_CN.md", "Superpowers overlay", "规划辅助"),
+        )
+        for name, required, replacement in cases:
+            with self.subTest(name=name, required=required):
+                root = self.make_source_fixture()
+                path = root / name
+                path.write_text(
+                    path.read_text(encoding="utf-8").replace(
+                        required, replacement, 1
+                    ),
+                    encoding="utf-8",
+                )
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(required, result.stdout)
+
 
 class InstallValidationTests(ValidatorTestCase):
     def test_correct_sibling_layout_allows_unrelated_skills(self) -> None:
@@ -526,6 +725,15 @@ class InstallValidationTests(ValidatorTestCase):
         result = run_cli("--install-root", root)
         self.assertEqual(result.returncode, 1)
         self.assertIn("references", result.stdout.lower())
+
+    def test_missing_planning_reference_fails(self) -> None:
+        root = self.make_install_fixture()
+        (root / "references" / "implementation-planning-template.md").unlink(
+            missing_ok=True
+        )
+        result = run_cli("--install-root", root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("implementation-planning-template.md", result.stdout)
 
     def test_extra_nhk_nesting_fails(self) -> None:
         root = self.make_install_fixture(nested=True)
@@ -578,6 +786,9 @@ class FinalValidationTests(ValidatorTestCase):
         content = standalone_text()
         content = content.replace("`coding-agent-guide.md`", "coding guide")
         content = content.replace(
+            "`implementation-planning.md`", "implementation planning"
+        )
+        content = content.replace(
             "`documentation-governance.md`", "documentation governance"
         )
         path = self.write_final(content)
@@ -586,6 +797,7 @@ class FinalValidationTests(ValidatorTestCase):
         )
         self.assertEqual(result.returncode, 1)
         self.assertIn("coding-agent-guide.md", result.stdout)
+        self.assertIn("implementation-planning.md", result.stdout)
         self.assertIn("documentation-governance.md", result.stdout)
 
     def test_missing_heading_and_marker_leak_fail(self) -> None:
@@ -655,6 +867,7 @@ class FinalValidationTests(ValidatorTestCase):
     def test_valid_companion_files_pass(self) -> None:
         cases = (
             ("coding-guide", coding_guide_text()),
+            ("planning-guide", planning_guide_text()),
             ("doc-governance", doc_governance_text()),
         )
         for kind, content in cases:
@@ -663,9 +876,29 @@ class FinalValidationTests(ValidatorTestCase):
                 result = run_cli("--final", path, "--kind", kind)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_standalone_allows_project_template_contract_language(self) -> None:
+        content = standalone_text().replace(
+            "- Project rule for Project Map.",
+            "- The email template contract is owned by `src/mail`.",
+            1,
+        )
+        path = self.write_final(content)
+        result = run_cli(
+            "--final",
+            path,
+            "--kind",
+            "agents",
+            "--mode",
+            "standalone",
+            "--complexity",
+            "simple",
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_companion_line_limits_fail(self) -> None:
         cases = (
             ("coding-guide", coding_guide_text(extra_lines=80), 80),
+            ("planning-guide", planning_guide_text(extra_lines=80), 80),
             ("doc-governance", doc_governance_text(extra_lines=100), 100),
         )
         for kind, content, limit in cases:
@@ -674,6 +907,68 @@ class FinalValidationTests(ValidatorTestCase):
                 result = run_cli("--final", path, "--kind", kind)
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(str(limit), result.stdout)
+
+    def test_planning_guide_requires_exact_sections_and_task_contract(self) -> None:
+        for heading in PLANNING_GUIDE_HEADINGS:
+            with self.subTest(heading=heading):
+                content = planning_guide_text().replace(f"## {heading}\n", "", 1)
+                path = self.write_final(content)
+                result = run_cli("--final", path, "--kind", "planning-guide")
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(heading, result.stdout)
+
+        for token in ("Delivers", "Blocked by", "Worker class"):
+            with self.subTest(token=token):
+                content = planning_guide_text().replace(token, "Missing field")
+                path = self.write_final(content)
+                result = run_cli("--final", path, "--kind", "planning-guide")
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(token, result.stdout)
+
+    def test_planning_guide_requires_field_syntax_in_task_contract(self) -> None:
+        content = planning_guide_text().replace(
+            "Each task declares these fields:\n\n"
+            "**Delivers:** one observable, independently acceptable result\n"
+            "**Blocked by:** task identifiers or None\n"
+            "**Worker class:** mechanical | standard | judgment",
+            "Do not use Delivers, Blocked by, or Worker class. "
+            "The forbidden worker classes are mechanical, standard, and judgment.",
+            1,
+        )
+        path = self.write_final(content)
+        result = run_cli("--final", path, "--kind", "planning-guide")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("field syntax", result.stdout.lower())
+
+    def test_planning_guide_scopes_superpowers_details_to_workflow_section(self) -> None:
+        content = planning_guide_text().replace(
+            "Keep the active Superpowers plan format, including Files, Interfaces, "
+            "TDD steps, commands, expected results, and necessary code.",
+            "Keep the active Superpowers plan format.",
+            1,
+        ).replace(
+            "Reject a task that cannot produce one observable result",
+            "Mention Files, Interfaces, TDD steps, commands, expected results, and "
+            "necessary code here. Reject a task that cannot produce one observable result",
+            1,
+        )
+        path = self.write_final(content)
+        result = run_cli("--final", path, "--kind", "planning-guide")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Workflow Compatibility", result.stdout)
+
+    def test_planning_guide_rejects_generation_prompts_and_placeholders(self) -> None:
+        cases = (
+            "Template Contract",
+            "Replace explanatory examples with workspace facts.",
+            "**Delivers:** <one observable result>",
+        )
+        for leaked in cases:
+            with self.subTest(leaked=leaked):
+                path = self.write_final(planning_guide_text() + f"\n{leaked}\n")
+                result = run_cli("--final", path, "--kind", "planning-guide")
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("generation", result.stdout.lower())
 
     def test_coding_guide_requires_routing_columns(self) -> None:
         content = coding_guide_text().replace("Likely Change Surface", "Change Here")
@@ -720,9 +1015,21 @@ class FinalValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("human approval", result.stdout.lower())
 
+        content = doc_governance_text().replace(
+            "`implementation-planning.md`", "the planning guide"
+        )
+        path = self.write_final(content)
+        result = run_cli("--final", path, "--kind", "doc-governance")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("implementation-planning.md", result.stdout)
+
     def test_claude_rejects_companion_auto_imports(self) -> None:
         cases = (
             ("thin", "@AGENTS.md\n\nRead @coding-agent-guide.md before editing.\n"),
+            (
+                "thin",
+                "@AGENTS.md\n\nRead @implementation-planning.md before planning.\n",
+            ),
             (
                 "standalone",
                 standalone_text()
@@ -741,9 +1048,13 @@ class FinalValidationTests(ValidatorTestCase):
     def test_claude_allows_non_active_companion_import_examples(self) -> None:
         examples = (
             "`@coding-agent-guide.md`",
+            "`@implementation-planning.md`",
             "> @coding-agent-guide.md",
+            "> @implementation-planning.md",
             "<!-- @coding-agent-guide.md -->",
+            "<!-- @implementation-planning.md -->",
             "```md\n@coding-agent-guide.md\n```",
+            "```md\n@implementation-planning.md\n```",
         )
         for example in examples:
             with self.subTest(example=example):
@@ -780,17 +1091,20 @@ class CliContractTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 2)
 
     def test_companion_kind_rejects_mode_and_complexity(self) -> None:
-        path = self.write_final(coding_guide_text())
-        cases = (
-            ("--mode", "standalone"),
-            ("--complexity", "simple"),
+        kinds = (
+            ("coding-guide", coding_guide_text()),
+            ("planning-guide", planning_guide_text()),
+            ("doc-governance", doc_governance_text()),
         )
-        for flag, value in cases:
-            with self.subTest(flag=flag):
-                result = run_cli(
-                    "--final", path, "--kind", "coding-guide", flag, value
-                )
-                self.assertEqual(result.returncode, 2)
+        flags = (("--mode", "standalone"), ("--complexity", "simple"))
+        for kind, content in kinds:
+            for flag, value in flags:
+                with self.subTest(kind=kind, flag=flag):
+                    path = self.write_final(content)
+                    result = run_cli(
+                        "--final", path, "--kind", kind, flag, value
+                    )
+                    self.assertEqual(result.returncode, 2)
 
 
 if __name__ == "__main__":

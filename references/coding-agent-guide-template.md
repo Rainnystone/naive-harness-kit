@@ -19,6 +19,7 @@ The routing table is the workspace's shallow code map. Do not create a second di
 - Canonical `AGENTS.md` or standalone `CLAUDE.md` defines execution, collaboration, approval, testing, and delivery rules.
 - A thin `CLAUDE.md` may import canonical AGENTS; it does not import this guide.
 - `coding-agent-guide.md` routes coding work.
+- `implementation-planning.md` sizes implementation-plan tasks and is loaded only for plan work.
 - `documentation-governance.md` governs active and archived documentation.
 - `archive/README.md` indexes historical workstreams and is consulted only when history is relevant.
 
