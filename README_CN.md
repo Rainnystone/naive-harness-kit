@@ -166,13 +166,15 @@ thin CLAUDE 只 import AGENTS。三份 companion docs 始终使用反引号普�
 
 ## Worker 成本规则
 
-如果所有 worker 都默认继承主线程顶配，最后很容易出现一种微妙局面：模型认真思考了半天，完成了一项本来只需要靠谱打字的工作。于是 NHK 保留了一条短小、实践型的 Codex preset 阶梯；它只是本工具的升级顺序，不宣称是什么宇宙通用排行榜：
+如果所有 worker 都默认继承主线程顶配，最后很容易出现一种微妙局面：模型认真思考了半天，完成了一项本来只需要靠谱打字的工作。于是 NHK 改成三个实践型 Codex preset 档；它们是按 task fit 选择的候选集合，不是什么宇宙通用排行榜，同档内部也没有固定强弱顺序：
 
-`GPT-5.6 Luna max → GPT-5.5 xhigh → GPT-5.6 Terra high → GPT-5.6 Terra xhigh → GPT-5.6 Terra max → GPT-5.6 Sol xhigh → GPT-5.6 Sol max`
+`Band 1: GPT-5.5 xhigh; GPT-5.6 Luna max; GPT-5.6 Terra high`
+`Band 2: GPT-5.6 Terra xhigh; GPT-5.6 Terra max; GPT-5.6 Sol high`
+`Band 3: GPT-5.6 Sol xhigh; GPT-5.6 Sol max`
 
-机械任务从 Luna max 开始；规格清楚的普通实现和 scoped review 从 GPT-5.5 xhigh 开始；多文件集成从 Terra high/xhigh 开始；困难但边界明确的实现、架构判断和 final review 再用上层档位。每次派遣都显式写 model 和 effort，不可用档位按顺序跳过；packet 太大先拆，不能拿升档当切分工具。主线程 model 和 effort 仍是每个 worker 的成本上限。Sol max 只要没越过这个上限就不用额外批准；越级则先问人。
+机械任务、规格清楚的普通实现和 scoped review 使用 Band 1；多文件集成和困难但边界明确的任务使用 Band 2；架构判断、高不确定但仍有边界的任务和 final review 使用 Band 3，或者留在主线程。主线程先选档，再显式写出 model 和 effort，并在档内按 task fit 与预计总成本选择，而不是默认拿最高 effort。某个 preset 不可用时先在同档换选；只有 packet 已经正确拆小、但能力仍不足时才升一档。packet 太大仍然先拆。主线程 model 和 effort 继续作为每个 worker 的成本上限。Sol max 只要没越过这个上限就不用额外批准；越级则先问人。
 
-Ultra 不在普通阶梯里。只有用户针对当前运行里的一个具体 packet 明确批准，并同时授权该 packet 内的递归派遣时，才可以下传。Claude standalone 沿用“满足任务的最低成本配置、越级先批准”的规则，但不随身背一张 OpenAI 型号表——毕竟它也不是来参观模型博物馆的。
+Ultra 不在这三个档里。只有用户针对当前运行里的一个具体 packet 明确批准，并同时授权该 packet 内的递归派遣时，才可以下传。Claude standalone 沿用“满足任务的最低成本配置、越级先批准”的规则，但不随身背一张 OpenAI 型号表——毕竟它也不是来参观模型博物馆的。
 
 ## 修补开始原地打转时
 

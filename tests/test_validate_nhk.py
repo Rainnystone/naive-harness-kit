@@ -71,10 +71,16 @@ PLANNING_GUIDE_HEADINGS = (
     "Plan Review",
 )
 
-CODEX_PRESET_LADDER = (
+LEGACY_CODEX_PRESET_LADDER = (
     "GPT-5.6 Luna max → GPT-5.5 xhigh → GPT-5.6 Terra high → "
     "GPT-5.6 Terra xhigh → GPT-5.6 Terra max → GPT-5.6 Sol xhigh → "
     "GPT-5.6 Sol max"
+)
+
+CODEX_PRESET_BAND_LINES = (
+    "Band 1: GPT-5.5 xhigh; GPT-5.6 Luna max; GPT-5.6 Terra high",
+    "Band 2: GPT-5.6 Terra xhigh; GPT-5.6 Terra max; GPT-5.6 Sol high",
+    "Band 3: GPT-5.6 Sol xhigh; GPT-5.6 Sol max",
 )
 
 IMPLEMENTATION_PLANNING_POINTER = (
@@ -135,7 +141,8 @@ Maintainers can validate generated companion docs:
 
 NHK keeps eight controlled references and five mandatory foundation surfaces.
 Its implementation-planning companion is a Superpowers overlay loaded only for plan work.
-The practical Codex preset ladder is: {CODEX_PRESET_LADDER}.
+NHK uses three practical Codex preset bands; presets within a band are unordered:
+{chr(10).join(CODEX_PRESET_BAND_LINES)}
 The user's main-thread model and effort set each worker's cost ceiling.
 If the same gap remains after round five, invoke systematic-debugging. No sixth patch
 is allowed before root-cause and architecture reassessment.
@@ -169,7 +176,8 @@ Python validator 是可选、零第三方依赖的检查工具：
 
 NHK 带有八个受控 reference 和五个强制 foundation surface。
 implementation-planning companion 是只在规划工作中加载的 Superpowers overlay。
-Codex 实践型 preset 阶梯是：{CODEX_PRESET_LADDER}。
+NHK 使用三个实践型 Codex preset 档；同档无顺序：
+{chr(10).join(CODEX_PRESET_BAND_LINES)}
 用户选择的主线程 model 和 effort 是每个 worker 的成本上限。
 同一个 gap 到第五轮仍未解决时，调用 systematic-debugging；根因和架构重审前不准贴第六块补丁。
 对新手项目来说，路由表就是新手需要的浅层 code map。
@@ -561,9 +569,15 @@ class SourceValidationTests(ValidatorTestCase):
 
     def test_codex_worker_routing_contract_fails(self) -> None:
         mutations = (
-            (CODEX_PRESET_LADDER, "GPT-5.6 Luna max → GPT-5.6 Sol max"),
+            (
+                CODEX_PRESET_BAND_LINES[0],
+                "Band 1: GPT-5.5 xhigh; GPT-5.6 Luna max",
+            ),
+            ("presets within a band are unordered", "use the listed order"),
             ("explicitly specify both model and effort", "use a suitable worker"),
+            ("select the best task fit within that band", "use the first preset"),
             ("split the packet before escalating", "escalate when useful"),
+            ("one band only", "one rung only"),
             ("above the main thread's model or effort", "uses more capacity"),
             ("specific packet and current run", "current project"),
         )
@@ -581,7 +595,7 @@ class SourceValidationTests(ValidatorTestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertIn("worker routing", result.stdout.lower())
 
-    def test_policy_surfaces_reject_models_outside_ladder(self) -> None:
+    def test_policy_surfaces_reject_models_outside_bands(self) -> None:
         for model in ("GPT-9 max", "GPT-5.6 Orion max"):
             with self.subTest(model=model):
                 root = self.make_source_fixture()
@@ -594,6 +608,19 @@ class SourceValidationTests(ValidatorTestCase):
                 result = run_cli("--root", root)
                 self.assertEqual(result.returncode, 1)
                 self.assertIn("unapproved versioned model", result.stdout.lower())
+
+    def test_policy_surfaces_reject_legacy_strict_ladder(self) -> None:
+        root = self.make_source_fixture()
+        for name in ("README.md", "README_CN.md"):
+            path = root / name
+            path.write_text(
+                path.read_text(encoding="utf-8")
+                + f"\n{LEGACY_CODEX_PRESET_LADDER}\n",
+                encoding="utf-8",
+            )
+        result = run_cli("--root", root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("strict preset ladder", result.stdout.lower())
 
     def test_all_skills_require_the_planning_foundation(self) -> None:
         for skill in SKILLS:
@@ -692,7 +719,11 @@ class SourceValidationTests(ValidatorTestCase):
             ("README.md", "eight controlled references", "several references"),
             ("README.md", "five mandatory foundation surfaces", "the foundation"),
             ("README.md", "Superpowers overlay", "planning helper"),
-            ("README.md", CODEX_PRESET_LADDER, "choose a suitable worker"),
+            (
+                "README.md",
+                CODEX_PRESET_BAND_LINES[1],
+                "Band 2: choose a suitable worker",
+            ),
             ("README_CN.md", "八个受控 reference", "几份 reference"),
             ("README_CN.md", "五个强制 foundation surface", "基础文档"),
             ("README_CN.md", "Superpowers overlay", "规划辅助"),

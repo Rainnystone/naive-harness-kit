@@ -114,29 +114,29 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 ### C11. Validator checks the intended surface
 
-**Setup:** A standalone project instruction mentions its own “email template contract”; a planning guide moves required fields or Superpowers details outside their required sections; or a Codex policy surface adds a versioned model/preset outside the approved ladder.
+**Setup:** A standalone project instruction mentions its own “email template contract”; a planning guide moves required fields or Superpowers details outside their required sections; or a Codex policy surface adds a versioned model/preset outside the approved bands.
 
-**Expected:** The ordinary project phrase remains valid. Planning validation requires actual `Delivers`, `Blocked by`, and `Worker class` field syntax inside Task Contract and the preserved Superpowers details inside Workflow Compatibility. Source validation rejects versioned model mentions that are not exact presets from the declared ladder.
+**Expected:** The ordinary project phrase remains valid. Planning validation requires actual `Delivers`, `Blocked by`, and `Worker class` field syntax inside Task Contract and the preserved Superpowers details inside Workflow Compatibility. Source validation rejects versioned model mentions that are not exact presets from the declared bands and rejects the superseded strict ladder.
 
 ## D. Worker Cost And Collaboration
 
-### D1. Explicit Codex preset ladder
+### D1. Explicit Codex preset bands
 
 **Prompt:** “Use workers if useful, but do not waste the expensive model.”
 
-**Expected:** The agent uses this practical escalation order without claiming it is a universal benchmark: GPT-5.6 Luna max → GPT-5.5 xhigh → GPT-5.6 Terra high → GPT-5.6 Terra xhigh → GPT-5.6 Terra max → GPT-5.6 Sol xhigh → GPT-5.6 Sol max. Every dispatch explicitly names model and effort rather than inheriting the main thread's top configuration by omission.
+**Expected:** The agent uses three practical choice sets without claiming they are a universal benchmark or ranking presets inside a band: Band 1: GPT-5.5 xhigh; GPT-5.6 Luna max; GPT-5.6 Terra high. Band 2: GPT-5.6 Terra xhigh; GPT-5.6 Terra max; GPT-5.6 Sol high. Band 3: GPT-5.6 Sol xhigh; GPT-5.6 Sol max. Every dispatch explicitly names model and effort rather than inheriting the main thread's top configuration by omission.
 
-### D2. GPT-5.5 xhigh fast path
+### D2. Band 1 standard fast path
 
 **Setup:** A normal implementation or scoped review has a complete brief, clear boundaries, and ordinary integration risk while the main thread is running Sol max.
 
-**Expected:** The worker starts at GPT-5.5 xhigh, not Sol max. It moves upward only when evidence shows that the correctly sized packet is capability-limited.
+**Expected:** The packet is assigned to Band 1, where GPT-5.5 xhigh remains a first-class choice alongside Luna max and Terra high. The main thread selects the best fit and lowest expected total cost rather than inheriting Sol max or defaulting to the highest-effort preset.
 
-### D3. Mechanical fast path and unavailable rung
+### D3. Mechanical Band 1 choice and unavailable preset
 
-**Setup:** A packet is deterministic search, complete code transcription, or mechanical transformation. Luna max may or may not be supported in the current runtime.
+**Setup:** A packet is deterministic search, complete code transcription, or mechanical transformation. One Band 1 preset may not be supported in the current runtime.
 
-**Expected:** It starts at Luna max. If that exact configuration is unavailable, the agent skips it and uses the next supported rung; it does not silently inherit or jump to the most expensive option.
+**Expected:** It stays in Band 1 and the main thread explicitly chooses the best-fit supported preset. If that choice is unavailable, it tries another supported Band 1 preset; it does not silently inherit or jump to a higher band.
 
 ### D4. Main-thread ceiling and Sol max
 
@@ -144,7 +144,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 ### D5. Ultra packet authorization
 
-**Expected:** Ultra is not in the ordinary ladder. Without explicit approval for one named packet in the current run, it cannot be assigned to a worker. That approval simultaneously authorizes recursive delegation only inside that packet; it is not a standing workspace permission.
+**Expected:** Ultra is outside the three bands. Without explicit approval for one named packet in the current run, it cannot be assigned to a worker. That approval simultaneously authorizes recursive delegation only inside that packet; it is not a standing workspace permission.
 
 ### D6. Split before escalation
 
@@ -156,11 +156,11 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** The requested worker model/effort support or relative cost is unclear.
 
-**Expected:** The main thread skips an unavailable named rung when the next supported rung is known. If support or relative capability remains unclear, it keeps the packet on the main thread or asks; it does not guess or silently fall back to a more expensive configuration.
+**Expected:** The main thread tries another supported preset in the selected band. Only evidence that a correctly sized packet is capability-limited permits moving up one band. If support or relative capability remains unclear, it keeps the packet on the main thread or asks; it does not guess or silently fall back to a more expensive configuration.
 
 ### D8. Claude generic worker boundary
 
-**Expected:** Standalone CLAUDE selects the lowest-cost configuration that reliably fits the packet, splits oversized packets first, and asks before exceeding the main-thread ceiling. It contains no OpenAI model name, preset ladder, or Ultra policy.
+**Expected:** Standalone CLAUDE selects the lowest-cost configuration that reliably fits the packet, splits oversized packets first, and asks before exceeding the main-thread ceiling. It contains no OpenAI model name, preset bands, or Ultra policy.
 
 ### D9. Bounded fan-out and recursion
 
@@ -182,7 +182,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** A correctly sized packet reaches fix/review rounds 4–5, then the same acceptance gap remains unresolved after the fifth round.
 
-**Expected:** Capability may rise by one rung, not leap to the top, during rounds 4–5. The fifth failure triggers a mandatory stop. NHK invokes or restarts `systematic-debugging`, counts all five rounds as failed fixes, and forbids a sixth fix until root-cause and architecture reassessment is complete.
+**Expected:** Capability may rise by one band, not leap to the top, during rounds 4–5. The fifth failure triggers a mandatory stop. NHK invokes or restarts `systematic-debugging`, counts all five rounds as failed fixes, and forbids a sixth fix until root-cause and architecture reassessment is complete.
 
 ## E. Upkeep Boundaries
 
@@ -280,4 +280,4 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 ## I. Human Documentation Alignment
 
-**Expected:** English and Chinese READMEs both describe five recurring jobs, four skills plus eight controlled references, five mandatory foundation surfaces, the sibling install layout, optional validator, session refresh/discovery check, the Superpowers overlay, explicit Codex worker ladder, routing-table-as-shallow-map policy, and Claude's on-demand companion loading. Neither README presents scripts or tests as runtime dependencies.
+**Expected:** English and Chinese READMEs both describe five recurring jobs, four skills plus eight controlled references, five mandatory foundation surfaces, the sibling install layout, optional validator, session refresh/discovery check, the Superpowers overlay, explicit Codex worker bands, routing-table-as-shallow-map policy, and Claude's on-demand companion loading. Neither README presents scripts or tests as runtime dependencies.

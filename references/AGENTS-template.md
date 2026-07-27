@@ -98,12 +98,15 @@ Include only when the selected medium or complex workspace has a safety boundary
 [[FINAL_VERBATIM:BEGIN]]
 ### Codex Worker Boundary
 
-- Use this practical escalation order, not as a universal benchmark: GPT-5.6 Luna max → GPT-5.5 xhigh → GPT-5.6 Terra high → GPT-5.6 Terra xhigh → GPT-5.6 Terra max → GPT-5.6 Sol xhigh → GPT-5.6 Sol max.
-- Start mechanical edits, complete code transcription, and deterministic retrieval at Luna max; clear ordinary implementation or scoped review at GPT-5.5 xhigh; multi-file integration at Terra high/xhigh; and bounded difficult implementation, architecture, or final review at Terra max through Sol max.
-- Every dispatch must explicitly specify both model and effort. Skip unavailable rungs in order; never inherit the main thread's top configuration by omission.
-- Escalate one rung only after evidence shows a correctly sized packet is capability-limited; split the packet before escalating when scope is the problem.
+- Use three practical worker bands, not a universal model ranking; presets within a band are unordered eligible choices.
+- Band 1: GPT-5.5 xhigh; GPT-5.6 Luna max; GPT-5.6 Terra high
+- Band 2: GPT-5.6 Terra xhigh; GPT-5.6 Terra max; GPT-5.6 Sol high
+- Band 3: GPT-5.6 Sol xhigh; GPT-5.6 Sol max
+- Assign mechanical work, clear ordinary implementation, and scoped review to Band 1; multi-file integration and difficult but bounded work to Band 2; architecture, high-uncertainty bounded work, and final review to Band 3 or keep them on the main thread.
+- Every dispatch must explicitly specify both model and effort, then select the best task fit within that band; do not default to the highest-effort preset or inherit the main thread's top configuration by omission.
+- If a chosen preset is unavailable, choose another supported preset in the same band. Escalate one band only after evidence shows a correctly sized packet is capability-limited; split the packet before escalating when scope is the problem.
 - Sol max needs no special approval within the main-thread ceiling. Any worker above the main thread's model or effort requires prior human approval.
-- Ultra is outside the ordinary ladder. Assign it only after the human approves the specific packet and current run; that approval amends the plan only for that packet to authorize recursive delegation.
+- Ultra is outside the three bands. Assign it only after the human approves the specific packet and current run; that approval amends the plan only for that packet to authorize recursive delegation.
 [[FINAL_VERBATIM:END]]
 
 [[FINAL_VERBATIM:BEGIN]]

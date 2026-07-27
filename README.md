@@ -166,13 +166,15 @@ Thin CLAUDE imports only AGENTS. The three companion docs stay as backticked lit
 
 ## Worker Cost Policy
 
-Leaving every worker to inherit the main thread turned out to be a wonderfully efficient way to buy premium reasoning for jobs that mostly needed competent typing. NHK therefore keeps one compact, practical Codex preset ladder. It is an escalation order for this kit, not a claim about universal model rankings:
+Leaving every worker to inherit the main thread turned out to be a wonderfully efficient way to buy premium reasoning for jobs that mostly needed competent typing. NHK therefore keeps three practical Codex preset bands. They are task-fit choice sets, not a universal model ranking, and presets within one band have no fixed internal order:
 
-`GPT-5.6 Luna max → GPT-5.5 xhigh → GPT-5.6 Terra high → GPT-5.6 Terra xhigh → GPT-5.6 Terra max → GPT-5.6 Sol xhigh → GPT-5.6 Sol max`
+`Band 1: GPT-5.5 xhigh; GPT-5.6 Luna max; GPT-5.6 Terra high`
+`Band 2: GPT-5.6 Terra xhigh; GPT-5.6 Terra max; GPT-5.6 Sol high`
+`Band 3: GPT-5.6 Sol xhigh; GPT-5.6 Sol max`
 
-Mechanical work starts at Luna max; clear ordinary implementation and scoped review start at GPT-5.5 xhigh; multi-file integration starts at Terra high/xhigh; bounded difficult implementation, architecture, and final review use the upper rungs. Every dispatch names model and effort explicitly, unavailable rungs are skipped in order, and an oversized packet is split before capability rises. The main-thread model and effort remain each worker's cost ceiling. Sol max needs no special approval when it remains within that ceiling; any configuration above the main-thread ceiling needs the human's approval.
+Mechanical work, clear ordinary implementation, and scoped review use Band 1; multi-file integration and difficult but bounded work use Band 2; architecture, high-uncertainty bounded work, and final review use Band 3 or stay on the main thread. The main thread explicitly names model and effort, then chooses the best task fit with the lowest expected total cost inside that band instead of defaulting to its highest-effort preset. An unavailable choice is replaced inside the same band; a correctly sized but capability-limited packet may rise one band. An oversized packet is split first. The main-thread model and effort remain each worker's cost ceiling. Sol max needs no special approval when it remains within that ceiling; any configuration above the main-thread ceiling needs the human's approval.
 
-Ultra stays outside the ordinary ladder. It reaches a worker only when the human approves one specific packet for the current run and simultaneously permits recursive delegation inside that packet. Claude standalone keeps the same lowest-cost-suitable and approval boundaries without carrying an OpenAI model list around like a tiny museum exhibit.
+Ultra stays outside the three bands. It reaches a worker only when the human approves one specific packet for the current run and simultaneously permits recursive delegation inside that packet. Claude standalone keeps the same lowest-cost-suitable and approval boundaries without carrying an OpenAI model list around like a tiny museum exhibit.
 
 ## When Fixes Start Going In Circles
 

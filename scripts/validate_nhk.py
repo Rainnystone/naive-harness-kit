@@ -208,18 +208,35 @@ CONVERGENCE_BACKSTOP = (
     "architecture reassessment is complete."
 )
 
-CODEX_PRESET_LADDER = (
+LEGACY_CODEX_PRESET_LADDER = (
     "GPT-5.6 Luna max → GPT-5.5 xhigh → GPT-5.6 Terra high → "
     "GPT-5.6 Terra xhigh → GPT-5.6 Terra max → GPT-5.6 Sol xhigh → "
     "GPT-5.6 Sol max"
 )
 
-CODEX_PRESETS = tuple(CODEX_PRESET_LADDER.split(" → "))
+CODEX_PRESET_BANDS = (
+    ("GPT-5.5 xhigh", "GPT-5.6 Luna max", "GPT-5.6 Terra high"),
+    ("GPT-5.6 Terra xhigh", "GPT-5.6 Terra max", "GPT-5.6 Sol high"),
+    ("GPT-5.6 Sol xhigh", "GPT-5.6 Sol max"),
+)
+
+CODEX_PRESET_BAND_LINES = tuple(
+    f"Band {number}: {'; '.join(presets)}"
+    for number, presets in enumerate(CODEX_PRESET_BANDS, 1)
+)
+
+CODEX_PRESETS = tuple(
+    preset for presets in CODEX_PRESET_BANDS for preset in presets
+)
 
 CODEX_WORKER_ROUTING_TOKENS = (
-    CODEX_PRESET_LADDER,
+    *CODEX_PRESET_BAND_LINES,
+    "presets within a band are unordered",
     "explicitly specify both model and effort",
+    "select the best task fit within that band",
+    "do not default to the highest-effort preset",
     "split the packet before escalating",
+    "one band only",
     "above the main thread's model or effort",
     "specific packet and current run",
 )
@@ -727,7 +744,8 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         "five mandatory foundation surfaces",
         "Superpowers overlay",
         "cost ceiling",
-        CODEX_PRESET_LADDER,
+        "three practical Codex preset bands",
+        *CODEX_PRESET_BAND_LINES,
     ):
         require_text(english, token, "README.md", issues, case_sensitive=False)
     for token in (
@@ -735,7 +753,8 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         "五个强制 foundation surface",
         "Superpowers overlay",
         "成本上限",
-        CODEX_PRESET_LADDER,
+        "三个实践型 Codex preset 档",
+        *CODEX_PRESET_BAND_LINES,
     ):
         require_text(chinese, token, "README_CN.md", issues, case_sensitive=False)
     for token in ("round five", "systematic-debugging", "No sixth patch"):
@@ -834,6 +853,10 @@ def validate_forbidden_legacy(root: Path, issues: list[str]) -> None:
                 r"Valid deployment options include|Supported effort levels are|Recommended deployment guidance",
                 re.IGNORECASE,
             ),
+        ),
+        (
+            "strict preset ladder",
+            re.compile(re.escape(LEGACY_CODEX_PRESET_LADDER), re.IGNORECASE),
         ),
     )
     model_policy_surfaces = {
