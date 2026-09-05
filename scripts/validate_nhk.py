@@ -234,12 +234,24 @@ CODEX_PRESET_BANDS = (
     ("GPT-5.6 Sol medium", "GPT-5.6 Sol high", "GPT-6 Astra medium"),
     ("GPT-5.6 Sol xhigh", "GPT-6 Astra xhigh"),
 )
+CODEX_RESERVED_DISPLAY_PRESETS = ("GPT-6 Astra max",)
+CODEX_ALLOWED_FAMILY_NAMES = ("GPT-5.6 Luna", "GPT-5.6 Sol", "GPT-6 Astra")
+CODEX_ALLOWED_RUNTIME_IDS = ("gpt-5.6-luna", "gpt-5.6-sol", "gpt-6-astra")
+CODEX_DISPLAY_PRESET_RE = re.compile(
+    r"\bGPT-\d+(?:\.\d+)?"
+    r"(?:"
+    r"(?:\s+[A-Z][A-Za-z0-9]+)+(?:\s+(?:low|medium|high|xhigh|max))?"
+    r"|"
+    r"\s+(?:low|medium|high|xhigh|max)"
+    r")\b"
+)
+CODEX_RUNTIME_ID_RE = re.compile(r"\bgpt-\d[\w.-]*\b", re.IGNORECASE)
 
 INSTRUCTION_COMPANION_ROUTES = (
     "Read `coding-agent-guide.md` to route a task or symptom to code and first-pass verification.",
     "Read `implementation-planning.md` before writing, approving, or materially revising an implementation plan.",
     "Read `worker-policy.md` only when orchestrating, dispatching, or reviewing workers. Load its common sections and the current platform section.",
-    "Read `execution-recovery.md` after five failed rounds on one acceptance gap, or earlier evidence of architectural stagnation.",
+    "Read `execution-recovery.md` after five failed rounds on one task or one acceptance gap, or earlier evidence of architectural stagnation.",
     "Treat `documentation-governance.md` as the source of truth for documentation lifecycle rules.",
 )
 
@@ -298,7 +310,7 @@ def second_level_sections(text: str) -> dict[str, str]:
     sections: dict[str, str] = {}
     current: str | None = None
     body: list[str] = []
-    for line in text.splitlines():
+    for _, line in active_markdown_lines(text):
         match = TOP_HEADING_RE.match(line)
         if match:
             if current is not None:
@@ -381,6 +393,42 @@ def validate_exact_codex_bands(
             )
 
 
+def validate_codex_declared_presets(
+    codex: str, label: str, issues: list[str]
+) -> None:
+    allowed_display = {
+        *(preset.lower() for band in CODEX_PRESET_BANDS for preset in band),
+        *(preset.lower() for preset in CODEX_RESERVED_DISPLAY_PRESETS),
+        *(name.lower() for name in CODEX_ALLOWED_FAMILY_NAMES),
+    }
+    allowed_runtime = {item.lower() for item in CODEX_ALLOWED_RUNTIME_IDS}
+    seen: set[str] = set()
+
+    for match in CODEX_DISPLAY_PRESET_RE.finditer(codex):
+        declared = " ".join(match.group(0).split()).lower()
+        if declared in allowed_display or declared in seen:
+            seen.add(declared)
+            continue
+        seen.add(declared)
+        issues.append(
+            f"{label} Codex Routing declares unapproved versioned preset "
+            f"{match.group(0)!r}; allowed presets are the Band 1-3 sets and "
+            "reserved GPT-6 Astra max"
+        )
+
+    leftover = CODEX_DISPLAY_PRESET_RE.sub(" ", codex)
+    for match in CODEX_RUNTIME_ID_RE.finditer(leftover):
+        token = match.group(0).lower()
+        if token in allowed_runtime or token in seen:
+            continue
+        seen.add(token)
+        issues.append(
+            f"{label} Codex Routing declares unapproved versioned preset "
+            f"{match.group(0)!r}; allowed presets are the Band 1-3 sets and "
+            "reserved GPT-6 Astra max"
+        )
+
+
 def validate_worker_policy_contract(
     text: str,
     headings: tuple[str, ...],
@@ -453,6 +501,7 @@ def validate_worker_policy_contract(
         issues,
     )
     validate_exact_codex_bands(sections.get("Codex Routing", ""), label, issues)
+    validate_codex_declared_presets(sections.get("Codex Routing", ""), label, issues)
 
 
 def validate_execution_recovery_contract(
@@ -1207,6 +1256,8 @@ def validate_source(root: Path) -> list[str]:
             *DOC_GOVERNANCE_HEADINGS,
             "100 lines",
             "`implementation-planning.md`",
+            "`worker-policy.md`",
+            "`execution-recovery.md`",
             "archive completed implementation plans",
         ):
             require_text(
@@ -1298,11 +1349,13 @@ def validate_final(
 
     headings = [
         match.group(1).strip()
-        for line in text.splitlines()
+        for _, line in active_markdown_lines(text)
         if (match := TOP_HEADING_RE.match(line))
     ]
     all_heading_titles = [
-        title for line in text.splitlines() if (title := heading_title(line))
+        title
+        for _, line in active_markdown_lines(text)
+        if (title := heading_title(line))
     ]
     forbidden_heading_names = {
         "NHK Governance",
@@ -1312,7 +1365,7 @@ def validate_final(
         "Agent Instructions Template",
         "Claude Code Project Instructions Template",
     }
-    for line in text.splitlines():
+    for _, line in active_markdown_lines(text):
         title = heading_title(line)
         if title in forbidden_heading_names:
             issues.append(f"final file contains invented governance heading {title!r}")
@@ -1325,7 +1378,7 @@ def validate_final(
 
         h1_headings = [
             match.group(1).strip()
-            for line in text.splitlines()
+            for _, line in active_markdown_lines(text)
             if (match := re.match(r"^#(?!#)\s+(.+?)\s*$", line))
         ]
         expected_h1 = {
@@ -1460,6 +1513,12 @@ def validate_final(
                 if token not in lower:
                     issues.append(
                         f"doc-governance planning lifecycle is missing {token!r}"
+                    )
+            roles = second_level_sections(text).get("Document Roles", "")
+            for token in ("worker-policy.md", "execution-recovery.md"):
+                if token not in roles:
+                    issues.append(
+                        f"doc-governance Document Roles is missing {token!r}"
                     )
         return issues
 

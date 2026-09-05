@@ -83,7 +83,7 @@ NHK 在这里是故意有主张的：
 
 `implementation-planning.md` 的职责刻意更窄：它只是 Superpowers overlay，不是来抢班夺权的第二套 planner。只有在编写、批准或实质修改 implementation plan 前才加载；普通编码、review 和 debug 不用读。它保留 Superpowers 要求的精确文件、接口、TDD steps、命令、预期结果与必要代码，只增加 `Delivers`、`Blocked by` 和 `Worker class`，把每个 task 收到一个 fresh implementer context 和一个 reviewer gate 能稳妥接住的大小。NHK 只通过 workspace 文档做这层改良，不去 patch Superpowers 插件。
 
-`worker-policy.md` 管的是“这活交给谁、要交代清楚什么、谁来检查”。需要安排子代理干活或检查它们的成果时，才读它。`execution-recovery.md` 则在修复开始打转时出场：同一个问题五轮还没解决，或者更早发现设计可能有问题，就先按它的说明重新判断。平时不用把两份文件都摊在桌上。
+`worker-policy.md` 管的是“这活交给谁、要交代清楚什么、谁来检查”。需要安排子代理干活或检查它们的成果时，才读它。`execution-recovery.md` 则在修复开始打转时出场：同一个任务或同一个问题五轮还没解决，或者更早发现设计可能有问题，就先按它的说明重新判断。平时不用把两份文件都摊在桌上。
 
 缺哪份，`nhk-bootstrap` 就按对应的[派工模板](references/worker-policy-template.md)或[恢复模板](references/execution-recovery-template.md)补哪份，已有的项目内容会留下。如果主指令文件里还放着旧版 NHK 的规则，bootstrap 或 upkeep 只把这些过时段落换成指向配套文件的说明。项目事实和你明确批准过的例外也会保留。
 

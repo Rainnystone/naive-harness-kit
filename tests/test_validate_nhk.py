@@ -144,7 +144,8 @@ def doc_governance_text(extra_lines: int = 0) -> str:
     sections = {
         "Document Roles": (
             "Instructions govern behavior; the routing guide routes coding work; "
-            "`implementation-planning.md` owns stable task sizing."
+            "`implementation-planning.md` owns stable task sizing; "
+            "`worker-policy.md` owns dispatch; `execution-recovery.md` owns recovery."
         ),
         "Active Documentation Surfaces": "Active plans and tracking contain active work only.",
         "Workspace and Document Map": "Use `AGENTS.md`, the routing guide, active docs, and `archive/README.md`.",
@@ -431,7 +432,7 @@ class SourceValidationTests(ValidatorTestCase):
                 "`worker-policy.md` when useful",
             ),
             (
-                "`execution-recovery.md` after five failed rounds on one acceptance gap, or earlier evidence of architectural stagnation",
+                "`execution-recovery.md` after five failed rounds on one task or one acceptance gap, or earlier evidence of architectural stagnation",
                 "`execution-recovery.md` after problems",
             ),
         )
@@ -515,6 +516,21 @@ class SourceValidationTests(ValidatorTestCase):
                 result = run_cli("--root", mutated)
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(token, result.stdout)
+
+    def test_governance_template_requires_new_companion_paths(self) -> None:
+        for token in ("`worker-policy.md`", "`execution-recovery.md`"):
+            with self.subTest(token=token):
+                root = self.make_source_fixture()
+                path = root / "references" / "documentation-governance-template.md"
+                path.write_text(
+                    path.read_text(encoding="utf-8").replace(
+                        token, "`other-companion.md`"
+                    ),
+                    encoding="utf-8",
+                )
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(token.strip("`"), result.stdout)
 
     def test_worker_policy_source_contract_fails(self) -> None:
         mutations = (
@@ -1025,6 +1041,25 @@ class FinalValidationTests(ValidatorTestCase):
         result = run_cli("--final", path, "--kind", "worker-policy")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_worker_policy_rejects_presets_declared_outside_band_lines(self) -> None:
+        extras = (
+            "GPT-9 Nova max is also approved for ordinary implementation.",
+            "GPT-6 Nova max is also approved for ordinary implementation.",
+            "GPT-5.5 xhigh is also approved for ordinary implementation.",
+        )
+        for extra in extras:
+            with self.subTest(extra=extra):
+                path = self.write_final(
+                    worker_policy_text().replace(
+                        "## Codex Routing",
+                        f"## Codex Routing\n\n- {extra}",
+                        1,
+                    )
+                )
+                result = run_cli("--final", path, "--kind", "worker-policy")
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("unapproved versioned preset", result.stdout.lower())
+
     def test_worker_policy_section_false_positive_fails(self) -> None:
         required = "Both must pass; self-review is not a substitute."
         content = worker_policy_text().replace(required, "", 1)
@@ -1118,6 +1153,44 @@ class FinalValidationTests(ValidatorTestCase):
         result = run_cli("--final", path, "--kind", "execution-recovery")
         self.assertEqual(result.returncode, 1)
         self.assertIn("Triggers and Accounting", result.stdout)
+
+    def test_companion_inactive_markdown_cannot_satisfy_contract(self) -> None:
+        cases = (
+            ("worker-policy", worker_policy_text()),
+            ("execution-recovery", execution_recovery_text()),
+        )
+        wrappers = (
+            lambda body: f"```md\n{body.rstrip()}\n```\n",
+            lambda body: f"<!--\n{body.rstrip()}\n-->\n",
+        )
+        for kind, content in cases:
+            for wrap in wrappers:
+                wrapped = wrap(content)
+                with self.subTest(kind=kind, wrapper=wrapped[:4]):
+                    path = self.write_final(wrapped)
+                    result = run_cli("--final", path, "--kind", kind)
+                    self.assertEqual(result.returncode, 1)
+                    self.assertRegex(
+                        result.stdout.lower(),
+                        r"heading|# worker policy|# execution recovery",
+                    )
+
+    def test_companion_fenced_heading_does_not_satisfy_or_pollute_contract(self) -> None:
+        missing = worker_policy_text().replace("## Claude Routing\n", "", 1)
+        missing += "\n```md\n## Claude Routing\n```\n"
+        path = self.write_final(missing)
+        result = run_cli("--final", path, "--kind", "worker-policy")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("headings", result.stdout.lower())
+
+        extra_example = worker_policy_text().replace(
+            "## Claude Routing",
+            "## Claude Routing\n\n```md\n## Extra Catalog\n```",
+            1,
+        )
+        path = self.write_final(extra_example)
+        result = run_cli("--final", path, "--kind", "worker-policy")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_companion_final_rejects_active_companion_imports(self) -> None:
         cases = (
@@ -1265,6 +1338,16 @@ class FinalValidationTests(ValidatorTestCase):
         result = run_cli("--final", path, "--kind", "doc-governance")
         self.assertEqual(result.returncode, 1)
         self.assertIn("implementation-planning.md", result.stdout)
+
+    def test_doc_governance_requires_worker_and_recovery_paths(self) -> None:
+        for token in ("`worker-policy.md`", "`execution-recovery.md`"):
+            with self.subTest(token=token):
+                path = self.write_final(
+                    doc_governance_text().replace(token, "`other-companion.md`", 1)
+                )
+                result = run_cli("--final", path, "--kind", "doc-governance")
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(token.strip("`"), result.stdout)
 
     def test_claude_rejects_companion_auto_imports(self) -> None:
         cases = (

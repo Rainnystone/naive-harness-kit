@@ -53,7 +53,7 @@ Include only a real safety boundary that cannot fit in Project Map. Route task-s
 - Read `coding-agent-guide.md` to route a task or symptom to code and first-pass verification.
 - Read `implementation-planning.md` before writing, approving, or materially revising an implementation plan.
 - Read `worker-policy.md` only when orchestrating, dispatching, or reviewing workers. Load its common sections and the current platform section.
-- Read `execution-recovery.md` after five failed rounds on one acceptance gap, or earlier evidence of architectural stagnation.
+- Read `execution-recovery.md` after five failed rounds on one task or one acceptance gap, or earlier evidence of architectural stagnation.
 - Treat `documentation-governance.md` as the source of truth for documentation lifecycle rules.
 - Load the smallest active context that safely routes the task. Prefer implementation, tests, and active docs before history.
 - Keep active plans and tracking aligned with actual status. Create heavier tracking only when the work needs it.
