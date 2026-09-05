@@ -22,10 +22,9 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 
 - Authorization comes from the allowed role or preset for the packet, not the main thread's current model or effort. Explicit user budgets still bind.
 - Select an explicitly runtime-supported model and effort; never inherit a top preset silently.
-- Codex workers use `fork_turns: none`. A fresh worker receives a self-contained brief, required files, and binding global constraints.
 - Send routine fixes back to the original implementer. Give a fresh replacement a self-contained file handoff.
 - Handoff uses the task brief, report, and fixed diff. State objective, scope, read/write authority, acceptance, verification, forbidden actions, expected return, selected configuration, and binding interfaces and constraints.
-- Recursive delegation needs separate human authorization for a named packet. Ultra authorization and recursion authorization never imply each other.
+- Recursive delegation needs separate human authorization for a named packet.
 - Keep subagent-driven implementers sequential. Parallelize read-only work only when ownership, state, artifacts, services, and verification resources are independent.
 - Check runtime progress and lifecycle. A timeout alone is not a blocker and does not require a nonexistent close tool.
 - The main thread owns integration, cross-task verification, recovery decisions, and the final result.
@@ -36,14 +35,11 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 - Use the upstream task-reviewer, re-review, and final-review prompts. Do not maintain copied NHK review prompts.
 - Give reviewers fixed BASE and HEAD revisions, binding constraints, the report, and evidence. Check implementer claims against the diff and test output.
 - A scoped re-review checks prior findings and regressions from the fix. The main thread resolves every cannot-verify item before completion.
-- Clear, small, low-risk initial reviews may use GPT-5.5 xhigh. Other initial Codex reviews use Band 2 or Band 3.
-- GPT-5.6 Luna may perform low-risk scoped re-review, never an initial task review.
-- GPT-6 Astra xhigh or max is reserved for the whole-change final review of a complex Superpowers plan. It is not an ordinary implementation, debugging, or recovery preset.
-- Select post-review fixes and re-reviews for their own task. “Most capable upstream” means most capable within the task's authorization, not an Ultra override.
 - Run one whole-change final review after all tasks. Follow it with at most one concentrated fix wave and one scoped re-review.
 
 ### Codex Routing
 
+- Every fresh Codex worker uses `fork_turns: none` and receives a self-contained brief, required files, and binding global constraints.
 - Band 1: GPT-5.5 xhigh; GPT-5.6 Luna max.
 - Band 2: GPT-5.6 Terra xhigh; GPT-5.6 Sol medium; GPT-5.6 Sol high; GPT-6 Astra low.
 - Band 3: GPT-5.6 Sol xhigh; GPT-6 Astra medium; GPT-6 Astra high.
@@ -52,7 +48,12 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 - If a preset is unavailable, choose a supported same-band substitute when possible. Treat whole-band unavailability as availability, not capability failure.
 - Repair oversized packets and missing context first. Escalate one band only when evidence shows a correctly sized packet is capability-limited.
 - At the ordinary Band 3 ceiling, enter execution recovery instead of borrowing special final-review presets.
+- Clear, small, low-risk initial reviews may use GPT-5.5 xhigh. Other initial reviews use Band 2 or Band 3.
+- GPT-5.6 Luna may perform low-risk scoped re-review, never an initial task review.
+- GPT-6 Astra xhigh or max is reserved for whole-change final review of a complex Superpowers plan, not ordinary implementation, debugging, or recovery.
+- Select post-review fixes and re-reviews for their own task. “Most capable upstream” means most capable within the task's authorization.
 - Ultra requires human approval naming the packet and current run. It never becomes a reusable project or session default.
+- Ultra authorization and recursion authorization never imply each other.
 
 ### Claude Routing
 

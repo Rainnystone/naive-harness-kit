@@ -31,6 +31,23 @@ COMPANION_PATHS = (
     "execution-recovery.md",
     "documentation-governance.md",
 )
+COMPANION_FINAL_CONTRACTS = {
+    "worker-policy-template.md": (
+        100,
+        "Worker Policy",
+        ("Dispatch Contract", "Review Gates", "Codex Routing", "Claude Routing"),
+    ),
+    "execution-recovery-template.md": (
+        80,
+        "Execution Recovery",
+        (
+            "Triggers and Accounting",
+            "Main-thread Reassessment",
+            "Independent Diagnosis",
+            "Recovery and Stop",
+        ),
+    ),
+}
 
 PROJECT_ADAPTATIONS = {
     "simple": {
@@ -154,6 +171,35 @@ def assemble_thin_claude() -> str:
 """
 
 
+def assemble_companion(template: Path, h1: str) -> str:
+    lines = template.read_text(encoding="utf-8").splitlines()
+    try:
+        start = lines.index("## Required Final Shape")
+        end = lines.index("## Final Check", start + 1)
+    except ValueError as error:
+        raise AssertionError(f"{template.name} lacks its final-shape boundary") from error
+
+    output = [f"# {h1}"]
+    in_final_section = False
+    for line in lines[start + 1 : end]:
+        if line.startswith("### "):
+            output.extend(("", f"## {line.removeprefix('### ')}"))
+            in_final_section = True
+        elif in_final_section:
+            output.append(line)
+    return "\n".join(output).strip() + "\n"
+
+
+def section_text(document: str, heading: str) -> str:
+    lines = document.splitlines()
+    start = lines.index(f"## {heading}") + 1
+    end = next(
+        (index for index in range(start, len(lines)) if lines[index].startswith("## ")),
+        len(lines),
+    )
+    return "\n".join(lines[start:end]).strip()
+
+
 def word_count(text: str) -> int:
     return len(WORD_RE.findall(text))
 
@@ -221,26 +267,61 @@ class InstructionExampleTests(unittest.TestCase):
         self.assertNotIn("[[", example)
         self.assertLessEqual(max(word_count(line) for line in lines), 24)
 
-    def test_companion_templates_cover_final_contracts(self) -> None:
-        cases = {
-            "worker-policy-template.md": (
-                140,
-                "Worker Policy",
-                ("Dispatch Contract", "Review Gates", "Codex Routing", "Claude Routing"),
-            ),
-            "execution-recovery-template.md": (
-                140,
-                "Execution Recovery",
-                ("Triggers and Accounting", "Main-thread Reassessment", "Independent Diagnosis", "Recovery and Stop"),
-            ),
-        }
-        for name, (limit, h1, h2s) in cases.items():
+    def test_generated_companions_are_clean_and_within_final_budgets(self) -> None:
+        for name, (limit, h1, h2s) in COMPANION_FINAL_CONTRACTS.items():
             with self.subTest(template=name):
-                text = (REFERENCES / name).read_text(encoding="utf-8")
-                self.assertLessEqual(len(text.splitlines()), limit)
-                self.assertIn(f"# {h1}", text)
-                for heading in h2s:
-                    self.assertIn(f"### {heading}", text)
+                template = REFERENCES / name
+                source_lines = template.read_text(encoding="utf-8").splitlines()
+                self.assertLessEqual(len(source_lines), 140)
+                example = assemble_companion(template, h1)
+                lines = example.splitlines()
+                headings = tuple(
+                    line.removeprefix("## ")
+                    for line in lines
+                    if line.startswith("## ")
+                )
+                self.assertEqual(lines[0], f"# {h1}")
+                self.assertEqual(headings, h2s)
+                self.assertLessEqual(len(lines), limit)
+                self.assertNotRegex(example, r"(?i)template|placeholder|replace this")
+
+    def test_generated_worker_common_sections_are_platform_neutral(self) -> None:
+        example = assemble_companion(
+            REFERENCES / "worker-policy-template.md", "Worker Policy"
+        )
+        common = "\n".join(
+            section_text(example, heading)
+            for heading in ("Dispatch Contract", "Review Gates")
+        )
+        self.assertNotRegex(
+            common,
+            r"\b(?:Codex|GPT-\d|Luna|Terra|Sol|Astra|Ultra|fork_turns)\b",
+        )
+        codex = section_text(example, "Codex Routing")
+        for token in (
+            "fork_turns: none",
+            "GPT-5.5 xhigh",
+            "GPT-5.6 Luna",
+            "GPT-6 Astra xhigh or max",
+            "Ultra authorization and recursion authorization never imply each other",
+        ):
+            self.assertIn(token, codex)
+
+    def test_generated_recovery_preserves_runtime_boundaries(self) -> None:
+        example = assemble_companion(
+            REFERENCES / "execution-recovery-template.md", "Execution Recovery"
+        )
+        for token in (
+            "existing authoritative execution record",
+            "In SDD, this is the SDD ledger",
+            "five fix-review rounds per task",
+            "five rounds for the same stable acceptance gap across tasks",
+            "why prior attempts failed",
+            "discriminating observation",
+            "original scope and authority",
+        ):
+            self.assertIn(token, example)
+        self.assertIn("do not create an SDD-only or parallel state system", example)
 
 
 if __name__ == "__main__":
