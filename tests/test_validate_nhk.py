@@ -518,19 +518,22 @@ class SourceValidationTests(ValidatorTestCase):
                 self.assertIn(token, result.stdout)
 
     def test_governance_template_requires_new_companion_paths(self) -> None:
-        for token in ("`worker-policy.md`", "`execution-recovery.md`"):
-            with self.subTest(token=token):
-                root = self.make_source_fixture()
-                path = root / "references" / "documentation-governance-template.md"
-                path.write_text(
-                    path.read_text(encoding="utf-8").replace(
-                        token, "`other-companion.md`"
-                    ),
-                    encoding="utf-8",
-                )
-                result = run_cli("--root", root)
-                self.assertEqual(result.returncode, 1)
-                self.assertIn(token.strip("`"), result.stdout)
+        root = self.make_source_fixture()
+        path = root / "references" / "documentation-governance-template.md"
+        text = path.read_text(encoding="utf-8")
+        start = text.index("### Document Roles")
+        end = text.index("### Active Documentation Surfaces")
+        chunk = (
+            text[start:end]
+            .replace("`worker-policy.md`", "`other-companion.md`")
+            .replace("`execution-recovery.md`", "`other-companion.md`")
+        )
+        path.write_text(text[:start] + chunk + text[end:], encoding="utf-8")
+        self.assertIn("`worker-policy.md`", path.read_text(encoding="utf-8"))
+        result = run_cli("--root", root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Document Roles", result.stdout)
+        self.assertIn("worker-policy.md", result.stdout)
 
     def test_worker_policy_source_contract_fails(self) -> None:
         mutations = (
@@ -1042,10 +1045,12 @@ class FinalValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_worker_policy_rejects_presets_declared_outside_band_lines(self) -> None:
-        extras = (
+                extras = (
             "GPT-9 Nova max is also approved for ordinary implementation.",
             "GPT-6 Nova max is also approved for ordinary implementation.",
             "GPT-5.5 xhigh is also approved for ordinary implementation.",
+            "GPT-6 Astra ultra is also approved for ordinary implementation.",
+            "GPT-6 Astra turbo is also approved for ordinary implementation.",
         )
         for extra in extras:
             with self.subTest(extra=extra):
@@ -1183,12 +1188,30 @@ class FinalValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("headings", result.stdout.lower())
 
-        extra_example = worker_policy_text().replace(
+                extra_example = worker_policy_text().replace(
             "## Claude Routing",
             "## Claude Routing\n\n```md\n## Extra Catalog\n```",
             1,
         )
         path = self.write_final(extra_example)
+        result = run_cli("--final", path, "--kind", "worker-policy")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_overindented_fence_does_not_hide_following_heading(self) -> None:
+        extra = "\n    ```md\n## Extra Section\n"
+        cases = (
+            ("worker-policy", worker_policy_text() + extra, "headings"),
+            ("doc-governance", doc_governance_text() + extra, "Extra Section"),
+        )
+        for kind, content, needle in cases:
+            with self.subTest(kind=kind):
+                path = self.write_final(content)
+                result = run_cli("--final", path, "--kind", kind)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(needle, result.stdout)
+
+        still_fenced = worker_policy_text() + "\n   ```md\n## Extra Section\n   ```\n"
+        path = self.write_final(still_fenced)
         result = run_cli("--final", path, "--kind", "worker-policy")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
@@ -1348,6 +1371,17 @@ class FinalValidationTests(ValidatorTestCase):
                 result = run_cli("--final", path, "--kind", "doc-governance")
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(token.strip("`"), result.stdout)
+
+        aliased = (
+            doc_governance_text()
+            .replace("`worker-policy.md`", "`legacy-worker-policy.md`", 1)
+            .replace("`execution-recovery.md`", "`legacy-execution-recovery.md`", 1)
+        )
+        path = self.write_final(aliased)
+        result = run_cli("--final", path, "--kind", "doc-governance")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("worker-policy.md", result.stdout)
+        self.assertIn("execution-recovery.md", result.stdout)
 
     def test_claude_rejects_companion_auto_imports(self) -> None:
         cases = (

@@ -30,7 +30,7 @@ Start with `# Documentation Governance`, then use the following second-level hea
 
 ### Document Roles
 
-Define the canonical instruction source, five companion docs, active work surfaces, archive root, and archive index in a compact table or list. State that companion paths load on demand rather than through Claude imports.
+Define the canonical instruction source, five companion docs including `worker-policy.md` and `execution-recovery.md`, active work surfaces, archive root, and archive index in a compact table or list. State that companion paths load on demand rather than through Claude imports.
 
 ### Active Documentation Surfaces
 

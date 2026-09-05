@@ -108,7 +108,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 ### C7. Documentation governance stays on documents
 
-**Expected:** `documentation-governance.md` stays within 100 lines and covers document roles, active surfaces, workspace/document map, lifecycle, naming/loading, and archive invariants. It registers all five stable companions, including literal `worker-policy.md` and `execution-recovery.md` paths, keeps `implementation-planning.md` separate from archivable completed plans, and contains no production-code map or step-by-step archive manual.
+**Expected:** `documentation-governance.md` stays within 100 lines and covers document roles, active surfaces, workspace/document map, lifecycle, naming/loading, and archive invariants. It registers all five stable companions as exact backticked `worker-policy.md` and `execution-recovery.md` paths (not prefixed aliases), keeps `implementation-planning.md` separate from archivable completed plans, and contains no production-code map or step-by-step archive manual. The governance source template's Required Final Shape Document Roles contract names both paths; mentioning them only in Purpose does not satisfy `--root`.
 
 ### C8. Superpowers-compatible planning companion
 
@@ -128,7 +128,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** A standalone project instruction mentions its own “email template contract”; a planning guide moves required fields or Superpowers details outside their required sections; or a worker/recovery companion violates its required headings, line budget, routing boundary, or approved policy contract.
 
-**Expected:** The ordinary project phrase remains valid. Planning validation requires actual `Delivers`, `Blocked by`, and `Worker class` field syntax inside Task Contract and the preserved Superpowers details inside Workflow Compatibility. Companion validation rejects a malformed worker or recovery document without broad scans that mistake ordinary project facts for policy. It reads H1, second-level headings, and section bodies from active Markdown, so fenced or commented examples cannot satisfy those contracts, and it rejects versioned Codex presets declared outside the approved Band 1-3 sets and reserved GPT-6 Astra max.
+**Expected:** The ordinary project phrase remains valid. Planning validation requires actual `Delivers`, `Blocked by`, and `Worker class` field syntax inside Task Contract and the preserved Superpowers details inside Workflow Compatibility. Companion validation rejects a malformed worker or recovery document without broad scans that mistake ordinary project facts for policy. It reads H1, second-level headings, and section bodies from active Markdown: fence delimiters count only when indented by at most three spaces, so a four-space-indented fence does not hide a following heading. Fenced or commented examples cannot satisfy those contracts, and it rejects versioned Codex presets declared outside the approved Band 1-3 sets and reserved GPT-6 Astra max, including unrecognized effort suffixes on an allowed family.
 
 ### C12. Companion budgets and measured instruction reduction
 

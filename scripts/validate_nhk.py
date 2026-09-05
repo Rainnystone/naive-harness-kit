@@ -237,15 +237,58 @@ CODEX_PRESET_BANDS = (
 CODEX_RESERVED_DISPLAY_PRESETS = ("GPT-6 Astra max",)
 CODEX_ALLOWED_FAMILY_NAMES = ("GPT-5.6 Luna", "GPT-5.6 Sol", "GPT-6 Astra")
 CODEX_ALLOWED_RUNTIME_IDS = ("gpt-5.6-luna", "gpt-5.6-sol", "gpt-6-astra")
+CODEX_QUALIFIER_STOPWORDS = (
+    "a",
+    "an",
+    "and",
+    "are",
+    "as",
+    "at",
+    "be",
+    "by",
+    "can",
+    "does",
+    "for",
+    "from",
+    "has",
+    "if",
+    "in",
+    "is",
+    "may",
+    "must",
+    "never",
+    "not",
+    "of",
+    "on",
+    "or",
+    "should",
+    "than",
+    "that",
+    "the",
+    "to",
+    "when",
+    "which",
+    "will",
+    "with",
+)
+CODEX_QUALIFIER_STOP_RE = "|".join(
+    sorted(CODEX_QUALIFIER_STOPWORDS, key=len, reverse=True)
+)
 CODEX_DISPLAY_PRESET_RE = re.compile(
     r"\bGPT-\d+(?:\.\d+)?"
     r"(?:"
-    r"(?:\s+[A-Z][A-Za-z0-9]+)+(?:\s+(?:low|medium|high|xhigh|max))?"
+    r"(?:\s+[A-Z][A-Za-z0-9]+)+"
+    rf"(?:\s+(?!(?:{CODEX_QUALIFIER_STOP_RE})\b)[a-z][a-z0-9]*)?"
     r"|"
-    r"\s+(?:low|medium|high|xhigh|max)"
+    rf"\s+(?!(?:{CODEX_QUALIFIER_STOP_RE})\b)[a-z][a-z0-9]*"
     r")\b"
 )
 CODEX_RUNTIME_ID_RE = re.compile(r"\bgpt-\d[\w.-]*\b", re.IGNORECASE)
+FENCE_MARKER_RE = re.compile(r"^([ \t]{0,3})(`{3,}|~{3,})")
+GOVERNANCE_ROLE_PATH_RES = (
+    ("worker-policy.md", re.compile(r"`(?:\./)?worker-policy\.md`")),
+    ("execution-recovery.md", re.compile(r"`(?:\./)?execution-recovery\.md`")),
+)
 
 INSTRUCTION_COMPANION_ROUTES = (
     "Read `coding-agent-guide.md` to route a task or symptom to code and first-pass verification.",
@@ -598,6 +641,14 @@ def strip_html_comments(line: str, in_comment: bool) -> tuple[str, bool]:
     return "".join(visible), in_comment
 
 
+def fence_marker(line: str) -> tuple[str, int, int] | None:
+    match = FENCE_MARKER_RE.match(line)
+    if not match:
+        return None
+    marker = match.group(2)
+    return marker[0], len(marker), match.end()
+
+
 def active_markdown_lines(text: str) -> Iterable[tuple[int, str]]:
     fence_char: str | None = None
     fence_width = 0
@@ -605,21 +656,22 @@ def active_markdown_lines(text: str) -> Iterable[tuple[int, str]]:
 
     for number, raw_line in enumerate(text.splitlines(), 1):
         if fence_char is not None:
-            stripped = raw_line.lstrip()
-            closing = re.fullmatch(
-                rf"{re.escape(fence_char)}{{{fence_width},}}[ \t]*", stripped
-            )
-            if closing:
+            marker = fence_marker(raw_line)
+            if (
+                marker is not None
+                and marker[0] == fence_char
+                and marker[1] >= fence_width
+                and raw_line[marker[2] :].strip() == ""
+            ):
                 fence_char = None
                 fence_width = 0
             continue
 
         visible, in_comment = strip_html_comments(raw_line, in_comment)
-        stripped = visible.lstrip()
-        fence = re.match(r"(`{3,}|~{3,})", stripped)
-        if fence:
-            fence_char = fence.group(1)[0]
-            fence_width = len(fence.group(1))
+        marker = fence_marker(visible)
+        if marker is not None:
+            fence_char = marker[0]
+            fence_width = marker[1]
             continue
 
         yield number, visible
@@ -1256,8 +1308,6 @@ def validate_source(root: Path) -> list[str]:
             *DOC_GOVERNANCE_HEADINGS,
             "100 lines",
             "`implementation-planning.md`",
-            "`worker-policy.md`",
-            "`execution-recovery.md`",
             "archive completed implementation plans",
         ):
             require_text(
@@ -1266,6 +1316,14 @@ def validate_source(root: Path) -> list[str]:
                 "documentation-governance-template.md",
                 issues,
             )
+        _, shape_sections = final_shape_sections(governance_template)
+        roles = shape_sections.get("Document Roles", "")
+        for name, pattern in GOVERNANCE_ROLE_PATH_RES:
+            if not pattern.search(roles):
+                issues.append(
+                    "documentation-governance-template.md Required Final Shape "
+                    f"Document Roles is missing `{name}`"
+                )
 
     validate_readmes(root, issues)
     validate_repo_split(root, issues)
@@ -1515,10 +1573,10 @@ def validate_final(
                         f"doc-governance planning lifecycle is missing {token!r}"
                     )
             roles = second_level_sections(text).get("Document Roles", "")
-            for token in ("worker-policy.md", "execution-recovery.md"):
-                if token not in roles:
+            for name, pattern in GOVERNANCE_ROLE_PATH_RES:
+                if not pattern.search(roles):
                     issues.append(
-                        f"doc-governance Document Roles is missing {token!r}"
+                        f"doc-governance Document Roles is missing `{name}`"
                     )
         return issues
 
