@@ -267,7 +267,7 @@ class InstructionExampleTests(unittest.TestCase):
                     example,
                 )
                 self.assertIn(
-                    "- Read `execution-recovery.md` after five failed rounds on one acceptance gap, or earlier evidence of architectural stagnation.",
+                    "- Read `execution-recovery.md` after five failed rounds on one task or one acceptance gap, or earlier evidence of architectural stagnation.",
                     example,
                 )
 
