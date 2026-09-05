@@ -85,6 +85,8 @@ The direct source for the governance layer is `references/documentation-governan
 
 `worker-policy.md` is the on-demand home for worker role permissions, dispatch packets, review gates, and the current Codex and Claude routing catalogs. Load it only to orchestrate, dispatch, or review workers. Read `execution-recovery.md` after five failed rounds on one acceptance gap, or earlier evidence of architectural stagnation; it records exhausted acceptance gaps and the bounded path back to a human decision. Bootstrap creates either missing companion minimally from [`references/worker-policy-template.md`](references/worker-policy-template.md) or [`references/execution-recovery-template.md`](references/execution-recovery-template.md), while preserving healthy project content.
 
+For an older workspace where those companions coexist with superseded NHK inline policy or recovery rules, bootstrap or upkeep replaces only that NHK text with the current companion routes and preserves project facts and human-authorized exceptions.
+
 ## Dependencies
 
 NHK expects these peer workflow systems:

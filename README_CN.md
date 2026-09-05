@@ -85,6 +85,8 @@ NHK 在这里是故意有主张的：
 
 `worker-policy.md` 是 worker 角色权限、dispatch packet、review gate 和当前 Codex/Claude 路由目录的按需唯一归属；只在编排、派遣或 review worker 时读取。某一 acceptance gap 连续五轮失败后，或更早出现架构停滞证据时，读取 `execution-recovery.md`；它记录耗尽的 acceptance gap，以及回到人类决策前那条有边界的恢复路径。若这两份 companion 缺失，bootstrap 会分别按 [`references/worker-policy-template.md`](references/worker-policy-template.md) 或 [`references/execution-recovery-template.md`](references/execution-recovery-template.md) 最小化补齐，并保留健康的项目内容。
 
+若旧 workspace 已有这两份 companion，却仍在 instruction 中保留过时的 NHK 内联 policy 或 recovery 规则，bootstrap 或 upkeep 只替换这部分 NHK 文本为当前 companion 路由，并保留项目事实和用户已授权的例外。
+
 ## 依赖
 
 NHK 默认把下面两个工作流系统视为并列依赖：

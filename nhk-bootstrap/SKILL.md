@@ -33,7 +33,7 @@ Simple workspaces may keep these surfaces short, but may not omit them.
 
 Once the canonical source is known:
 
-- adapt the matching instruction template only when the canonical file is missing or materially incomplete
+- adapt the matching instruction template only when the canonical file is missing, materially incomplete, or retains superseded NHK-owned inline policy or recovery rules alongside the new companions
 - preserve a valid thin adapter, or create one only when the decision above calls for it
 - add or repair `coding-agent-guide.md` from `../references/coding-agent-guide-template.md`
 - add or repair `implementation-planning.md` from `../references/implementation-planning-template.md`
@@ -47,13 +47,15 @@ Use backticked literal paths for all five companion docs. In Claude Code, only a
 
 Never overwrite correct project-specific content merely to match template wording.
 
+When an older workspace has the new companions but still keeps superseded NHK-owned inline model-catalog or recovery-procedure text in its canonical instruction, make a minimal semantic repair: replace only that NHK text with the current explicit companion routes. Preserve correct project facts and human-authorized exceptions.
+
 ## Root Tracking Is Conditional
 
 Do not create root `task_plan.md`, `findings.md`, or `progress.md` merely because bootstrap runs. Create them only when the current work genuinely needs multi-session recovery, an active plan/spec, multiple packets, or explicit progress tracking. The archive foundation is still mandatory in a simple workspace.
 
 ## Instruction Template Audit
 
-If bootstrap is creating or structurally repairing the instruction surface, open only the generation contract that matches the handoff's canonical source: `../references/AGENTS-template.md` or `../references/CLAUDE-template.md`. Do not load the other platform template. Do not load an instruction template when only a companion or archive surface is missing.
+If bootstrap is creating, structurally repairing, or making the specific semantic policy/recovery migration above, open only the generation contract that matches the handoff's canonical source: `../references/AGENTS-template.md` or `../references/CLAUDE-template.md`. Do not load the other platform template. Do not load an instruction template when only a companion or archive surface is missing and the canonical instruction has no superseded NHK-owned policy or recovery text.
 
 - Select simple, medium, or complex deliberately.
 - A standalone final file must contain the seven required top-level sections in template order and stay within 100, 125, or 150 lines respectively.
@@ -77,6 +79,7 @@ Before finishing:
 - confirm all five companion docs, `archive/`, and the archive index exist and cross-references resolve
 - confirm companion docs meet their 80/80/100/80/100-line limits and CLAUDE does not auto-import them
 - confirm generated instruction content meets its selected structure and line limit
+- confirm any semantic migration replaced only superseded NHK-owned policy or recovery text and preserved project facts and authorized exceptions
 - confirm no existing healthy surface was unnecessarily replaced
 - if root tracking exists, record the audit there; otherwise report it in the delivery note
 - if a dependency was adopted, state: it is not installed; its conventions were followed manually for this NHK run

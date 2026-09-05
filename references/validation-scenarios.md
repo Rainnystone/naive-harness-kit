@@ -96,6 +96,12 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Expected:** `welcome-to-nhk` routes to bootstrap. Bootstrap creates or repairs only the missing companion and its required links from its matching template, preserves the healthy project-specific surfaces, then refreshes the router handoff.
 
+### C5b. Old-workspace policy migration is minimal
+
+**Setup:** An older workspace has both new companions, but its otherwise valid canonical instruction still carries superseded NHK-owned inline model-catalog or recovery-procedure text. Its project facts and human-authorized exceptions are correct.
+
+**Expected:** Bootstrap or upkeep opens only the matching canonical instruction template and replaces only the superseded NHK text with the current explicit companion routes. It preserves the project facts and authorized exceptions, does not rebuild the healthy instruction, and does not load an instruction template for a genuinely companion-only omission with otherwise-correct instructions.
+
 ### C6. Routing guide is the shallow code map
 
 **Expected:** `coding-agent-guide.md` has one Task Routing table with `Task or Symptom`, `Read First`, `Likely Change Surface`, and `Targeted Verification`, stays within 80 lines, and does not add separate current-state, packet, code-map, default-verification, or anti-detour sections.

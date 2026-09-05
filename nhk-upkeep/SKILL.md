@@ -15,7 +15,7 @@ Use the handoff's dependency, instruction, topology, and complete-foundation sta
 
 ## Maintenance Pass
 
-1. Compare the canonical instruction source and any thin adapter with the live workspace. If its structure needs repair, open only the matching `../references/AGENTS-template.md` or `../references/CLAUDE-template.md`.
+1. Compare the canonical instruction source and any thin adapter with the live workspace. If its structure needs repair or it retains superseded NHK-owned inline policy or recovery rules alongside the new companions, open only the matching `../references/AGENTS-template.md` or `../references/CLAUDE-template.md`.
 2. Compare the single Task Routing table in `coding-agent-guide.md` with current task routes, likely change surfaces, and targeted verification; keep the file at or below 80 lines. Open `../references/coding-agent-guide-template.md` only when this surface needs structural repair.
 3. Compare `implementation-planning.md` with the Superpowers-compatible task contract; keep it at or below 80 lines and load it only for plan work. Open `../references/implementation-planning-template.md` only when this surface needs structural repair.
 4. Compare `worker-policy.md` with its on-demand dispatch and review contract; keep it at or below 100 lines. Open `../references/worker-policy-template.md` only when this companion needs contract comparison or repair, not for unrelated upkeep.
@@ -30,6 +30,7 @@ Use the handoff's dependency, instruction, topology, and complete-foundation sta
 - Preserve the canonical source and a valid thin adapter; do not turn them back into a false two-file ambiguity.
 - Restore missing required instruction categories, remove leaked template markers or generation prompts, and enforce the selected final line limit without inventing new headings.
 - Update stale repository, dependency, routing, verification, active/archive, and loading-order statements.
+- For an older workspace with new companions, replace only superseded NHK-owned inline policy or recovery text with the current conditional companion routes; preserve correct project facts and human-authorized exceptions.
 - Do not recreate separate current-state, packet-routing, packet-checklist, code-map, default-verification, or anti-detour sections in `coding-agent-guide.md`; the routing table owns that job.
 - Keep plan sizing in `implementation-planning.md`; do not duplicate its task contract in the routing or governance docs.
 - Keep exact worker permissions in `worker-policy.md` and recovery procedure in `execution-recovery.md`; canonical instructions only retain their conditional routes.
