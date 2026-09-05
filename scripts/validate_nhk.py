@@ -52,9 +52,11 @@ LEAF_HANDOFF_TOKENS = (
 
 BOOTSTRAP_HANDOFF_TOKENS = (
     "After bootstrap changes the foundation, rerun `welcome-to-nhk`",
-    "If bootstrap is creating or structurally repairing the instruction surface",
-    "Do not load an instruction template when only a companion or archive surface "
-    "is missing.",
+    "If bootstrap is creating, structurally repairing, or making the specific semantic "
+    "policy/recovery migration above",
+    "Do not load an instruction template when only a companion or archive surface is "
+    "missing and the canonical instruction has no superseded NHK-owned policy or "
+    "recovery text.",
 )
 
 REFERENCES = (
@@ -62,6 +64,8 @@ REFERENCES = (
     "CLAUDE-template.md",
     "coding-agent-guide-template.md",
     "implementation-planning-template.md",
+    "worker-policy-template.md",
+    "execution-recovery-template.md",
     "documentation-governance-template.md",
     "archive-readme-template.md",
     "dependency-setup.md",
@@ -103,6 +107,8 @@ SOURCE_TEMPLATE_LIMITS = {
 PLAIN_REFERENCE_SOURCE_LIMITS = {
     "coding-agent-guide-template.md": 140,
     "implementation-planning-template.md": 120,
+    "worker-policy-template.md": 140,
+    "execution-recovery-template.md": 140,
     "documentation-governance-template.md": 160,
     "archive-readme-template.md": 40,
 }
@@ -112,6 +118,8 @@ FINAL_LIMITS = {"simple": 100, "medium": 125, "complex": 150}
 COMPANION_FINAL_LIMITS = {
     "coding-guide": 80,
     "planning-guide": 80,
+    "worker-policy": 100,
+    "execution-recovery": 80,
     "doc-governance": 100,
 }
 
@@ -144,6 +152,20 @@ PLANNING_GUIDE_HEADINGS = (
     "Dependencies and Execution",
     "Wide Changes",
     "Plan Review",
+)
+
+WORKER_POLICY_HEADINGS = (
+    "Dispatch Contract",
+    "Review Gates",
+    "Codex Routing",
+    "Claude Routing",
+)
+
+EXECUTION_RECOVERY_HEADINGS = (
+    "Triggers and Accounting",
+    "Main-thread Reassessment",
+    "Independent Diagnosis",
+    "Recovery and Stop",
 )
 
 PLANNING_WORKFLOW_TOKENS = (
@@ -189,7 +211,7 @@ LEGACY_CODING_GUIDE_HEADINGS = {
 
 COMPANION_IMPORT_RE = re.compile(
     r"@(?:\./)?(?:coding-agent-guide|implementation-planning|"
-    r"documentation-governance)\.md\b"
+    r"worker-policy|execution-recovery|documentation-governance)\.md\b"
 )
 
 COMMON_VERBATIM_HEADINGS = {
@@ -201,13 +223,6 @@ COMMON_VERBATIM_HEADINGS = {
     "Git and Delivery",
 }
 
-CONVERGENCE_BACKSTOP = (
-    "Five failed fix–verify or fix–review rounds on the same acceptance gap "
-    "trigger a mandatory stop. Invoke or restart `systematic-debugging`, count "
-    "those rounds as failed fixes, and forbid a sixth fix until root-cause and "
-    "architecture reassessment is complete."
-)
-
 LEGACY_CODEX_PRESET_LADDER = (
     "GPT-5.6 Luna max → GPT-5.5 xhigh → GPT-5.6 Terra high → "
     "GPT-5.6 Terra xhigh → GPT-5.6 Terra max → GPT-5.6 Sol xhigh → "
@@ -215,38 +230,17 @@ LEGACY_CODEX_PRESET_LADDER = (
 )
 
 CODEX_PRESET_BANDS = (
-    ("GPT-5.5 xhigh", "GPT-5.6 Luna max", "GPT-5.6 Terra high"),
-    ("GPT-5.6 Terra xhigh", "GPT-5.6 Terra max", "GPT-5.6 Sol high"),
-    ("GPT-5.6 Sol xhigh", "GPT-5.6 Sol max"),
+    ("GPT-5.5 xhigh", "GPT-5.6 Luna max"),
+    ("GPT-5.6 Terra xhigh", "GPT-5.6 Sol medium", "GPT-5.6 Sol high", "GPT-6 Astra low"),
+    ("GPT-5.6 Sol xhigh", "GPT-6 Astra medium", "GPT-6 Astra high"),
 )
 
-CODEX_PRESET_BAND_LINES = tuple(
-    f"Band {number}: {'; '.join(presets)}"
-    for number, presets in enumerate(CODEX_PRESET_BANDS, 1)
-)
-
-CODEX_PRESETS = tuple(
-    preset for presets in CODEX_PRESET_BANDS for preset in presets
-)
-
-CODEX_WORKER_ROUTING_TOKENS = (
-    *CODEX_PRESET_BAND_LINES,
-    "presets within a band are unordered",
-    "explicitly specify both model and effort",
-    "select the best task fit within that band",
-    "do not default to the highest-effort preset",
-    "split the packet before escalating",
-    "one band only",
-    "above the main thread's model or effort",
-    "specific packet and current run",
-)
-
-IMPLEMENTATION_PLANNING_POINTERS = (
-    "Before writing, approving, or materially revising an implementation plan, "
-    "read `implementation-planning.md`; do not dispatch a task that fails its "
-    "packet contract.",
-    "Do not load `implementation-planning.md` for ordinary coding, review, or "
-    "debugging.",
+INSTRUCTION_COMPANION_ROUTES = (
+    "Read `coding-agent-guide.md` to route a task or symptom to code and first-pass verification.",
+    "Read `implementation-planning.md` before writing, approving, or materially revising an implementation plan.",
+    "Read `worker-policy.md` only when orchestrating, dispatching, or reviewing workers. Load its common sections and the current platform section.",
+    "Read `execution-recovery.md` after five failed rounds on one acceptance gap, or earlier evidence of architectural stagnation.",
+    "Treat `documentation-governance.md` as the source of truth for documentation lifecycle rules.",
 )
 
 INSTALL_COMMAND = (
@@ -261,6 +255,8 @@ VALIDATOR_INSTALL_COMMAND = (
 VALIDATOR_COMPANION_COMMANDS = (
     "python3 -B scripts/validate_nhk.py --final <coding-agent-guide.md> --kind coding-guide",
     "python3 -B scripts/validate_nhk.py --final <implementation-planning.md> --kind planning-guide",
+    "python3 -B scripts/validate_nhk.py --final <worker-policy.md> --kind worker-policy",
+    "python3 -B scripts/validate_nhk.py --final <execution-recovery.md> --kind execution-recovery",
     "python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance",
 )
 
@@ -314,6 +310,273 @@ def second_level_sections(text: str) -> dict[str, str]:
     if current is not None:
         sections[current] = "\n".join(body)
     return sections
+
+
+def final_shape_sections(text: str) -> tuple[tuple[str, ...], dict[str, str]]:
+    lines = text.splitlines()
+    try:
+        start = lines.index("## Required Final Shape") + 1
+        end = lines.index("## Final Check", start)
+    except ValueError:
+        return (), {}
+
+    headings: list[str] = []
+    sections: dict[str, str] = {}
+    current: str | None = None
+    body: list[str] = []
+    for line in lines[start:end]:
+        match = re.match(r"^###(?!#)\s+(.+?)\s*$", line)
+        if match:
+            if current is not None:
+                sections[current] = "\n".join(body)
+            current = match.group(1).strip()
+            headings.append(current)
+            body = []
+        elif current is not None:
+            body.append(line)
+    if current is not None:
+        sections[current] = "\n".join(body)
+    return tuple(headings), sections
+
+
+def require_section_text(
+    sections: dict[str, str],
+    heading: str,
+    snippets: Iterable[str],
+    label: str,
+    issues: list[str],
+) -> None:
+    body = sections.get(heading, "")
+    for snippet in snippets:
+        if snippet not in body:
+            issues.append(f"{label} {heading} is missing {snippet!r}")
+
+
+def validate_exact_codex_bands(
+    codex: str, label: str, issues: list[str]
+) -> None:
+    found: dict[int, list[str]] = {}
+    for line in codex.splitlines():
+        match = re.match(r"^\s*-\s*Band\s+(\d+):\s*(.*?)\s*$", line)
+        if not match:
+            continue
+        band = int(match.group(1))
+        raw = match.group(2).removesuffix(".")
+        found.setdefault(band, []).extend(
+            item.strip().removesuffix(".") for item in raw.split(";") if item.strip()
+        )
+
+    for band in sorted(set(found) - {1, 2, 3}):
+        issues.append(
+            f"{label} Codex Routing has unexpected Band {band}; exact unordered "
+            "preset sets exist only for Bands 1-3"
+        )
+
+    for band, expected in enumerate(CODEX_PRESET_BANDS, 1):
+        actual = found.get(band, [])
+        if len(actual) != len(expected) or set(actual) != set(expected):
+            issues.append(
+                f"{label} Codex Routing Band {band} must contain the exact unordered "
+                f"preset set: {'; '.join(expected)}"
+            )
+
+
+def validate_worker_policy_contract(
+    text: str,
+    headings: tuple[str, ...],
+    sections: dict[str, str],
+    label: str,
+    issues: list[str],
+) -> None:
+    if headings != WORKER_POLICY_HEADINGS:
+        issues.append(
+            f"{label} headings must be exactly: " + ", ".join(WORKER_POLICY_HEADINGS)
+        )
+
+    require_section_text(
+        sections,
+        "Dispatch Contract",
+        (
+            "Authorization comes from the allowed role or preset for the packet, not the main thread's current model or effort",
+            "Explicit user budgets still bind",
+            "explicitly runtime-supported model and effort",
+            "never inherit a top preset silently",
+            "Recursive delegation needs separate human authorization for a named packet",
+            "Keep subagent-driven implementers sequential",
+            "The main thread owns integration",
+        ),
+        label,
+        issues,
+    )
+    require_section_text(
+        sections,
+        "Review Gates",
+        (
+            "one independent read-only reviewer",
+            "separate spec-compliance and task-quality verdicts",
+            "Both must pass; self-review is not a substitute",
+            "fixed BASE and HEAD revisions",
+            "one whole-change final review",
+            "at most one concentrated fix wave and one scoped re-review",
+        ),
+        label,
+        issues,
+    )
+    require_section_text(
+        sections,
+        "Codex Routing",
+        (
+            "`fork_turns: none`",
+            "Presets within a band are unordered task-fit choices",
+            "there is no mandatory Band 1 trial",
+            "Escalate one band only",
+            "ordinary Band 3 ceiling",
+            "GPT-5.6 Luna may perform low-risk scoped re-review, never an initial task review",
+            "GPT-6 Astra xhigh or max is reserved for whole-change final review of a complex Superpowers plan, not ordinary implementation, debugging, or recovery",
+            "Ultra requires human approval naming the packet and current run",
+            "Ultra authorization and recursion authorization never imply each other",
+        ),
+        label,
+        issues,
+    )
+    require_section_text(
+        sections,
+        "Claude Routing",
+        (
+            "Use Sonnet for ordinary implementation and review",
+            "Use Opus for difficult work, debugging, architecture, final review",
+            "Use Fable only when the human explicitly chooses or approves it for the main thread",
+            "Specify Sonnet or Opus for every worker so Fable is never inherited",
+            "Do not add a Haiku band",
+        ),
+        label,
+        issues,
+    )
+    validate_exact_codex_bands(sections.get("Codex Routing", ""), label, issues)
+
+    if re.search(r"main thread[^\n]{0,80}(?:cost\s+)?ceiling", text, re.IGNORECASE):
+        issues.append(f"{label}: old main-thread ceiling authorization is forbidden")
+
+    codex = sections.get("Codex Routing", "")
+    for line in codex.splitlines():
+        lowered = line.lower()
+        if (
+            re.search(r"\bastra\s+(?:xhigh|max)\b", lowered)
+            and "ordinary implementation" in lowered
+            and re.search(r"\b(?:may|can|allow|use)\b", lowered)
+        ):
+            issues.append(f"{label}: unauthorized Astra role grant")
+        if (
+            "luna" in lowered
+            and "initial task review" in lowered
+            and "never" not in lowered
+        ):
+            issues.append(f"{label}: unauthorized Luna role grant")
+        if (
+            "ultra" in lowered
+            and "authorizes recursion" in lowered
+            and "never" not in lowered
+        ):
+            issues.append(f"{label}: Ultra recursion authorization must stay separate")
+
+    claude = sections.get("Claude Routing", "")
+    for line in claude.splitlines():
+        lowered = line.lower()
+        if (
+            "fable" in lowered
+            and "worker" in lowered
+            and "never" not in lowered
+            and re.search(r"\b(?:may|can|allow|use|inherit)\w*\b", lowered)
+        ):
+            issues.append(f"{label}: unauthorized Fable role grant")
+
+
+def validate_execution_recovery_contract(
+    headings: tuple[str, ...],
+    sections: dict[str, str],
+    label: str,
+    issues: list[str],
+) -> None:
+    if headings != EXECUTION_RECOVERY_HEADINGS:
+        issues.append(
+            f"{label} headings must be exactly: "
+            + ", ".join(EXECUTION_RECOVERY_HEADINGS)
+        )
+
+    require_section_text(
+        sections,
+        "Triggers and Accounting",
+        (
+            "systematic-debugging",
+            "architecture check after three failed fixes",
+            "five fix-review rounds per task",
+            "five rounds for the same stable acceptance gap across tasks",
+            "Reaching either the task-round bound or stable-gap bound stops ordinary fixing",
+            "Worker, session, model, commit, task rename, or replanning never resets a task or gap count",
+            "existing authoritative execution record",
+            "In SDD, this is the SDD ledger",
+            "do not create an SDD-only or parallel state system",
+            "Read-only diagnosis spends no fix round and grants no additional modification authority",
+        ),
+        label,
+        issues,
+    )
+    require_section_text(
+        sections,
+        "Main-thread Reassessment",
+        (
+            "original intent, approved spec and public contracts, verification signal, prior attempts, and cross-task consequences",
+            "Classify the failure as implementation, design or ownership, spec conflict, invalid oracle, reviewer error, or external conditions",
+            "how the new explanation differs from old hypotheses",
+            "concrete command or input, observed result, and expected before-and-after result",
+            "original scope and authority",
+            "require a human decision",
+        ),
+        label,
+        issues,
+    )
+    require_section_text(
+        sections,
+        "Independent Diagnosis",
+        (
+            "competing explanations, review-versus-implementation conflict, or an unverified old premise",
+            "at most one fresh-context Band 3 or Opus read-only diagnostic worker",
+            "challenge one concrete hypothesis",
+            "does not authorize a fix",
+            "Do not start a diagnostic chain",
+        ),
+        label,
+        issues,
+    )
+    require_section_text(
+        sections,
+        "Recovery and Stop",
+        (
+            "at most one recovery fix wave and one independent re-review",
+            "may be the sixth modification and supersedes an old absolute “No sixth patch” rule",
+            "stop automatic fixes and ask the human",
+            "Changing model, plan, or task never renews recovery",
+            "Final review retains one concentrated fix wave and one scoped re-review",
+            "An exhausted earlier gap cannot use final review as another repair allowance",
+            "never return to the ordinary loop",
+        ),
+        label,
+        issues,
+    )
+
+    all_text = "\n".join(sections.values())
+    prohibited = (
+        (r"(?:new|starting a new) task[^\n]{0,50}resets?[^\n]{0,50}(?:gap|count)", "gap reset"),
+        (r"second recovery fix wave[^\n]{0,60}(?:allowed|permitted)", "recovery limit bypass"),
+        (
+            r"final review[^\n]{0,40}(?:grants?|allows?|permits?|provides?)"
+            r"[^\n]{0,40}(?:another|additional) repair allowance",
+            "final-review bypass",
+        ),
+    )
+    for pattern, description in prohibited:
+        if re.search(pattern, all_text, re.IGNORECASE):
+            issues.append(f"{label}: forbidden {description}")
 
 
 def strip_html_comments(line: str, in_comment: bool) -> tuple[str, bool]:
@@ -537,33 +800,16 @@ def validate_shared_templates(
 
     agent_only = set(agents) - COMMON_VERBATIM_HEADINGS
     claude_only = set(claude) - COMMON_VERBATIM_HEADINGS
-    if agent_only != {"Codex Worker Boundary"}:
+    if agent_only:
         issues.append(
-            "AGENTS-template.md: platform-specific verbatim blocks must contain only "
-            "'Codex Worker Boundary'"
+            "AGENTS-template.md: unexpected platform-specific verbatim block(s): "
+            + ", ".join(sorted(agent_only))
         )
     if claude_only:
         issues.append(
             "CLAUDE-template.md: unexpected platform-specific verbatim block(s): "
             + ", ".join(sorted(claude_only))
         )
-
-    codex_boundary = agents.get("Codex Worker Boundary", "")
-    for token in CODEX_WORKER_ROUTING_TOKENS:
-        if token not in codex_boundary:
-            issues.append(
-                "AGENTS-template.md: Codex worker routing is missing " + repr(token)
-            )
-    if "Ultra" not in codex_boundary or "recursive delegation" not in codex_boundary:
-        issues.append(
-            "AGENTS-template.md: Codex worker routing must keep Ultra behind "
-            "packet-specific approval and recursive-delegation authorization"
-        )
-    for block in agent_blocks:
-        if block.first_heading != "Codex Worker Boundary" and "Ultra" in block.content:
-            issues.append(
-                "AGENTS-template.md: Ultra may appear only in Codex Worker Boundary"
-            )
 
     forbidden_claude_models = re.search(
         r"\b(?:Ultra|Luna|Terra|Sol|Sonnet|Opus|Haiku)\b|\bgpt-\d",
@@ -578,32 +824,29 @@ def validate_shared_templates(
 
     worker_block = agents.get("Subagents and Packets", "")
     worker_contract_tokens = (
+        "independent, reviewable packet",
         "fewest workers",
-        "lowest-cost configuration",
-        "cost ceiling for each worker",
-        "split it before increasing",
-        "human approval",
-        "recursive delegation",
-        "serially",
-        "read/write authority",
-        "A timeout is not proof of a blocker",
-        "close idle workers",
+        "apply `worker-policy.md`",
+        "brief self-contained",
+        "Run writes sequentially",
+        "progress and lifecycle",
+        "main thread owns integration",
     )
     for token in worker_contract_tokens:
         if token not in worker_block:
             issues.append(f"templates: shared worker contract is missing {token!r}")
 
-    execution_block = agents.get("Execution Rules", "")
-    if f"- {CONVERGENCE_BACKSTOP}" not in execution_block:
-        issues.append("templates: shared Execution Rules are missing the convergence backstop")
-
-    context_block = agents.get("Context and Documentation", "")
-    for token in IMPLEMENTATION_PLANNING_POINTERS:
-        if token not in context_block:
-            issues.append(
-                "templates: shared implementation-planning pointer is missing "
-                + repr(token)
-            )
+    for template_name, blocks in (
+        ("AGENTS-template.md", agents),
+        ("CLAUDE-template.md", claude),
+    ):
+        context_block = blocks.get("Context and Documentation", "")
+        for token in INSTRUCTION_COMPANION_ROUTES:
+            if token not in context_block:
+                issues.append(
+                    f"{template_name}: Context and Documentation conditional companion "
+                    f"route is missing {token!r}"
+                )
 
 
 def parse_frontmatter(text: str) -> dict[str, str] | None:
@@ -663,11 +906,18 @@ def validate_skill(root: Path, name: str, issues: list[str]) -> None:
         if token not in text:
             issues.append(f"{name}/SKILL.md: router handoff is missing {token!r}")
 
-    if "`implementation-planning.md`" not in text:
-        issues.append(
-            f"{name}/SKILL.md: planning foundation must name "
-            "`implementation-planning.md`"
-        )
+    for companion in (
+        "coding-agent-guide.md",
+        "implementation-planning.md",
+        "worker-policy.md",
+        "execution-recovery.md",
+        "documentation-governance.md",
+    ):
+        if f"`{companion}`" not in text:
+            issues.append(
+                f"{name}/SKILL.md: seven-surface foundation must name "
+                f"`{companion}`"
+            )
 
     reference_root = (root / "references").resolve()
     for match in REFERENCE_RE.finditer(text):
@@ -740,26 +990,28 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
     for token in ("scripts/", "tests/", "不属于运行时", "可选", "刷新", "可发现"):
         require_text(chinese, token, "README_CN.md", issues, case_sensitive=False)
     for token in (
-        "eight controlled references",
-        "five mandatory foundation surfaces",
+        "ten controlled references",
+        "seven mandatory foundation surfaces",
         "Superpowers overlay",
-        "cost ceiling",
-        "three practical Codex preset bands",
-        *CODEX_PRESET_BAND_LINES,
+        "role and allowed preset",
+        "three unordered Codex bands",
+        "spec-compliance and task-quality verdicts must both pass",
+        "one recovery fix wave plus one re-review",
     ):
         require_text(english, token, "README.md", issues, case_sensitive=False)
     for token in (
-        "八个受控 reference",
-        "五个强制 foundation surface",
+        "十个受控 reference",
+        "七个强制 foundation surface",
         "Superpowers overlay",
-        "成本上限",
-        "三个实践型 Codex preset 档",
-        *CODEX_PRESET_BAND_LINES,
+        "角色和允许 preset",
+        "三个无序 Codex band",
+        "spec-compliance 与 task-quality 两份 verdict 都必须通过",
+        "一轮 recovery fix wave 和一次 re-review",
     ):
         require_text(chinese, token, "README_CN.md", issues, case_sensitive=False)
-    for token in ("round five", "systematic-debugging", "No sixth patch"):
+    for token in ("five-round task bound", "stable acceptance gaps"):
         require_text(english, token, "README.md", issues, case_sensitive=False)
-    for token in ("第五轮", "systematic-debugging", "第六块补丁"):
+    for token in ("每个 task 的五轮上限", "稳定 acceptance gap"):
         require_text(chinese, token, "README_CN.md", issues, case_sensitive=False)
     for token in (
         "routing table is the shallow code map",
@@ -859,10 +1111,8 @@ def validate_forbidden_legacy(root: Path, issues: list[str]) -> None:
             re.compile(re.escape(LEGACY_CODEX_PRESET_LADDER), re.IGNORECASE),
         ),
     )
-    model_policy_surfaces = {
-        Path("README.md"),
-        Path("README_CN.md"),
-        Path("references/AGENTS-template.md"),
+    allowed_versioned_model_surfaces = {
+        Path("references/worker-policy-template.md"),
         Path("references/validation-scenarios.md"),
     }
     versioned_model = re.compile(r"\bgpt-\d[\w.-]*\b", re.IGNORECASE)
@@ -875,23 +1125,7 @@ def validate_forbidden_legacy(root: Path, issues: list[str]) -> None:
             continue
         relative = path.relative_to(root)
         model_matches = list(versioned_model.finditer(text))
-        if relative in model_policy_surfaces:
-            for model_match in model_matches:
-                suffix = text[model_match.start() :]
-                if not any(
-                    re.match(
-                        re.escape(preset) + r"(?![\w-])",
-                        suffix,
-                        re.IGNORECASE,
-                    )
-                    for preset in CODEX_PRESETS
-                ):
-                    issues.append(
-                        f"{relative}: unapproved versioned model on Codex policy "
-                        f"surface: {model_match.group(0)}"
-                    )
-                    break
-        elif model_matches:
+        if relative not in allowed_versioned_model_surfaces and model_matches:
             issues.append(
                 f"{relative}: forbidden versioned model outside Codex policy surfaces: "
                 f"{model_matches[0].group(0)}"
@@ -977,6 +1211,54 @@ def validate_source(root: Path) -> list[str]:
                 issues,
             )
 
+    worker_template = read_text(
+        root / "references" / "worker-policy-template.md",
+        issues,
+        "references/worker-policy-template.md",
+    )
+    if worker_template is not None:
+        headings, sections = final_shape_sections(worker_template)
+        validate_worker_policy_contract(
+            worker_template,
+            headings,
+            sections,
+            "worker-policy-template.md",
+            issues,
+        )
+        for token in (
+            "Final file hard limit: 100 lines",
+            "Source-template hard limit: 140 lines",
+            "Start with `# Worker Policy`",
+            "Never use a Claude `@` import",
+        ):
+            require_text(worker_template, token, "worker-policy-template.md", issues)
+
+    recovery_template = read_text(
+        root / "references" / "execution-recovery-template.md",
+        issues,
+        "references/execution-recovery-template.md",
+    )
+    if recovery_template is not None:
+        headings, sections = final_shape_sections(recovery_template)
+        validate_execution_recovery_contract(
+            headings,
+            sections,
+            "execution-recovery-template.md",
+            issues,
+        )
+        for token in (
+            "Final file hard limit: 80 lines",
+            "Source-template hard limit: 140 lines",
+            "Start with `# Execution Recovery`",
+            "Never use a Claude `@` import",
+        ):
+            require_text(
+                recovery_template,
+                token,
+                "execution-recovery-template.md",
+                issues,
+            )
+
     governance_template = read_text(
         root / "references" / "documentation-governance-template.md",
         issues,
@@ -1047,6 +1329,11 @@ def validate_final(
         return issues
 
     lower = text.lower()
+    for number, imported in active_companion_imports(text):
+        issues.append(
+            f"final file auto-imports companion {imported!r} at line {number}; "
+            "use a backticked literal path and load it on demand"
+        )
     if FINAL_MARKER_LEAK_RE.search(text):
         issues.append("final file contains a template marker")
     generation_leaks = (
@@ -1106,6 +1393,8 @@ def validate_final(
         expected_h1 = {
             "coding-guide": "Coding Agent Guide",
             "planning-guide": "Implementation Planning",
+            "worker-policy": "Worker Policy",
+            "execution-recovery": "Execution Recovery",
             "doc-governance": "Documentation Governance",
         }[kind]
         if h1_headings != [expected_h1]:
@@ -1183,6 +1472,21 @@ def validate_final(
                     issues.append(
                         f"planning-guide Wide Changes is missing {token!r}"
                     )
+        elif kind == "worker-policy":
+            validate_worker_policy_contract(
+                text,
+                tuple(headings),
+                second_level_sections(text),
+                "worker-policy final file",
+                issues,
+            )
+        elif kind == "execution-recovery":
+            validate_execution_recovery_contract(
+                tuple(headings),
+                second_level_sections(text),
+                "execution-recovery final file",
+                issues,
+            )
         else:
             if tuple(headings[: len(DOC_GOVERNANCE_HEADINGS)]) != DOC_GOVERNANCE_HEADINGS:
                 issues.append(
@@ -1222,12 +1526,6 @@ def validate_final(
         return issues
 
     imports = valid_import_lines(text)
-    companion_imports = active_companion_imports(text) if kind == "claude" else []
-    for number, imported in companion_imports:
-        issues.append(
-            f"Claude final file auto-imports companion {imported!r} at line {number}; "
-            "use a backticked literal path and load it on demand"
-        )
     count = line_count(text)
     if mode == "thin":
         if count > 35:
@@ -1251,14 +1549,23 @@ def validate_final(
         )
     if imports:
         issues.append("standalone final file mixes in a thin AGENTS import")
-    for companion in (
-        "coding-agent-guide.md",
-        "implementation-planning.md",
-        "documentation-governance.md",
-    ):
-        if f"`{companion}`" not in text:
+    context = second_level_sections(text).get("Context and Documentation", "")
+    for route in INSTRUCTION_COMPANION_ROUTES:
+        if route not in context:
+            companion = next(
+                name
+                for name in (
+                    "coding-agent-guide.md",
+                    "implementation-planning.md",
+                    "worker-policy.md",
+                    "execution-recovery.md",
+                    "documentation-governance.md",
+                )
+                if name in route
+            )
             issues.append(
-                f"standalone final file must route to `{companion}` by literal path"
+                "standalone final Context and Documentation must contain the "
+                f"conditional literal route for `{companion}`"
             )
     return issues
 
@@ -1278,6 +1585,8 @@ def build_parser() -> argparse.ArgumentParser:
             "claude",
             "coding-guide",
             "planning-guide",
+            "worker-policy",
+            "execution-recovery",
             "doc-governance",
         ),
     )
