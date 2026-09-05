@@ -1045,7 +1045,7 @@ class FinalValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_worker_policy_rejects_presets_declared_outside_band_lines(self) -> None:
-                extras = (
+        extras = (
             "GPT-9 Nova max is also approved for ordinary implementation.",
             "GPT-6 Nova max is also approved for ordinary implementation.",
             "GPT-5.5 xhigh is also approved for ordinary implementation.",
