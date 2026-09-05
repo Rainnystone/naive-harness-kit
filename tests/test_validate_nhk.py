@@ -640,7 +640,7 @@ class SourceValidationTests(ValidatorTestCase):
             path = root / name
             path.write_text(
                 path.read_text(encoding="utf-8").replace(
-                    "five-round task bound", "unbounded task loop"
+                    "five-round limit", "unbounded task loop"
                 ),
                 encoding="utf-8",
             )
@@ -667,15 +667,15 @@ class SourceValidationTests(ValidatorTestCase):
     def test_readme_planning_and_worker_policy_drift_fails(self) -> None:
         cases = (
             ("README.md", "ten controlled references", "several references"),
-            ("README.md", "seven mandatory foundation surfaces", "the foundation"),
+            ("README.md", "seven required pieces", "the foundation"),
             ("README.md", "Superpowers overlay", "planning helper"),
             (
                 "README.md",
-                "three unordered Codex bands",
+                "three practical Codex bands",
                 "several worker options",
             ),
             ("README_CN.md", "十个受控 reference", "几份 reference"),
-            ("README_CN.md", "七个强制 foundation surface", "基础文档"),
+            ("README_CN.md", "七项基础内容", "基础文档"),
             ("README_CN.md", "Superpowers overlay", "规划辅助"),
         )
         for name, required, replacement in cases:

@@ -12,7 +12,7 @@ NHK helps with five recurring jobs that show up surprisingly fast once you start
 
 - getting the useful workflow tools in place, especially `superpowers` and `planning-with-files`
 - lazily but safely initializing the right workspace instruction file for the current agent environment
-- keeping routing, implementation-planning, and documentation-governance companions aligned with reality
+- keeping the workspace's routing, planning, worker, recovery, and governance notes aligned with reality
 - deciding whether a workstream should stay active or move to archive
 - doing all of that with explicit prompts instead of opaque hooks
 
@@ -64,14 +64,14 @@ For an NHK-managed workspace, the expected document system is layered:
 | Instruction layer | canonical `AGENTS.md` or standalone `CLAUDE.md`, plus an optional thin Claude adapter | stable execution rules, verification discipline, collaboration rules |
 | Routing layer | `coding-agent-guide.md` | task or symptom to first reads, likely change surfaces, and targeted verification |
 | Planning layer | `implementation-planning.md` | on-demand Superpowers-compatible task sizing, dependency edges, and wide-change structure |
-| Worker and recovery layer | `worker-policy.md`, `execution-recovery.md` | on-demand dispatch/review permissions and bounded recovery for exhausted acceptance gaps |
+| Worker and recovery layer | `worker-policy.md`, `execution-recovery.md` | choosing helpers, reviewing their work, and knowing when to pause repeated fixes |
 | Governance layer | `documentation-governance.md` | document roles, active/archive surfaces, naming/loading, and archive invariants |
 | Active work layer | active `specs/`, active `plans/`, optional root `task_plan.md` / `progress.md` / `findings.md` | work in progress only |
 | Archive layer | `archive/` plus root `archive/README.md` | completed specs, completed plans, completed tracking files, historical reference only |
 
 NHK is opinionated here on purpose:
 
-- after the canonical instruction is known, every NHK-managed workspace has seven mandatory foundation surfaces: routing, implementation planning, worker policy, execution recovery, governance, `archive/`, and `archive/README.md`
+- once the main instruction file is chosen, NHK sets up seven required pieces: the routing, planning, worker, recovery, and governance guides, plus `archive/` and `archive/README.md`
 - root tracking files are conditional, not automatic
 - active docs and archive docs should not be mixed
 - archive transitions require human confirmation
@@ -83,9 +83,9 @@ The direct source for the governance layer is `references/documentation-governan
 
 `implementation-planning.md` is deliberately narrower. It is a Superpowers overlay, not a competing planner: load it before writing, approving, or materially revising an implementation plan, then leave it closed for ordinary coding, review, and debugging. It keeps Superpowers' exact files, interfaces, TDD steps, commands, expected results, and necessary code while adding `Delivers`, `Blocked by`, and `Worker class` to make each task small enough for one fresh implementer context and one reviewer gate. NHK improves this through workspace documents; it does not patch the Superpowers plugin.
 
-`worker-policy.md` is the on-demand home for worker role permissions, dispatch packets, review gates, and the current Codex and Claude routing catalogs. Load it only to orchestrate, dispatch, or review workers. Read `execution-recovery.md` after five failed rounds on one acceptance gap, or earlier evidence of architectural stagnation; it records exhausted acceptance gaps and the bounded path back to a human decision. Bootstrap creates either missing companion minimally from [`references/worker-policy-template.md`](references/worker-policy-template.md) or [`references/execution-recovery-template.md`](references/execution-recovery-template.md), while preserving healthy project content.
+`worker-policy.md` helps the main agent choose a helper, explain the job, and arrange a review. It is read when there is work to delegate or review. `execution-recovery.md` comes out when fixes keep circling the same problem: after five failed rounds, or sooner if there is reason to question the design. Most of the time, neither needs to sit open on the desk.
 
-For an older workspace where those companions coexist with superseded NHK inline policy or recovery rules, bootstrap or upkeep replaces only that NHK text with the current companion routes and preserves project facts and human-authorized exceptions.
+If either file is missing, `nhk-bootstrap` adds it from the [worker policy template](references/worker-policy-template.md) or the [recovery template](references/execution-recovery-template.md), leaving existing project details in place. If older NHK rules are still sitting in the main instruction file, bootstrap or upkeep replaces just those outdated passages with links to the companions. Your project facts and explicitly approved exceptions stay intact.
 
 ## Dependencies
 
@@ -138,18 +138,6 @@ python3 -B scripts/validate_nhk.py --install-root <skills-root>
 
 The validator confirms files and versions; it cannot confirm platform skill discovery. After copying and validating, refresh the agent session and confirm that all four skills are discoverable. Then start in the target workspace with `welcome-to-nhk`.
 
-Maintainers can also check generated companion docs without turning the validator into a runtime dependency:
-
-```bash
-python3 -B scripts/validate_nhk.py --final <coding-agent-guide.md> --kind coding-guide
-python3 -B scripts/validate_nhk.py --final <implementation-planning.md> --kind planning-guide
-python3 -B scripts/validate_nhk.py --final <worker-policy.md> --kind worker-policy
-python3 -B scripts/validate_nhk.py --final <execution-recovery.md> --kind execution-recovery
-python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance
-```
-
-When comparing generated standalone instruction examples against the base, keep the project facts identical and measure their always-loaded English words. Both `AGENTS.md` and standalone `CLAUDE.md` must be at least 20% shorter; line wrapping does not count as a reduction.
-
 If you are installing NHK into a new environment and are not sure whether the dependencies are already present, that is normal. NHK is designed to stop and ask before pretending everything is ready.
 
 ## How To Use It
@@ -158,7 +146,7 @@ The shortest path is:
 
 1. Start with `welcome-to-nhk`.
 2. Let it decide whether the workspace needs `nhk-bootstrap`, `nhk-upkeep`, or `nhk-archive`.
-3. Use `nhk-bootstrap` to create or adapt the workspace instruction file, the five mandatory companion docs, and the root archive surface (`archive/` plus `archive/README.md`).
+3. Let `nhk-bootstrap` prepare the main instruction file, the five companion guides, and a home for finished work (`archive/` plus `archive/README.md`). You do not need to write these from scratch.
 4. Use `nhk-upkeep` after normal delivery cycles to repair drift; it asks about archive only when one specific workstream has completion evidence and related materials.
 5. Use `nhk-archive` only after the human clearly confirms that one workstream is done and should move to archive.
 
@@ -175,13 +163,19 @@ NHK does not guess recklessly. When both files exist and CLAUDE has a real impor
 
 Thin CLAUDE imports only AGENTS. The five companion docs stay as backticked literal paths and load on demand; importing them with `@` would charge every session for the full map before anyone knows whether it is needed.
 
-## Worker Dispatch, Review, And Recovery
+## Picking Helpers And Knowing When To Pause
 
-Worker configuration is authorized by the role and allowed preset for the packet, never by silently inheriting the main thread's configuration. Explicit user budgets still bind. The three unordered Codex bands fit clear low-risk work, ordinary implementation or bounded integration, and architecture, high uncertainty, or high risk; NHK starts in the band that fits and does not force a Band 1 trial. The exact catalog, same-band availability rule, one-band escalation evidence, and special final-review reservation live in [`references/worker-policy-template.md`](references/worker-policy-template.md), which produces the target workspace's `worker-policy.md`.
+Letting every worker inherit the main thread's settings turned out to be a remarkably effective way to pay for deep thought about very small edits. NHK uses three practical Codex bands, with no ranking inside a band: clear, low-risk jobs; ordinary implementation and bounded integration; and difficult design or high-risk work. The main agent starts with the band that fits the job and explicitly selects a configuration allowed for the task. Your budget still counts.
 
-Every worker gets a self-contained brief, explicit runtime-supported configuration, and clear authority. A task gets one independent read-only reviewer whose spec-compliance and task-quality verdicts must both pass. Claude workers explicitly use the policy's Sonnet or Opus route; Fable is only a human-chosen or approved main-thread option and is never inherited by a worker. Ultra and recursive delegation need separate current-run approval for a named packet.
+The current model list, availability rules, and conditions for using a stronger model live in the [worker policy template](references/worker-policy-template.md), which creates your workspace's `worker-policy.md`. Keeping one list gives us fewer opportunities to disagree with ourselves. It also spells out which configurations are reserved for the final review of a complex plan.
 
-For ordinary bugs, use Superpowers systematic debugging. The recovery companion tracks both the five-round task bound and stable acceptance gaps across tasks in the workflow's existing execution record. It requires new causal evidence before recovery, permits at most one fresh-context read-only diagnosis for a real dispute, and limits an exhausted gap to one recovery fix wave plus one re-review before the human decides. The exact triggers, accounting, and final-review boundary live in [`references/execution-recovery-template.md`](references/execution-recovery-template.md).
+Every helper gets the job, relevant context, and permission boundaries in its brief. Each task also gets an independent, read-only reviewer. It checks whether the work meets the requirements and whether the implementation is sound; both checks must pass.
+
+Claude helpers use Sonnet or Opus. Fable stays on the main thread, and only when you choose or approve it. Ultra and letting a helper delegate further are two separate permissions: each needs your approval for the specific task and current run.
+
+For ordinary bugs, keep using Superpowers systematic debugging. When the same problem survives round five, NHK asks the main agent to revisit its explanation before reaching for patch six. The five-round limit applies to each task and to the same unresolved problem across tasks; renaming the task does not give it a clean slate. Counts stay in the workflow's existing record.
+
+If new causal evidence explains why earlier attempts failed, NHK allows one recovery fix and one independent re-review. When explanations conflict, it may first ask one fresh, read-only helper to examine the evidence. If the evidence is still inconclusive, or recovery fails, the next decision is yours. The [recovery template](references/execution-recovery-template.md) covers the earlier design checks, the evidence needed to try again, and the limits that still apply at final review.
 
 ## Repo Maintenance
 
@@ -193,3 +187,15 @@ The intent is:
 - `CLAUDE.md` imports `AGENTS.md` and adds only Claude-specific glue
 
 That keeps the human-facing README separate from the agent-facing working rules, which is the least dramatic arrangement and therefore usually the best one.
+
+If you are maintaining NHK itself, you can also check generated companion files with the optional validator:
+
+```bash
+python3 -B scripts/validate_nhk.py --final <coding-agent-guide.md> --kind coding-guide
+python3 -B scripts/validate_nhk.py --final <implementation-planning.md> --kind planning-guide
+python3 -B scripts/validate_nhk.py --final <worker-policy.md> --kind worker-policy
+python3 -B scripts/validate_nhk.py --final <execution-recovery.md> --kind execution-recovery
+python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance
+```
+
+The size tests use identical project facts to compare generated `AGENTS.md` and standalone `CLAUDE.md` examples with the baseline from before the detailed rules moved into companions. Both must contain at least 20% fewer always-loaded English words; moving line breaks around does not count. This measures instruction size, not a promised reduction in your bill. It is a maintainer check, not homework for installing NHK.

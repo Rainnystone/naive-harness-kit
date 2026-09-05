@@ -929,27 +929,27 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         require_text(chinese, token, "README_CN.md", issues, case_sensitive=False)
     for token in (
         "ten controlled references",
-        "seven mandatory foundation surfaces",
+        "seven required pieces",
         "Superpowers overlay",
-        "role and allowed preset",
-        "three unordered Codex bands",
-        "spec-compliance and task-quality verdicts must both pass",
-        "one recovery fix wave plus one re-review",
+        "configuration allowed for the task",
+        "three practical Codex bands",
+        "both checks must pass",
+        "one recovery fix and one independent re-review",
     ):
         require_text(english, token, "README.md", issues, case_sensitive=False)
     for token in (
         "十个受控 reference",
-        "七个强制 foundation surface",
+        "七项基础内容",
         "Superpowers overlay",
-        "角色和允许 preset",
-        "三个无序 Codex band",
-        "spec-compliance 与 task-quality 两份 verdict 都必须通过",
-        "一轮 recovery fix wave 和一次 re-review",
+        "任务允许使用的配置",
+        "三个 Codex 档位，档内不排座次",
+        "是否符合需求、实现质量是否过关，两项都要通过",
+        "一轮恢复修正和一次复审",
     ):
         require_text(chinese, token, "README_CN.md", issues, case_sensitive=False)
-    for token in ("five-round task bound", "stable acceptance gaps"):
+    for token in ("five-round limit", "same unresolved problem across tasks"):
         require_text(english, token, "README.md", issues, case_sensitive=False)
-    for token in ("每个 task 的五轮上限", "稳定 acceptance gap"):
+    for token in ("每项任务最多五轮普通修复与复审", "同一个未解决的问题"):
         require_text(chinese, token, "README_CN.md", issues, case_sensitive=False)
     for token in (
         "routing table is the shallow code map",
