@@ -26,9 +26,10 @@ Start with `# Implementation Planning`, then use exactly the following second-le
 
 ### Plan Layers
 
-- Keep outcome, constraints, architecture, and cross-task sequencing at plan level.
-- Make each task the smallest independently reviewable delivery unit; keep the workflow's 2–5-minute execution steps short and exact.
-- Do not turn every setup action or test command into its own task.
+- Keep outcome, constraints, architecture, interfaces, and cross-task sequencing at plan level.
+- Make each task one worthwhile, independently acceptable delivery with a complete implementation-and-verification loop.
+- Keep the workflow's 2–5-minute execution steps short and exact. A task may contain multiple necessary TDD cycles.
+- Fold setup, tests, configuration, and documentation into the result they enable instead of making them separate tasks.
 
 ### Task Contract
 
@@ -40,19 +41,21 @@ Each task starts with these fields before the workflow's ordinary implementation
 **Worker class:** <mechanical | standard | judgment>
 ```
 
-Then retain the workflow's exact file, interface, TDD, command, expected-result, and code requirements.
+Then retain the workflow's `Files`, `Interfaces`, exact TDD steps, commands, expected results, and necessary code.
 
-- One task must fit one fresh implementer context, one test cycle, one reviewer gate, and one independent return.
-- If a substep can be approved or rejected separately, promote it to a task.
-- Fold setup, scaffolding, configuration, and documentation that serve only this result into the same task.
+- One task must fit one fresh implementer context, one coherent acceptance result, one reviewer gate, and one independent return.
+- Separate independent judgment, results, or ownership boundaries. Do not split one transaction, permission decision, or recovery path across tasks.
+- Batch same-shape mechanical edits when they share one acceptance result and verification loop.
 - `mechanical` covers deterministic search, transcription, or transformation; `standard` covers clear implementation or scoped review; `judgment` covers bounded work whose main difficulty is integration or design judgment.
 
 ### Dependencies and Execution
 
 - `Blocked by` lists only real prerequisite tasks and uses `None` when there is no dependency.
 - Under subagent-driven development, implementation tasks remain sequential; dependency metadata does not grant parallel-write permission.
-- A dispatch brief carries the complete task body. Do not make the implementer reconstruct acceptance criteria from the rest of the plan.
-- Split a task before assigning it when the result, test cycle, or review gate is not singular.
+- A dispatch brief carries the complete task body, selected configuration, and binding `Files`, `Interfaces`, acceptance, authority, verification, forbidden actions, expected return, and global constraints.
+- If a brief helper extracts only the task section, copy plan-level constraints into that section or attach one self-contained file handoff.
+- Split a task before assigning it when its delivery, ownership boundary, or reviewer gate is not singular.
+- Apply `worker-policy.md` for dispatch and review choices. Apply `execution-recovery.md` only when its triggers fire.
 
 ### Wide Changes
 
@@ -66,11 +69,12 @@ Then retain the workflow's exact file, interface, TDD, command, expected-result,
 Before approval or dispatch, verify:
 
 - every task has `Delivers`, `Blocked by`, and `Worker class`
-- every task has one observable result, one fresh context, one test cycle, and one reviewer gate
+- every task has one worthwhile acceptance result, one fresh context, a complete verification loop, and one reviewer gate
 - dependencies form a valid execution order and do not imply unsafe parallel writes
 - wide changes use expand, migrate batches, and contract rather than one giant task
 - the plan preserves the active Superpowers details and introduces no competing workflow
-- a fifth failed fix/review round enters the existing systematic-debugging breaker; the plan does not schedule a sixth patch
+- every extracted brief carries or attaches binding plan-level constraints and interfaces
+- dispatch and recovery procedures route to their companions instead of being copied into the plan
 
 ## Final Check
 
