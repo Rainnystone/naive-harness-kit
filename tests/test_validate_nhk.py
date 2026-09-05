@@ -984,7 +984,7 @@ class FinalValidationTests(ValidatorTestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(section, result.stdout)
 
-    def test_worker_policy_rejects_old_main_thread_ceiling(self) -> None:
+    def test_worker_policy_requires_explicit_budget_clause(self) -> None:
         content = worker_policy_text().replace(
             "Explicit user budgets still bind.",
             "The main thread's model and effort are the worker cost ceiling.",
@@ -993,40 +993,27 @@ class FinalValidationTests(ValidatorTestCase):
         path = self.write_final(content)
         result = run_cli("--final", path, "--kind", "worker-policy")
         self.assertEqual(result.returncode, 1)
-        self.assertIn("main-thread ceiling", result.stdout.lower())
+        self.assertIn("Dispatch Contract", result.stdout)
 
-    def test_worker_policy_rejects_additional_unauthorized_role_grants(self) -> None:
-        additions = (
-            (
-                "## Codex Routing",
-                "- GPT-6 Astra max may perform ordinary implementation.",
-                "Astra role",
-            ),
-            (
-                "## Codex Routing",
-                "- GPT-5.6 Luna max may perform an initial task review.",
-                "Luna role",
-            ),
-            (
-                "## Claude Routing",
-                "- Fable may be inherited by workers when available.",
-                "Fable role",
-            ),
-            (
-                "## Codex Routing",
-                "- Ultra approval also authorizes recursion.",
-                "Ultra recursion",
-            ),
+    def test_worker_policy_allows_explicit_prohibitions(self) -> None:
+        content = worker_policy_text().replace(
+            "## Codex Routing",
+            """## Codex Routing
+
+- Do not use GPT-6 Astra max for ordinary implementation.
+- GPT-5.6 Luna max must not perform initial task reviews.
+- Ultra approval never authorizes recursive delegation.""",
+            1,
+        ).replace(
+            "## Claude Routing",
+            """## Claude Routing
+
+- Workers may not inherit Fable for ordinary coding.""",
+            1,
         )
-        for heading, addition, expected in additions:
-            with self.subTest(addition=addition):
-                content = worker_policy_text().replace(
-                    heading, f"{heading}\n\n{addition}", 1
-                )
-                path = self.write_final(content)
-                result = run_cli("--final", path, "--kind", "worker-policy")
-                self.assertEqual(result.returncode, 1)
-                self.assertIn(expected.lower(), result.stdout.lower())
+        path = self.write_final(content)
+        result = run_cli("--final", path, "--kind", "worker-policy")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_worker_policy_section_false_positive_fails(self) -> None:
         required = "Both must pass; self-review is not a substitute."
@@ -1058,35 +1045,55 @@ class FinalValidationTests(ValidatorTestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertIn("headings", result.stdout.lower())
 
-    def test_execution_recovery_rejects_gap_reset_and_limit_bypasses(self) -> None:
-        additions = (
+    def test_execution_recovery_rejects_drift_in_gap_and_limit_clauses(self) -> None:
+        mutations = (
             (
-                "## Triggers and Accounting",
-                "- Starting a new task or model resets the stable acceptance-gap count.",
-                "reset",
+                "Worker, session, model, commit, task rename, or replanning never "
+                "resets a task or gap count.",
+                "Changing the model resets the stable acceptance-gap count.",
+                "Triggers and Accounting",
             ),
             (
-                "## Recovery and Stop",
-                "- A second recovery fix wave is allowed when the model changes.",
-                "recovery limit",
+                "at most one recovery fix wave and one independent re-review",
+                "An additional recovery fix wave is allowed after exhaustion.",
+                "Recovery and Stop",
             ),
             (
-                "## Recovery and Stop",
-                "- Final review grants another repair allowance for an exhausted earlier gap.",
-                "final-review bypass",
+                "An exhausted earlier gap cannot use final review as another repair allowance",
+                "Final review may repair an exhausted earlier gap afresh.",
+                "Recovery and Stop",
             ),
         )
-        for heading, addition, expected in additions:
-            with self.subTest(addition=addition):
+        for required, replacement, section in mutations:
+            with self.subTest(required=required):
                 content = execution_recovery_text().replace(
-                    heading, f"{heading}\n\n{addition}", 1
+                    required, replacement, 1
                 )
                 path = self.write_final(content)
                 result = run_cli(
                     "--final", path, "--kind", "execution-recovery"
                 )
                 self.assertEqual(result.returncode, 1)
-                self.assertIn(expected, result.stdout.lower())
+                self.assertIn(section, result.stdout)
+
+    def test_execution_recovery_allows_explicit_prohibitions(self) -> None:
+        content = execution_recovery_text().replace(
+            "## Triggers and Accounting",
+            """## Triggers and Accounting
+
+- Changing the model must not reset the stable acceptance-gap count.""",
+            1,
+        ).replace(
+            "## Recovery and Stop",
+            """## Recovery and Stop
+
+- No additional recovery fix wave is allowed after exhaustion.
+- Final review never grants another repair allowance for an exhausted gap.""",
+            1,
+        )
+        path = self.write_final(content)
+        result = run_cli("--final", path, "--kind", "execution-recovery")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_execution_recovery_scopes_gap_accounting_to_trigger_section(self) -> None:
         required = (
@@ -1308,6 +1315,51 @@ class FinalValidationTests(ValidatorTestCase):
                     "--final", path, "--kind", "claude", "--mode", "thin"
                 )
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_comment_fence_text_cannot_hide_active_imports(self) -> None:
+        hidden_companion = self.write_final(
+            """@AGENTS.md
+
+<!--
+```md
+-->
+Read @worker-policy.md before dispatching.
+"""
+        )
+        result = run_cli(
+            "--final", hidden_companion, "--kind", "claude", "--mode", "thin"
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("worker-policy.md", result.stdout)
+
+        hidden_agents = self.write_final(
+            """<!--
+```md
+-->
+@AGENTS.md
+"""
+        )
+        result = run_cli(
+            "--final", hidden_agents, "--kind", "claude", "--mode", "thin"
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_comment_markers_inside_real_fence_do_not_change_comment_state(self) -> None:
+        path = self.write_final(
+            """```md
+<!--
+-->
+```
+@AGENTS.md
+Read @worker-policy.md before dispatching.
+"""
+        )
+        result = run_cli(
+            "--final", path, "--kind", "claude", "--mode", "thin"
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("worker-policy.md", result.stdout)
+        self.assertNotIn("valid import line", result.stdout)
 
 
 class CliContractTests(ValidatorTestCase):

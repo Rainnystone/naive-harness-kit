@@ -454,42 +454,6 @@ def validate_worker_policy_contract(
     )
     validate_exact_codex_bands(sections.get("Codex Routing", ""), label, issues)
 
-    if re.search(r"main thread[^\n]{0,80}(?:cost\s+)?ceiling", text, re.IGNORECASE):
-        issues.append(f"{label}: old main-thread ceiling authorization is forbidden")
-
-    codex = sections.get("Codex Routing", "")
-    for line in codex.splitlines():
-        lowered = line.lower()
-        if (
-            re.search(r"\bastra\s+(?:xhigh|max)\b", lowered)
-            and "ordinary implementation" in lowered
-            and re.search(r"\b(?:may|can|allow|use)\b", lowered)
-        ):
-            issues.append(f"{label}: unauthorized Astra role grant")
-        if (
-            "luna" in lowered
-            and "initial task review" in lowered
-            and "never" not in lowered
-        ):
-            issues.append(f"{label}: unauthorized Luna role grant")
-        if (
-            "ultra" in lowered
-            and "authorizes recursion" in lowered
-            and "never" not in lowered
-        ):
-            issues.append(f"{label}: Ultra recursion authorization must stay separate")
-
-    claude = sections.get("Claude Routing", "")
-    for line in claude.splitlines():
-        lowered = line.lower()
-        if (
-            "fable" in lowered
-            and "worker" in lowered
-            and "never" not in lowered
-            and re.search(r"\b(?:may|can|allow|use|inherit)\w*\b", lowered)
-        ):
-            issues.append(f"{label}: unauthorized Fable role grant")
-
 
 def validate_execution_recovery_contract(
     headings: tuple[str, ...],
@@ -564,21 +528,6 @@ def validate_execution_recovery_contract(
         issues,
     )
 
-    all_text = "\n".join(sections.values())
-    prohibited = (
-        (r"(?:new|starting a new) task[^\n]{0,50}resets?[^\n]{0,50}(?:gap|count)", "gap reset"),
-        (r"second recovery fix wave[^\n]{0,60}(?:allowed|permitted)", "recovery limit bypass"),
-        (
-            r"final review[^\n]{0,40}(?:grants?|allows?|permits?|provides?)"
-            r"[^\n]{0,40}(?:another|additional) repair allowance",
-            "final-review bypass",
-        ),
-    )
-    for pattern, description in prohibited:
-        if re.search(pattern, all_text, re.IGNORECASE):
-            issues.append(f"{label}: forbidden {description}")
-
-
 def strip_html_comments(line: str, in_comment: bool) -> tuple[str, bool]:
     remaining = line
     visible: list[str] = []
@@ -600,16 +549,14 @@ def strip_html_comments(line: str, in_comment: bool) -> tuple[str, bool]:
     return "".join(visible), in_comment
 
 
-def valid_import_lines(text: str) -> list[int]:
-    imports: list[int] = []
+def active_markdown_lines(text: str) -> Iterable[tuple[int, str]]:
     fence_char: str | None = None
     fence_width = 0
     in_comment = False
 
     for number, raw_line in enumerate(text.splitlines(), 1):
-        stripped = raw_line.lstrip()
-        fence = re.match(r"(`{3,}|~{3,})", stripped)
         if fence_char is not None:
+            stripped = raw_line.lstrip()
             closing = re.fullmatch(
                 rf"{re.escape(fence_char)}{{{fence_width},}}[ \t]*", stripped
             )
@@ -617,12 +564,22 @@ def valid_import_lines(text: str) -> list[int]:
                 fence_char = None
                 fence_width = 0
             continue
+
+        visible, in_comment = strip_html_comments(raw_line, in_comment)
+        stripped = visible.lstrip()
+        fence = re.match(r"(`{3,}|~{3,})", stripped)
         if fence:
             fence_char = fence.group(1)[0]
             fence_width = len(fence.group(1))
             continue
 
-        visible, in_comment = strip_html_comments(raw_line, in_comment)
+        yield number, visible
+
+
+def valid_import_lines(text: str) -> list[int]:
+    imports: list[int] = []
+
+    for number, visible in active_markdown_lines(text):
         trimmed = visible.strip()
         if not trimmed or trimmed.startswith(">"):
             continue
@@ -634,27 +591,8 @@ def valid_import_lines(text: str) -> list[int]:
 
 def active_companion_imports(text: str) -> list[tuple[int, str]]:
     imports: list[tuple[int, str]] = []
-    fence_char: str | None = None
-    fence_width = 0
-    in_comment = False
 
-    for number, raw_line in enumerate(text.splitlines(), 1):
-        stripped = raw_line.lstrip()
-        fence = re.match(r"(`{3,}|~{3,})", stripped)
-        if fence_char is not None:
-            closing = re.fullmatch(
-                rf"{re.escape(fence_char)}{{{fence_width},}}[ \t]*", stripped
-            )
-            if closing:
-                fence_char = None
-                fence_width = 0
-            continue
-        if fence:
-            fence_char = fence.group(1)[0]
-            fence_width = len(fence.group(1))
-            continue
-
-        visible, in_comment = strip_html_comments(raw_line, in_comment)
+    for number, visible in active_markdown_lines(text):
         if not visible.strip() or visible.lstrip().startswith(">"):
             continue
         visible = re.sub(r"`+[^`\n]*`+", "", visible)
