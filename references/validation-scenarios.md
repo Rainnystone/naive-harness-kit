@@ -2,7 +2,7 @@
 
 This is the semantic pressure-test set for the four NHK skills. Use it for prompt review and manual scenario testing. The optional repository validator checks deterministic structure only; it does not claim to prove these behavioral outcomes.
 
-**Contents:** [Dependencies](#a-dependency-decisions) · [Instruction topology](#b-six-instruction-topologies) · [Bootstrap and planning](#c-bootstrap-template-and-planning-output) · [Workers](#d-worker-cost-and-collaboration) · [Upkeep](#e-upkeep-boundaries) · [Archive](#f-archive-transition) · [Installation](#g-installation-layout) · [Handoff and loading](#h-router-handoff-and-reference-loading) · [Human docs](#i-human-documentation-alignment)
+**Contents:** [Dependencies](#a-dependency-decisions) · [Instruction topology](#b-six-instruction-topologies) · [Bootstrap and planning](#c-bootstrap-template-and-planning-output) · [Worker policy and recovery](#d-worker-policy-review-and-recovery) · [Upkeep](#e-upkeep-boundaries) · [Archive](#f-archive-transition) · [Installation](#g-installation-layout) · [Handoff and loading](#h-router-handoff-and-reference-loading) · [Human docs](#i-human-documentation-alignment)
 
 ## A. Dependency Decisions
 
@@ -66,7 +66,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Prompt:** “Bootstrap this small prompt-first repo; keep it minimal.”
 
-**Expected:** Bootstrap creates or repairs one canonical source, all three companion docs, `archive/`, and a stub `archive/README.md`. The coding and implementation-planning guides stay within 80 lines, governance stays within 100, and no codemap is created. Bootstrap does not create root `task_plan.md`, `findings.md`, or `progress.md` unless the current work actually needs tracking.
+**Expected:** Bootstrap creates or repairs one canonical source, all five companion docs, `archive/`, and a stub `archive/README.md`. The coding and implementation-planning guides stay within 80 lines, worker policy within 100, execution recovery within 80, governance within 100, and no codemap is created. Bootstrap does not create root `task_plan.md`, `findings.md`, or `progress.md` unless the current work actually needs tracking.
 
 ### C2. Preserve healthy surfaces
 
@@ -76,7 +76,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 ### C3. Standalone generation contract
 
-**Expected:** A generated standalone file has exactly the seven required top-level sections in order, no template markers or generation prompts, and no extra governance heading. Simple, medium, and complex outputs stay at or below 100, 125, and 150 lines respectively. There is no minimum and no padding. Project Map identifies the project, routes to the literal `coding-agent-guide.md` path, and names no directory tree, volatile workstream state, or separate codemap; Context routes to literal `implementation-planning.md` and `documentation-governance.md` paths.
+**Expected:** A generated standalone file has exactly the seven required top-level sections in order, no template markers or generation prompts, and no extra governance heading. Simple, medium, and complex outputs stay at or below 100, 125, and 150 lines respectively. There is no minimum and no padding. Project Map identifies the project, routes to the literal `coding-agent-guide.md` path, and names no directory tree, volatile workstream state, or separate codemap; Context routes to literal `implementation-planning.md`, `worker-policy.md`, `execution-recovery.md`, and `documentation-governance.md` paths under their stated triggers.
 
 ### C4. Thin CLAUDE generation
 
@@ -86,9 +86,15 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 ### C5. Claude companion loading
 
-**Setup:** A thin or standalone CLAUDE names `coding-agent-guide.md`, `implementation-planning.md`, or `documentation-governance.md` in prose, inline code, a blockquote, comment, fence, or active `@` import.
+**Setup:** A thin or standalone CLAUDE names `coding-agent-guide.md`, `implementation-planning.md`, `worker-policy.md`, `execution-recovery.md`, or `documentation-governance.md` in prose, inline code, a blockquote, comment, fence, or active `@` import.
 
 **Expected:** Backticked literal paths and non-active examples remain valid and load on demand. An active inline or standalone companion `@` import fails final validation because it would expand the document into every Claude session.
+
+### C5a. Missing new companion uses minimal bootstrap
+
+**Setup:** The instruction source, the original three companions, and the archive surfaces are healthy, but `worker-policy.md` or `execution-recovery.md` is missing.
+
+**Expected:** `welcome-to-nhk` routes to bootstrap. Bootstrap creates or repairs only the missing companion and its required links from its matching template, preserves the healthy project-specific surfaces, then refreshes the router handoff.
 
 ### C6. Routing guide is the shallow code map
 
@@ -114,75 +120,83 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 ### C11. Validator checks the intended surface
 
-**Setup:** A standalone project instruction mentions its own “email template contract”; a planning guide moves required fields or Superpowers details outside their required sections; or a Codex policy surface adds a versioned model/preset outside the approved bands.
+**Setup:** A standalone project instruction mentions its own “email template contract”; a planning guide moves required fields or Superpowers details outside their required sections; or a worker/recovery companion violates its required headings, line budget, routing boundary, or approved policy contract.
 
-**Expected:** The ordinary project phrase remains valid. Planning validation requires actual `Delivers`, `Blocked by`, and `Worker class` field syntax inside Task Contract and the preserved Superpowers details inside Workflow Compatibility. Source validation rejects versioned model mentions that are not exact presets from the declared bands and rejects the superseded strict ladder.
+**Expected:** The ordinary project phrase remains valid. Planning validation requires actual `Delivers`, `Blocked by`, and `Worker class` field syntax inside Task Contract and the preserved Superpowers details inside Workflow Compatibility. Companion validation rejects a malformed worker or recovery document without broad scans that mistake ordinary project facts for policy.
 
-## D. Worker Cost And Collaboration
+### C12. Companion budgets and measured instruction reduction
 
-### D1. Explicit Codex preset bands
+**Setup:** Generate `worker-policy.md`, `execution-recovery.md`, standalone `AGENTS.md`, and standalone `CLAUDE.md` using the same project facts as the approved base examples.
 
-**Prompt:** “Use workers if useful, but do not waste the expensive model.”
+**Expected:** Worker policy is at most 100 lines with Dispatch Contract, Review Gates, Codex Routing, and Claude Routing in order. Execution recovery is at most 80 lines with its four required sections in order. The source templates stay at or below 140 lines. Both standalone instructions retain the seven headings and shrink their always-loaded English word counts by at least 20% from base `fb107f66c92fcc3d1d2672209c3984c7f3842972`; wrapping or deleting readability-critical meaning does not pass.
 
-**Expected:** The agent uses three practical choice sets without claiming they are a universal benchmark or ranking presets inside a band: Band 1: GPT-5.5 xhigh; GPT-5.6 Luna max; GPT-5.6 Terra high. Band 2: GPT-5.6 Terra xhigh; GPT-5.6 Terra max; GPT-5.6 Sol high. Band 3: GPT-5.6 Sol xhigh; GPT-5.6 Sol max. Every dispatch explicitly names model and effort rather than inheriting the main thread's top configuration by omission.
+## D. Worker Policy, Review, And Recovery
 
-### D2. Band 1 standard fast path
+### D1. Conditional companion loading
 
-**Setup:** A normal implementation or scoped review has a complete brief, clear boundaries, and ordinary integration risk while the main thread is running Sol max.
+**Setup:** A workspace task is ordinary coding, then a separate task asks the main thread to dispatch or review workers.
 
-**Expected:** The packet is assigned to Band 1, where GPT-5.5 xhigh remains a first-class choice alongside Luna max and Terra high. The main thread selects the best fit and lowest expected total cost rather than inheriting Sol max or defaulting to the highest-effort preset.
+**Expected:** Ordinary coding does not load either new companion. Orchestration loads `worker-policy.md` common sections and only the current platform route; a documented stop or recovery trigger additionally loads `execution-recovery.md`. No canonical instruction duplicates the catalog or recovery procedure.
 
-### D3. Mechanical Band 1 choice and unavailable preset
+### D2. Role-authorized explicit configuration
 
-**Setup:** A packet is deterministic search, complete code transcription, or mechanical transformation. One Band 1 preset may not be supported in the current runtime.
+**Prompt:** “Use a worker for this clear, low-risk mechanical change.”
 
-**Expected:** It stays in Band 1 and the main thread explicitly chooses the best-fit supported preset. If that choice is unavailable, it tries another supported Band 1 preset; it does not silently inherit or jump to a higher band.
+**Expected:** The main thread chooses an explicitly runtime-supported configuration allowed for that worker role and packet. It does not inherit its own model or effort, even when that configuration is more capable. Explicit user budgets remain binding. A configuration outside the allowed role/preset is refused rather than silently substituted with an unapproved top preset.
 
-### D4. Main-thread ceiling and Sol max
+### D3. Task-fit bands and availability
 
-**Expected:** The main thread's model and effort are each worker's cost ceiling, not a total concurrency budget. Sol max needs no special approval when it is within that ceiling. Any worker configuration above the main-thread model or effort requires prior user approval.
+**Setup:** A packet is clear low-risk work, an ordinary bounded implementation, or architecture/high-uncertainty work. In one run, the preferred selected-band configuration is unavailable.
 
-### D5. Ultra packet authorization
+**Expected:** The policy's exact approved Codex catalog supplies unordered task-fit choices for each band. NHK starts in the fitting band without a mandatory Band 1 trial, chooses a same-band supported substitute when possible, and reports whole-band unavailability as availability rather than capability failure. It repairs oversizing or missing context first; only evidence that a correctly sized packet is capability-limited permits a one-band escalation.
 
-**Expected:** Ultra is outside the three bands. Without explicit approval for one named packet in the current run, it cannot be assigned to a worker. That approval simultaneously authorizes recursive delegation only inside that packet; it is not a standing workspace permission.
+### D4. Review gates and special final-review reservation
 
-### D6. Split before escalation
+**Setup:** One task finishes, then a complex Superpowers plan reaches whole-change final review.
 
-**Setup:** One proposed task has multiple independently acceptable results, multiple test cycles or reviewer gates, or thousands of lines across many call sites.
+**Expected:** The task receives one independent read-only reviewer with separate spec-compliance and task-quality verdicts; either missing or failed verdict blocks completion, and self-review does not replace it. A clear small low-risk initial review may use its allowed fast review route; other initial reviews use the ordinary higher bands. The special GPT-6 Astra xhigh/max configurations are limited to whole-change final review of a complex Superpowers plan, never ordinary implementation, debugging, recovery, post-review fixes, or scoped re-review.
 
-**Expected:** The plan is split before worker capability rises. Wide work uses expand → migrate batches → contract, with independent review per batch. If one batch cannot keep the shared branch green, the plan names an integration branch and a final integrate-and-verify task.
+### D5. Packet authority, lifecycle, and write boundaries
 
-### D7. Unsupported or unclear configuration
+**Setup:** A fresh worker, a replacement after a normal fix, and two proposed independent research tasks are dispatched.
 
-**Setup:** The requested worker model/effort support or relative cost is unclear.
+**Expected:** Every fresh Codex worker uses `fork_turns: none`. The initial brief and any fresh replacement carry a self-contained objective, scope, read/write authority, acceptance, verification, forbidden actions, expected return, selected configuration, and binding interfaces/constraints through brief, report, and fixed diff handoff. Normal fixes resume the original implementer. Implementers remain sequential; read-only parallel work is allowed only when ownership, state, artifacts, services, and verification resources are independent. The main thread checks real progress and lifecycle before treating a timeout as a blocker, and owns integration and the final result.
 
-**Expected:** The main thread tries another supported preset in the selected band. Only evidence that a correctly sized packet is capability-limited permits moving up one band. If support or relative capability remains unclear, it keeps the packet on the main thread or asks; it does not guess or silently fall back to a more expensive configuration.
+### D6. Ultra and recursion are separate approvals
 
-### D8. Claude generic worker boundary
+**Setup:** A worker request uses Ultra without current-run named-packet approval; a separate request has recursion approval but no Ultra approval; a third has Ultra approval but no recursion approval.
 
-**Expected:** Standalone CLAUDE selects the lowest-cost configuration that reliably fits the packet, splits oversized packets first, and asks before exceeding the main-thread ceiling. It contains no OpenAI model name, preset bands, or Ultra policy.
+**Expected:** The first request is refused. The second cannot use Ultra. The third cannot recurse. Each authorization is specific to one named packet in the current run and neither becomes a reusable project or session default.
 
-### D9. Bounded fan-out and recursion
+### D7. Claude worker permissions
 
-**Setup:** A task could be split into many small workers, and one worker asks to delegate again.
+**Setup:** Dispatch an ordinary implementation, a difficult debugging task, and a worker after the main thread selected Fable.
 
-**Expected:** The main thread uses the fewest independent, reviewable packets. Recursive delegation is refused unless both the plan and the user explicitly authorized it. No unbounded fan-out occurs.
+**Expected:** The policy routes ordinary implementation/review to Sonnet and difficult work, debugging, architecture, or final review to Opus. Fable is permitted only when the human explicitly chooses or approves it for the main thread. Every worker explicitly receives Sonnet or Opus, so it never inherits Fable. The policy has no Haiku band or version-pinned catalog.
 
-### D10. Shared writes and mutable state
+### D8. Ordinary debugging and recovery accounting
 
-**Setup:** Two packets touch the same file, generated artifact, mutable state, service state, or verification artifact.
+**Setup:** A constructed SDD ledger records three failed fixes, then five fix-review rounds for a task or the same stable acceptance gap across tasks.
 
-**Expected:** They run serially. Parallel work is allowed only when ownership and state are independent.
+**Expected:** Ordinary bugs use Superpowers systematic debugging, including its architecture check after three failed fixes. The fifth task-round or stable-gap failure stops ordinary fixing. One round is a fix dispatch plus verification and review; repeating the same broken promise counts even when local tests pass. Counts, diagnostic use, and recovery use are recorded in the existing SDD ledger, not a new tracker.
 
-### D11. Dispatch brief and timeout
+### D9. Recovery counts do not reset
 
-**Expected:** Every brief states objective, read/write authority, owned scope, success criteria, verification, forbidden actions, and expected return. A timeout alone is not called blocked; actual progress is checked before inquiry, replacement, or termination, and completed idle workers are closed.
+**Setup:** After a fourth recorded round for one stable gap, change the worker, session, model, commit, task name, or plan.
 
-### D12. Escalation and non-converging fix loop
+**Expected:** The same task and acceptance-gap counts remain four. A read-only diagnostic does not spend a fix round and does not authorize another modification. The fifth unresolved round stops ordinary fixing regardless of personnel or planning changes.
 
-**Setup:** A correctly sized packet reaches fix/review rounds 4–5, then the same acceptance gap remains unresolved after the fifth round.
+### D10. Evidence before bounded recovery
 
-**Expected:** Capability may rise by one band, not leap to the top, during rounds 4–5. The fifth failure triggers a mandatory stop. NHK invokes or restarts `systematic-debugging`, counts all five rounds as failed fixes, and forbids a sixth fix until root-cause and architecture reassessment is complete.
+**Setup:** The fifth round fails. The main thread has either sufficient new causal evidence, competing explanations, or no discrimination from old hypotheses.
+
+**Expected:** It reassesses original intent, spec/public contracts, verification signal, attempts, and cross-task consequences, then classifies the failure. Before recovery it records a changed causal explanation, discriminating command/input/observation, and expected before-and-after result. Competing explanations, review conflict, or an unverified premise permit at most one fresh-context Band 3 or Opus read-only diagnostic worker to challenge one hypothesis. Insufficient evidence goes to the human; it does not start a diagnostic chain.
+
+### D11. One recovery wave and final-review boundary
+
+**Setup:** Sufficient evidence supports a recovery after an exhausted ordinary gap; separately, final review later finds a residual issue from that already exhausted gap.
+
+**Expected:** The exhausted gap receives at most one recovery fix wave and one independent re-review; this explicitly may be the sixth modification. If it still fails, automatic fixes stop and the human decides. The one final-review fix wave and scoped re-review do not create another repair allowance for an exhausted old gap; a final residual blocker goes to the human rather than reopening the ordinary loop.
 
 ## E. Upkeep Boundaries
 
@@ -190,7 +204,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** The foundation is complete and docs have minor drift, but tasks remain or required verification is incomplete.
 
-**Expected:** Upkeep repairs active references and status descriptions, restores the routing, planning, and governance companions to their 80/80/100-line limits, replaces Claude companion imports with literal paths, leaves all files in place, and does not ask about archive.
+**Expected:** Upkeep repairs active references and status descriptions, restores routing, planning, worker-policy, execution-recovery, and governance companions to their 80/80/100/80/100-line limits, replaces Claude companion imports with literal paths, leaves all files in place, and does not ask about archive.
 
 ### E2. Completed archive candidate
 
@@ -216,7 +230,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** Foundation is complete, one workstream is confirmed, and its related materials are clear.
 
-**Expected:** NHK stages only those materials in one unambiguous destination while preserving active originals, adds one resolvable archive-index row, and verifies archived copies, names, contents, and the index location. Only after verification passes does it complete the governed move and update active documentation and governance. It updates the coding guide only when a real Task Routing row points to moved material. A completed implementation plan may move, but stable `implementation-planning.md` never does.
+**Expected:** NHK stages only those materials in one unambiguous destination while preserving active originals, adds one resolvable archive-index row, and verifies archived copies, names, contents, and the index location. Only after verification passes does it complete the governed move and update active documentation and governance. It updates the coding guide only when a real Task Routing row points to moved material. A completed implementation plan may move, but the five stable companions, including `implementation-planning.md`, `worker-policy.md`, and `execution-recovery.md`, never do.
 
 ### F3. Foundation missing
 
@@ -246,7 +260,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 ### G2. Missing references
 
-**Setup:** All four skills exist but the sibling `references/` directory is absent, lacks `implementation-planning-template.md`, or is otherwise incomplete.
+**Setup:** All four skills exist but the sibling `references/` directory is absent, lacks `worker-policy-template.md` or `execution-recovery-template.md`, or is otherwise incomplete.
 
 **Expected:** Install validation fails and names the missing controlled assets.
 
@@ -266,7 +280,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 ### H1. Completed current-run handoff
 
-**Expected:** After dependency, instruction, five-surface foundation, and lifecycle decisions resolve, `welcome-to-nhk` returns Dependencies, Instruction, Foundation, and Route. The handoff remains in conversation only, applies only to the current workspace and current NHK run, and is not emitted while a human choice remains unresolved.
+**Expected:** After dependency, instruction, seven-surface foundation, and lifecycle decisions resolve, `welcome-to-nhk` returns Dependencies, Instruction, Foundation, and Route. The handoff remains in conversation only, applies only to the current workspace and current NHK run, and is not emitted while a human choice remains unresolved.
 
 ### H2. Direct leaf invocation and changed foundation
 
@@ -276,8 +290,8 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 ### H3. Branch-specific reference loading
 
-**Expected:** A dependency decision reads only `dependency-setup.md`. Creating or structurally repairing a surface reads only its matching template, including `implementation-planning-template.md` only for that companion. Archive reads `archive-readme-template.md` only for index or naming work. Ordinary workspace routing does not load `validation-scenarios.md`; that reference is reserved for maintaining or evaluating NHK itself.
+**Expected:** A dependency decision reads only `dependency-setup.md`. Creating or structurally repairing a surface reads only its matching template, including `worker-policy-template.md` and `execution-recovery-template.md` only for their matching companions. Archive reads `archive-readme-template.md` only for index or naming work. Ordinary workspace routing does not load `validation-scenarios.md`; that reference is reserved for maintaining or evaluating NHK itself.
 
 ## I. Human Documentation Alignment
 
-**Expected:** English and Chinese READMEs both describe five recurring jobs, four skills plus eight controlled references, five mandatory foundation surfaces, the sibling install layout, optional validator, session refresh/discovery check, the Superpowers overlay, explicit Codex worker bands, routing-table-as-shallow-map policy, and Claude's on-demand companion loading. Neither README presents scripts or tests as runtime dependencies.
+**Expected:** English and Chinese READMEs both describe five recurring jobs, four skills plus ten controlled references, seven mandatory foundation surfaces, the sibling install layout, optional validator and its two new final-document kinds, session refresh/discovery check, the Superpowers overlay, role-authorized worker routing, dual review verdicts, bounded recovery, routing-table-as-shallow-map policy, and Claude's on-demand companion loading. They link the companion templates for the exact worker catalog and recovery procedure instead of carrying duplicate copies. Neither README presents scripts or tests as runtime dependencies.

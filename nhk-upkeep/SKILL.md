@@ -18,10 +18,12 @@ Use the handoff's dependency, instruction, topology, and complete-foundation sta
 1. Compare the canonical instruction source and any thin adapter with the live workspace. If its structure needs repair, open only the matching `../references/AGENTS-template.md` or `../references/CLAUDE-template.md`.
 2. Compare the single Task Routing table in `coding-agent-guide.md` with current task routes, likely change surfaces, and targeted verification; keep the file at or below 80 lines. Open `../references/coding-agent-guide-template.md` only when this surface needs structural repair.
 3. Compare `implementation-planning.md` with the Superpowers-compatible task contract; keep it at or below 80 lines and load it only for plan work. Open `../references/implementation-planning-template.md` only when this surface needs structural repair.
-4. Compare `documentation-governance.md` with actual document roles, active surfaces, workspace/document map, lifecycle, naming/loading rules, and archive invariants; keep it at or below 100 lines. Open `../references/documentation-governance-template.md` only when this surface needs structural repair.
-5. Verify `archive/README.md` remains a resolvable index of existing archived workstreams. Open `../references/archive-readme-template.md` only when its shape or row contract needs repair.
-6. Inspect existing implementation plans, task lists, `task_plan.md`, `progress.md`, and `findings.md` as active surfaces, not permanent assumptions.
-7. Repair inaccurate active references and status descriptions, replace any Claude companion `@` import with a literal on-demand path, then verify cross-links and instruction structure.
+4. Compare `worker-policy.md` with its on-demand dispatch and review contract; keep it at or below 100 lines. Open `../references/worker-policy-template.md` only when this surface needs structural repair.
+5. Compare `execution-recovery.md` with its on-demand exhausted-loop contract; keep it at or below 80 lines. Open `../references/execution-recovery-template.md` only when this surface needs structural repair.
+6. Compare `documentation-governance.md` with actual document roles, active surfaces, workspace/document map, lifecycle, naming/loading rules, and archive invariants; keep it at or below 100 lines. Open `../references/documentation-governance-template.md` only when this surface needs structural repair.
+7. Verify `archive/README.md` remains a resolvable index of existing archived workstreams. Open `../references/archive-readme-template.md` only when its shape or row contract needs repair.
+8. Inspect existing implementation plans, task lists, `task_plan.md`, `progress.md`, and `findings.md` as active surfaces, not permanent assumptions.
+9. Repair inaccurate active references and status descriptions, replace any Claude companion `@` import with a literal on-demand path, then verify cross-links and instruction structure.
 
 ## Repair Boundaries
 
@@ -30,8 +32,10 @@ Use the handoff's dependency, instruction, topology, and complete-foundation sta
 - Update stale repository, dependency, routing, verification, active/archive, and loading-order statements.
 - Do not recreate separate current-state, packet-routing, packet-checklist, code-map, default-verification, or anti-detour sections in `coding-agent-guide.md`; the routing table owns that job.
 - Keep plan sizing in `implementation-planning.md`; do not duplicate its task contract in the routing or governance docs.
+- Keep exact worker permissions in `worker-policy.md` and recovery procedure in `execution-recovery.md`; canonical instructions only retain their conditional routes.
 - Keep production-code navigation out of `documentation-governance.md`, and keep detailed archive execution in `nhk-archive`.
 - Keep stable `implementation-planning.md` active; only completed implementation plans may become archive candidates.
+- Keep all five companions active; none is an archive candidate.
 - Update existing tracking status when it no longer reflects reality.
 - Never delete, move, rename, archive, reset, clear, or empty a file in `nhk-upkeep`.
 - Never demote a document by removing it from the workspace; only correct whether active docs describe it as an active execution source.

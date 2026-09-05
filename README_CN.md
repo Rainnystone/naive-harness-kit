@@ -29,12 +29,14 @@ NHK 自带 4 个核心 skill：
 - `nhk-upkeep`：日常维护
 - `nhk-archive`：用户确认后的归档交接
 
-另外还带了八个受控 reference：
+另外还带了十个受控 reference：
 
 - `AGENTS-template.md`
 - `CLAUDE-template.md`
 - `coding-agent-guide-template.md`
 - `implementation-planning-template.md`
+- `worker-policy-template.md`
+- `execution-recovery-template.md`
 - `documentation-governance-template.md`
 - `archive-readme-template.md`
 - `dependency-setup.md`
@@ -62,13 +64,14 @@ NHK 是刻意把“写给人看”和“写给 agent 看”的文档拆开的：
 | 指令层 | canonical `AGENTS.md` 或 standalone `CLAUDE.md`，可再带一个 thin Claude adapter | 稳定执行规则、验证纪律、协作规则 |
 | 路由层 | `coding-agent-guide.md` | 从任务或症状找到首读文件、可能修改面和针对性验证 |
 | 规划层 | `implementation-planning.md` | 按需加载的 Superpowers-compatible task sizing、依赖边和 wide-change 结构 |
+| Worker 与 recovery 层 | `worker-policy.md`、`execution-recovery.md` | 按需加载的派遣/review 权限，以及耗尽 acceptance gap 的有界恢复机制 |
 | 治理层 | `documentation-governance.md` | 文档角色、active/archive surfaces、命名与加载、归档不变量 |
 | 活跃工作层 | active `specs/`、active `plans/`，以及按需启用的根目录 `task_plan.md` / `progress.md` / `findings.md` | 只放正在进行的工作 |
 | 归档层 | `archive/` 加根级 `archive/README.md` | 已完成的 spec、plan、tracking，以及历史参考材料 |
 
 NHK 在这里是故意有主张的：
 
-- canonical instruction 确定后，每个 NHK-managed workspace 都有五个强制 foundation surface：路由、implementation planning、governance、`archive/` 和 `archive/README.md`
+- canonical instruction 确定后，每个 NHK-managed workspace 都有七个强制 foundation surface：路由、implementation planning、worker policy、execution recovery、governance、`archive/` 和 `archive/README.md`
 - 根目录 tracking 文件是按需启用，不是默认永远存在
 - active 文档和 archive 文档不能混着放
 - archive 转换必须有人类确认
@@ -79,6 +82,8 @@ NHK 在这里是故意有主张的：
 治理层的直接依据就是 `references/documentation-governance-template.md`。NHK 不认为文档生命周期应该靠默认脑补解决，而是要求这些规则在目标 workspace 里明确写出来。
 
 `implementation-planning.md` 的职责刻意更窄：它只是 Superpowers overlay，不是来抢班夺权的第二套 planner。只有在编写、批准或实质修改 implementation plan 前才加载；普通编码、review 和 debug 不用读。它保留 Superpowers 要求的精确文件、接口、TDD steps、命令、预期结果与必要代码，只增加 `Delivers`、`Blocked by` 和 `Worker class`，把每个 task 收到一个 fresh implementer context 和一个 reviewer gate 能稳妥接住的大小。NHK 只通过 workspace 文档做这层改良，不去 patch Superpowers 插件。
+
+`worker-policy.md` 是 worker 角色权限、dispatch packet、review gate 和当前 Codex/Claude 路由目录的按需唯一归属；只在编排、派遣或 review worker 时读取。某一 acceptance gap 连续五轮失败后，或更早出现架构停滞证据时，读取 `execution-recovery.md`；它记录耗尽的 acceptance gap，以及回到人类决策前那条有边界的恢复路径。若这两份 companion 缺失，bootstrap 会分别按 [`references/worker-policy-template.md`](references/worker-policy-template.md) 或 [`references/execution-recovery-template.md`](references/execution-recovery-template.md) 最小化补齐，并保留健康的项目内容。
 
 ## 依赖
 
@@ -136,8 +141,12 @@ Validator 只能核对文件和版本，不能冒充平台的 skill discovery。
 ```bash
 python3 -B scripts/validate_nhk.py --final <coding-agent-guide.md> --kind coding-guide
 python3 -B scripts/validate_nhk.py --final <implementation-planning.md> --kind planning-guide
+python3 -B scripts/validate_nhk.py --final <worker-policy.md> --kind worker-policy
+python3 -B scripts/validate_nhk.py --final <execution-recovery.md> --kind execution-recovery
 python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance
 ```
+
+将生成后的 standalone instruction 示例和基线比较时，必须保持项目事实完全相同，并测量 always-loaded English words。`AGENTS.md` 与 standalone `CLAUDE.md` 都必须至少缩短 20%；只改换行不算缩短。
 
 如果你是第一次配这种环境，不确定依赖有没有装好，这非常正常。NHK 的设计本来就是在这种地方先停下来问，而不是装懂。
 
@@ -147,7 +156,7 @@ python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind 
 
 1. 先从 `welcome-to-nhk` 开始。
 2. 让它判断现在应该进入 `nhk-bootstrap`、`nhk-upkeep` 还是 `nhk-archive`。
-3. 用 `nhk-bootstrap` 去建立或适配主 instruction file、三个强制 companion docs，以及根级 archive surface（`archive/` 加 `archive/README.md`）。
+3. 用 `nhk-bootstrap` 去建立或适配主 instruction file、五个强制 companion docs，以及根级 archive surface（`archive/` 加 `archive/README.md`）。
 4. 正常开发周期走完后，用 `nhk-upkeep` 修正漂移；只有一个具体 workstream 同时具备完成证据和相关材料时，它才会询问是否归档。
 5. 只有在用户明确说“这个 workstream 完成了，可以归档”之后，才进入 `nhk-archive`。
 
@@ -162,23 +171,15 @@ NHK 同时兼容这两个方向：
 
 NHK 不会在这件事上瞎猜。如果两个文件都在，而 CLAUDE 在正文里有一行严格等于 `@AGENTS.md` 或 `@./AGENTS.md` 的真实 import，AGENTS 就是 canonical，不必多问。只有导入行却没有 AGENTS 的 CLAUDE 是 broken adapter；两个互相独立的文件才是真歧义，需要人来选。
 
-thin CLAUDE 只 import AGENTS。三份 companion docs 始终使用反引号普通路径并按需读取；如果用 `@` 把它们展开，每次会话都得先把整套说明背一遍，再看看今天到底用不用得上。
+thin CLAUDE 只 import AGENTS。五份 companion docs 始终使用反引号普通路径并按需读取；如果用 `@` 把它们展开，每次会话都得先把整套说明背一遍，再看看今天到底用不用得上。
 
-## Worker 成本规则
+## Worker 派遣、Review 与恢复
 
-如果所有 worker 都默认继承主线程顶配，最后很容易出现一种微妙局面：模型认真思考了半天，完成了一项本来只需要靠谱打字的工作。于是 NHK 改成三个实践型 Codex preset 档；它们是按 task fit 选择的候选集合，不是什么宇宙通用排行榜，同档内部也没有固定强弱顺序：
+Worker 的 configuration 由该 packet 的角色和允许 preset 授权，不能从主线程 configuration 静默继承；用户明确给出的预算仍然有效。三个无序 Codex band 分别适合规格清楚的低风险工作、普通实现或边界明确的集成，以及架构、高不确定性或高风险任务；NHK 从适合 packet 的 band 开始，不强制先试 Band 1。完整目录、同 band 不可用时的替代、升级所需证据和 final review 的特殊预留都由 [`references/worker-policy-template.md`](references/worker-policy-template.md) 规定，并生成目标 workspace 的 `worker-policy.md`。
 
-`Band 1: GPT-5.5 xhigh; GPT-5.6 Luna max; GPT-5.6 Terra high`
-`Band 2: GPT-5.6 Terra xhigh; GPT-5.6 Terra max; GPT-5.6 Sol high`
-`Band 3: GPT-5.6 Sol xhigh; GPT-5.6 Sol max`
+每个 worker 都拿到自包含 brief、明确且运行时支持的 configuration，以及清楚的 authority。每个 task 有一位独立只读 reviewer，spec-compliance 与 task-quality 两份 verdict 都必须通过。Claude worker 明确走 policy 中的 Sonnet 或 Opus 路由；Fable 只可作为用户选择或批准的主线程选项，不能被 worker 继承。Ultra 和递归派遣都需要对当前运行中命名 packet 的独立批准。
 
-机械任务、规格清楚的普通实现和 scoped review 使用 Band 1；多文件集成和困难但边界明确的任务使用 Band 2；架构判断、高不确定但仍有边界的任务和 final review 使用 Band 3，或者留在主线程。主线程先选档，再显式写出 model 和 effort，并在档内按 task fit 与预计总成本选择，而不是默认拿最高 effort。某个 preset 不可用时先在同档换选；只有 packet 已经正确拆小、但能力仍不足时才升一档。packet 太大仍然先拆。主线程 model 和 effort 继续作为每个 worker 的成本上限。Sol max 只要没越过这个上限就不用额外批准；越级则先问人。
-
-Ultra 不在这三个档里。只有用户针对当前运行里的一个具体 packet 明确批准，并同时授权该 packet 内的递归派遣时，才可以下传。Claude standalone 沿用“满足任务的最低成本配置、越级先批准”的规则，但不随身背一张 OpenAI 型号表——毕竟它也不是来参观模型博物馆的。
-
-## 修补开始原地打转时
-
-大多数 gap 应该能在五轮认真的 fix–verify 或 fix–review 里收敛。如果同一个 gap 到第五轮还稳稳坐在那里，NHK 就不再假装“第六次说不定会灵光一现”：必须停手并调用或重启 `systematic-debugging`，把前五轮算作失败修复；根因和架构重新审视完成之前，不准再贴第六块补丁。
+普通 bug 仍走 Superpowers systematic debugging。Recovery companion 在工作流已有的 execution record 中同时跟踪每个 task 的五轮上限和跨 task 稳定 acceptance gap；恢复前必须有新的因果证据，真正存在争议时最多可用一次 fresh-context 只读诊断；耗尽的 gap 最多再获得一轮 recovery fix wave 和一次 re-review，之后由人来决定。完整的触发、记账和 final-review 边界见 [`references/execution-recovery-template.md`](references/execution-recovery-template.md)。
 
 ## 仓库自身的维护
 

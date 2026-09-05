@@ -258,6 +258,19 @@ class InstructionExampleTests(unittest.TestCase):
                     for path in COMPANION_PATHS:
                         self.assertIn(f"`{path}`", example)
 
+    def test_generated_standalone_examples_name_concrete_recovery_triggers(self) -> None:
+        for template_name in ("AGENTS-template.md", "CLAUDE-template.md"):
+            with self.subTest(template=template_name):
+                example = assemble_standalone(REFERENCES / template_name, "simple")
+                self.assertIn(
+                    "- Use Superpowers `systematic-debugging` for bugs and its required architecture checks.",
+                    example,
+                )
+                self.assertIn(
+                    "- Read `execution-recovery.md` after five failed rounds on one acceptance gap, or earlier evidence of architectural stagnation.",
+                    example,
+                )
+
     def test_thin_claude_example_is_small_clean_and_literal(self) -> None:
         example = assemble_thin_claude()
         lines = example.splitlines()

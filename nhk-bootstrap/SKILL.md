@@ -21,6 +21,8 @@ The finished workspace must have:
 - optionally, a thin `CLAUDE.md` adapter importing canonical `AGENTS.md`
 - `coding-agent-guide.md`
 - `implementation-planning.md`
+- `worker-policy.md`
+- `execution-recovery.md`
 - `documentation-governance.md`
 - `archive/`
 - `archive/README.md`
@@ -35,11 +37,13 @@ Once the canonical source is known:
 - preserve a valid thin adapter, or create one only when the decision above calls for it
 - add or repair `coding-agent-guide.md` from `../references/coding-agent-guide-template.md`
 - add or repair `implementation-planning.md` from `../references/implementation-planning-template.md`
+- add or repair `worker-policy.md` from `../references/worker-policy-template.md`
+- add or repair `execution-recovery.md` from `../references/execution-recovery-template.md`
 - add or repair `documentation-governance.md` from `../references/documentation-governance-template.md`
 - create `archive/` when missing and add or repair `archive/README.md` from `../references/archive-readme-template.md`
 - connect the canonical instruction source, companion docs, and archive index with concise, accurate references
 
-Use backticked literal paths for all three companion docs. In Claude Code, only a thin adapter may import canonical AGENTS; neither thin nor standalone CLAUDE may `@` import a companion doc.
+Use backticked literal paths for all five companion docs. In Claude Code, only a thin adapter may import canonical AGENTS; neither thin nor standalone CLAUDE may `@` import a companion doc.
 
 Never overwrite correct project-specific content merely to match template wording.
 
@@ -61,6 +65,8 @@ If bootstrap is creating or structurally repairing the instruction surface, open
 - Do not expand project detail past the line budget; route it to the companion docs.
 - Keep `coding-agent-guide.md` at or below 80 lines with one Task Routing table using `Task or Symptom`, `Read First`, `Likely Change Surface`, and `Targeted Verification`.
 - Keep `implementation-planning.md` at or below 80 lines with `Workflow Compatibility`, `Plan Layers`, `Task Contract`, `Dependencies and Execution`, `Wide Changes`, and `Plan Review` in order.
+- Keep `worker-policy.md` at or below 100 lines with its dispatch, review, Codex, and Claude sections in order.
+- Keep `execution-recovery.md` at or below 80 lines with its accounting, reassessment, diagnosis, and recovery sections in order.
 - Keep `documentation-governance.md` at or below 100 lines and limited to document roles, active surfaces, the workspace/document map, lifecycle, naming/loading, and archive invariants.
 
 ## Foundation Verification
@@ -68,8 +74,8 @@ If bootstrap is creating or structurally repairing the instruction surface, open
 Before finishing:
 
 - confirm the canonical source and any thin adapter match the topology rules
-- confirm all three companion docs, `archive/`, and the archive index exist and cross-references resolve
-- confirm companion docs meet their 80/80/100-line limits and CLAUDE does not auto-import them
+- confirm all five companion docs, `archive/`, and the archive index exist and cross-references resolve
+- confirm companion docs meet their 80/80/100/80/100-line limits and CLAUDE does not auto-import them
 - confirm generated instruction content meets its selected structure and line limit
 - confirm no existing healthy surface was unnecessarily replaced
 - if root tracking exists, record the audit there; otherwise report it in the delivery note

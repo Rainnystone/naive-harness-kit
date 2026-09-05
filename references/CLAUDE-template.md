@@ -47,7 +47,7 @@ Omit directory trees, inventories, active status, inferable stack facts, and a s
 - Preserve declared sources of truth. Change generated artifacts only through the project's required process.
 - Resolve intended behavior when instructions, implementation, tests, and active docs disagree, then restore consistency.
 - Use an installed or explicitly adopted workflow when it fits. Do not claim an unavailable workflow.
-- Use ordinary systematic debugging for bugs. Read `execution-recovery.md` when its stop or recovery triggers apply.
+- Use Superpowers `systematic-debugging` for bugs and its required architecture checks.
 [[FINAL_VERBATIM:END]]
 
 [[OPTIONAL_BY_COMPLEXITY:BEGIN]]
@@ -63,7 +63,7 @@ Include only a real safety boundary that cannot fit in Project Map. Route task-s
 - Read `coding-agent-guide.md` to route a task or symptom to code and first-pass verification.
 - Read `implementation-planning.md` before writing, approving, or materially revising an implementation plan.
 - Read `worker-policy.md` only when orchestrating, dispatching, or reviewing workers. Load its common sections and the current platform section.
-- Read `execution-recovery.md` only when a documented recovery trigger or exhausted review path applies.
+- Read `execution-recovery.md` after five failed rounds on one acceptance gap, or earlier evidence of architectural stagnation.
 - Treat `documentation-governance.md` as the source of truth for documentation lifecycle rules.
 - Load the smallest active context that safely routes the task. Prefer implementation, tests, and active docs before history.
 - Keep active plans and tracking aligned with actual status. Create heavier tracking only when the work needs it.

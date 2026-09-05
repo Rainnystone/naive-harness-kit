@@ -30,7 +30,7 @@ Select related materials in this order:
 3. filenames, directories, dates, and topic slugs matching the chosen identity
 4. file content and current context when naming signals are incomplete
 
-Archive only materials that clearly belong to that identity. Completed implementation plans may move with their workstream, but the stable `implementation-planning.md` companion never does. Do not archive unrelated live plans, shared instruction or governance docs, or tracking still used by another workstream.
+Archive only materials that clearly belong to that identity. Completed implementation plans may move with their workstream, but the stable companions `coding-agent-guide.md`, `implementation-planning.md`, `worker-policy.md`, `execution-recovery.md`, and `documentation-governance.md` never do. Do not archive unrelated live plans, shared instruction or governance docs, or tracking still used by another workstream.
 
 ## Naming And Index Contract
 

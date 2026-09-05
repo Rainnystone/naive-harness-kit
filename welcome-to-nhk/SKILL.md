@@ -22,7 +22,7 @@ Treat `superpowers` and `planning-with-files` as peer dependencies.
 
 A valid thin import is a line whose trimmed content is exactly `@AGENTS.md` or `@./AGENTS.md`, outside fenced code, Markdown blockquotes, and comments. Mentions in prose, examples, quoted text, code fences, or comments do not count.
 
-Claude `@` imports of `coding-agent-guide.md`, `implementation-planning.md`, or `documentation-governance.md` are not topology signals and are not valid NHK routing. Companion docs must be named by literal path and loaded only when the task requires them.
+Claude `@` imports of any companion doc are not topology signals and are not valid NHK routing. Companion docs must be named by literal path and loaded only when the task requires them.
 
 Apply this order:
 
@@ -35,10 +35,12 @@ Apply this order:
 
 ## 3. Check The NHK Foundation
 
-After the canonical source is known, check all five foundation surfaces:
+After the canonical source is known, check all seven foundation surfaces:
 
 - `coding-agent-guide.md`
 - `implementation-planning.md`
+- `worker-policy.md`
+- `execution-recovery.md`
 - `documentation-governance.md`
 - `archive/`
 - `archive/README.md`
@@ -50,7 +52,7 @@ If any surface is missing or the instruction topology needs the user-approved re
 Only after the foundation is complete:
 
 - Route to `nhk-archive` when the user explicitly asks to archive a completed workstream or has already clearly confirmed that transition.
-- Route to `nhk-upkeep` when instruction, routing, implementation-planning, governance, archive-index, or active tracking descriptions may have drifted.
+- Route to `nhk-upkeep` when instruction, companion, governance, archive-index, or active tracking descriptions may have drifted.
 - If nothing needs setup, repair, or archive handling, report that the foundation is ready and stop.
 
 ## Router Handoff
@@ -59,7 +61,7 @@ After every decision above is resolved, return one compact handoff with exactly 
 
 - **Dependencies** — the installed, enabled, or current-run adopted state of each peer workflow
 - **Instruction** — the canonical source and standalone/thin topology
-- **Foundation** — which of the five required surfaces are present or missing
+- **Foundation** — which of the seven required surfaces are present or missing
 - **Route** — `bootstrap`, `upkeep`, `archive`, or `ready`
 
 The handoff exists only in conversation for the current workspace and current NHK run. Do not write it to a file or reuse it after its dependency state, instruction topology, foundation state, lifecycle intent, or workspace changes. If a human choice remains unresolved, do not emit a complete handoff; stop at that choice.
