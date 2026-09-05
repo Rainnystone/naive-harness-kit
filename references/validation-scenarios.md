@@ -116,7 +116,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 ### C9. Executable task contract
 
-**Expected:** Every implementation-plan task adds `Delivers`, `Blocked by`, and `Worker class` (`mechanical`, `standard`, or `judgment`). It delivers one observable result in one fresh implementer context, with one test cycle, one reviewer gate, and one independent return. A separately acceptable substep becomes its own task; setup or docs that only serve the result stay inside it.
+**Expected:** Every implementation-plan task adds `Delivers`, `Blocked by`, and `Worker class` (`mechanical`, `standard`, or `judgment`). It delivers one observable, independently acceptable result with one coherent acceptance result and a complete implementation-and-verification loop in one fresh implementer context, one reviewer gate, and one independent return. A task may contain multiple necessary TDD cycles. Split genuinely independent results, judgments, or ownership boundaries; keep one transaction, permission decision, or recovery path together, and keep supporting setup, tests, configuration, and documentation with the result they enable.
 
 ### C10. Superpowers task-brief compatibility
 

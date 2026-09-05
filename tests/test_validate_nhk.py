@@ -187,8 +187,13 @@ def planning_guide_text(extra_lines: int = 0) -> str:
             "an integrate-and-verify task when a batch cannot stay green alone."
         ),
         "Plan Review": (
-            "Reject a task that cannot produce one observable result in one fresh context "
-            "with one test cycle and reviewer gate."
+            "Reject a task that cannot deliver one worthwhile, independently acceptable "
+            "result with a complete implementation-and-verification loop. Each task must "
+            "fit one fresh implementer context, one coherent acceptance result, one reviewer "
+            "gate, and one independent return. A task may contain multiple necessary TDD "
+            "cycles. Split genuinely independent results, judgments, or ownership boundaries; "
+            "keep one transaction, permission decision, or recovery path together, and keep "
+            "setup, tests, configuration, and documentation with the result they enable."
         ),
     }
     lines = ["# Implementation Planning", ""]
