@@ -154,45 +154,57 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** One task finishes, then a complex Superpowers plan reaches whole-change final review.
 
-**Expected:** The task receives one independent read-only reviewer with separate spec-compliance and task-quality verdicts; either missing or failed verdict blocks completion, and self-review does not replace it. A clear small low-risk initial review may use its allowed fast review route; other initial reviews use the ordinary higher bands. The special GPT-6 Astra xhigh/max configurations are limited to whole-change final review of a complex Superpowers plan, never ordinary implementation, debugging, recovery, post-review fixes, or scoped re-review.
+**Expected:** The task receives one independent read-only reviewer with separate spec-compliance and task-quality verdicts; either missing or failed verdict blocks completion, and self-review does not replace it. The special GPT-6 Astra xhigh/max configurations are limited to whole-change final review of a complex Superpowers plan, never ordinary implementation, debugging, recovery, post-review fixes, or scoped re-review.
 
-### D5. Packet authority, lifecycle, and write boundaries
+### D5. Initial-review route and upstream evidence
+
+**Setup:** A clear small low-risk change needs its initial review, then a low-risk scoped re-review is proposed. The reviewer receives a report, test evidence, fixed BASE and HEAD revisions, and binding constraints.
+
+**Expected:** The clear low-risk initial review may use GPT-5.5 xhigh; other initial reviews use the ordinary Band 2 or Band 3 routes. GPT-5.6 Luna may perform only the low-risk scoped re-review and never the initial task review. The reviewer uses the applicable upstream task-reviewer, re-review, or final-review prompt rather than a copied NHK prompt. It checks the implementer's claims against the fixed diff and test output.
+
+### D6. Scoped re-review and cannot-verify gate
+
+**Setup:** A fix responds to a prior reviewer finding, but one related item cannot be verified from the available evidence.
+
+**Expected:** The scoped re-review checks that the prior finding is actually addressed and that the fix introduced no regression. The main thread resolves every cannot-verify item before completion; a passed local test or implementer self-review does not bypass that responsibility.
+
+### D7. Packet authority, lifecycle, and write boundaries
 
 **Setup:** A fresh worker, a replacement after a normal fix, and two proposed independent research tasks are dispatched.
 
 **Expected:** Every fresh Codex worker uses `fork_turns: none`. The initial brief and any fresh replacement carry a self-contained objective, scope, read/write authority, acceptance, verification, forbidden actions, expected return, selected configuration, and binding interfaces/constraints through brief, report, and fixed diff handoff. Normal fixes resume the original implementer. Implementers remain sequential; read-only parallel work is allowed only when ownership, state, artifacts, services, and verification resources are independent. The main thread checks real progress and lifecycle before treating a timeout as a blocker, and owns integration and the final result.
 
-### D6. Ultra and recursion are separate approvals
+### D8. Ultra and recursion are separate approvals
 
 **Setup:** A worker request uses Ultra without current-run named-packet approval; a separate request has recursion approval but no Ultra approval; a third has Ultra approval but no recursion approval.
 
 **Expected:** The first request is refused. The second cannot use Ultra. The third cannot recurse. Each authorization is specific to one named packet in the current run and neither becomes a reusable project or session default.
 
-### D7. Claude worker permissions
+### D9. Claude worker permissions
 
 **Setup:** Dispatch an ordinary implementation, a difficult debugging task, and a worker after the main thread selected Fable.
 
 **Expected:** The policy routes ordinary implementation/review to Sonnet and difficult work, debugging, architecture, or final review to Opus. Fable is permitted only when the human explicitly chooses or approves it for the main thread. Every worker explicitly receives Sonnet or Opus, so it never inherits Fable. The policy has no Haiku band or version-pinned catalog.
 
-### D8. Ordinary debugging and recovery accounting
+### D10. Ordinary debugging and recovery accounting
 
 **Setup:** A constructed SDD ledger records three failed fixes, then five fix-review rounds for a task or the same stable acceptance gap across tasks.
 
 **Expected:** Ordinary bugs use Superpowers systematic debugging, including its architecture check after three failed fixes. The fifth task-round or stable-gap failure stops ordinary fixing. One round is a fix dispatch plus verification and review; repeating the same broken promise counts even when local tests pass. Counts, diagnostic use, and recovery use are recorded in the existing SDD ledger, not a new tracker.
 
-### D9. Recovery counts do not reset
+### D11. Recovery counts do not reset
 
 **Setup:** After a fourth recorded round for one stable gap, change the worker, session, model, commit, task name, or plan.
 
 **Expected:** The same task and acceptance-gap counts remain four. A read-only diagnostic does not spend a fix round and does not authorize another modification. The fifth unresolved round stops ordinary fixing regardless of personnel or planning changes.
 
-### D10. Evidence before bounded recovery
+### D12. Evidence before bounded recovery
 
 **Setup:** The fifth round fails. The main thread has either sufficient new causal evidence, competing explanations, or no discrimination from old hypotheses.
 
 **Expected:** It reassesses original intent, spec/public contracts, verification signal, attempts, and cross-task consequences, then classifies the failure. Before recovery it records a changed causal explanation, discriminating command/input/observation, and expected before-and-after result. Competing explanations, review conflict, or an unverified premise permit at most one fresh-context Band 3 or Opus read-only diagnostic worker to challenge one hypothesis. Insufficient evidence goes to the human; it does not start a diagnostic chain.
 
-### D11. One recovery wave and final-review boundary
+### D13. One recovery wave and final-review boundary
 
 **Setup:** Sufficient evidence supports a recovery after an exhausted ordinary gap; separately, final review later finds a residual issue from that already exhausted gap.
 
