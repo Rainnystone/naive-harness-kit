@@ -1,0 +1,17 @@
+{
+  "base_commit": "fb107f66c92fcc3d1d2672209c3984c7f3842972",
+  "provenance": "Final examples assembled from the two templates at base_commit with the test adaptation payload identified by adaptation_sha256.",
+  "adaptation_sha256": "240bad361ab1d7c268b30cf1698e7db81a6d550510ee9f8b7dad68ae5413127f",
+  "source_template_sha256": {
+    "AGENTS-template.md": "541b93699ec1e49864c5901cb353aa5f6d461bbe60ecec782abc7b2c283eb139",
+    "CLAUDE-template.md": "294ecc4fc89817294cb1db1157bcce18fe36ee17494cc8f0433294306ca6945e"
+  },
+  "word_counts": {
+    "AGENTS-template.md:simple": 994,
+    "AGENTS-template.md:medium": 1055,
+    "AGENTS-template.md:complex": 1103,
+    "CLAUDE-template.md:simple": 771,
+    "CLAUDE-template.md:medium": 832,
+    "CLAUDE-template.md:complex": 880
+  }
+}

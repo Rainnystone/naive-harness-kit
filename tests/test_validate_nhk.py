@@ -7,6 +7,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from tests.test_instruction_examples import assemble_companion, assemble_standalone
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "validate_nhk.py"
@@ -30,6 +32,8 @@ REFERENCES = (
     "CLAUDE-template.md",
     "coding-agent-guide-template.md",
     "implementation-planning-template.md",
+    "worker-policy-template.md",
+    "execution-recovery-template.md",
     "documentation-governance-template.md",
     "archive-readme-template.md",
     "dependency-setup.md",
@@ -78,33 +82,18 @@ LEGACY_CODEX_PRESET_LADDER = (
 )
 
 CODEX_PRESET_BAND_LINES = (
-    "Band 1: GPT-5.5 xhigh; GPT-5.6 Luna max; GPT-5.6 Terra high",
-    "Band 2: GPT-5.6 Terra xhigh; GPT-5.6 Terra max; GPT-5.6 Sol high",
-    "Band 3: GPT-5.6 Sol xhigh; GPT-5.6 Sol max",
+    "Band 1: GPT-5.6 Luna max; GPT-6 Astra low.",
+    "Band 2: GPT-5.6 Sol medium; GPT-5.6 Sol high; GPT-6 Astra medium.",
+    "Band 3: GPT-5.6 Sol xhigh; GPT-6 Astra xhigh.",
 )
 
-IMPLEMENTATION_PLANNING_POINTER = (
-    "Before writing, approving, or materially revising an implementation plan, "
-    "read `implementation-planning.md`; do not dispatch a task that fails its "
-    "packet contract."
+COMPANION_ROUTES = (
+    "`coding-agent-guide.md`",
+    "`implementation-planning.md`",
+    "`worker-policy.md`",
+    "`execution-recovery.md`",
+    "`documentation-governance.md`",
 )
-
-CONVERGENCE_BACKSTOP = (
-    "Five failed fix–verify or fix–review rounds on the same acceptance gap "
-    "trigger a mandatory stop. Invoke or restart `systematic-debugging`, count "
-    "those rounds as failed fixes, and forbid a sixth fix until root-cause and "
-    "architecture reassessment is complete."
-)
-
-INSTALL_COMMAND = (
-    "cp -R welcome-to-nhk nhk-bootstrap nhk-upkeep nhk-archive references "
-    "<skills-root>/"
-)
-
-COMPANION_VALIDATOR_COMMANDS = """python3 -B scripts/validate_nhk.py --final <coding-agent-guide.md> --kind coding-guide
-python3 -B scripts/validate_nhk.py --final <implementation-planning.md> --kind planning-guide
-python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance"""
-
 
 def run_cli(*args: object) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
@@ -114,75 +103,6 @@ def run_cli(*args: object) -> subprocess.CompletedProcess[str]:
         capture_output=True,
         check=False,
     )
-
-
-def english_readme() -> str:
-    names = "\n".join(f"- `{name}`" for name in (*SKILLS, *REFERENCES))
-    return f"""# NHK
-
-[中文](README_CN.md)
-
-NHK handles five recurring jobs with four prompt-first skills.
-
-{names}
-
-Install the five sibling directories directly under one skills root:
-
-```bash
-{INSTALL_COMMAND}
-```
-
-`scripts/` and `tests/` are maintainer-only and are not runtime installation content.
-The Python validator is optional and has no third-party dependencies:
-`python3 -B scripts/validate_nhk.py --install-root <skills-root>`.
-After validation, refresh the session and confirm that all four skills are discoverable.
-Maintainers can validate generated companion docs:
-{COMPANION_VALIDATOR_COMMANDS}
-
-NHK keeps eight controlled references and five mandatory foundation surfaces.
-Its implementation-planning companion is a Superpowers overlay loaded only for plan work.
-NHK uses three practical Codex preset bands; presets within a band are unordered:
-{chr(10).join(CODEX_PRESET_BAND_LINES)}
-The user's main-thread model and effort set each worker's cost ceiling.
-If the same gap remains after round five, invoke systematic-debugging. No sixth patch
-is allowed before root-cause and architecture reassessment.
-For beginner-sized projects, the routing table is the shallow code map.
-Thin CLAUDE imports only AGENTS; companion docs use backticked literal paths and load on demand.
-"""
-
-
-def chinese_readme() -> str:
-    names = "\n".join(f"- `{name}`" for name in (*SKILLS, *REFERENCES))
-    return f"""# NHK 中文说明
-
-[English](README.md)
-
-NHK 用四个 prompt-first skill 处理 5 类反复出现的工作。
-
-{names}
-
-把下面五个同级目录直接复制到同一个 skills root：
-
-```bash
-{INSTALL_COMMAND}
-```
-
-`scripts/` 和 `tests/` 只供维护者使用，不属于运行时安装内容。
-Python validator 是可选、零第三方依赖的检查工具：
-`python3 -B scripts/validate_nhk.py --install-root <skills-root>`。
-验证后仍要刷新会话，并确认四个 skill 都可发现。
-维护者可以验证生成后的 companion docs：
-{COMPANION_VALIDATOR_COMMANDS}
-
-NHK 带有八个受控 reference 和五个强制 foundation surface。
-implementation-planning companion 是只在规划工作中加载的 Superpowers overlay。
-NHK 使用三个实践型 Codex preset 档；同档无顺序：
-{chr(10).join(CODEX_PRESET_BAND_LINES)}
-用户选择的主线程 model 和 effort 是每个 worker 的成本上限。
-同一个 gap 到第五轮仍未解决时，调用 systematic-debugging；根因和架构重审前不准贴第六块补丁。
-对新手项目来说，路由表就是新手需要的浅层 code map。
-thin CLAUDE 只 import AGENTS；companion docs 使用反引号普通路径并按需读取。
-"""
 
 
 def standalone_text(extra_lines: int = 0) -> str:
@@ -195,6 +115,8 @@ def standalone_text(extra_lines: int = 0) -> str:
                     "- Use `coding-agent-guide.md` for task routing.",
                     "- Use `documentation-governance.md` for document lifecycle rules.",
                     "- Read `implementation-planning.md` only before plan work.",
+                    "- Read `worker-policy.md` only when dispatching or reviewing workers.",
+                    "- Read `execution-recovery.md` only after its recovery trigger fires.",
                     "",
                 )
             )
@@ -265,8 +187,13 @@ def planning_guide_text(extra_lines: int = 0) -> str:
             "an integrate-and-verify task when a batch cannot stay green alone."
         ),
         "Plan Review": (
-            "Reject a task that cannot produce one observable result in one fresh context "
-            "with one test cycle and reviewer gate."
+            "Reject a task that cannot deliver one worthwhile, independently acceptable "
+            "result with a complete implementation-and-verification loop. Each task must "
+            "fit one fresh implementer context, one coherent acceptance result, one reviewer "
+            "gate, and one independent return. A task may contain multiple necessary TDD "
+            "cycles. Split genuinely independent results, judgments, or ownership boundaries; "
+            "keep one transaction, permission decision, or recovery path together, and keep "
+            "setup, tests, configuration, and documentation with the result they enable."
         ),
     }
     lines = ["# Implementation Planning", ""]
@@ -274,6 +201,18 @@ def planning_guide_text(extra_lines: int = 0) -> str:
         lines.extend((f"## {heading}", "", body, ""))
     lines.extend(f"- extra {index}" for index in range(extra_lines))
     return "\n".join(lines).rstrip() + "\n"
+
+
+def worker_policy_text() -> str:
+    return assemble_companion(
+        ROOT / "references" / "worker-policy-template.md", "Worker Policy"
+    )
+
+
+def execution_recovery_text() -> str:
+    return assemble_companion(
+        ROOT / "references" / "execution-recovery-template.md", "Execution Recovery"
+    )
 
 
 class ValidatorTestCase(unittest.TestCase):
@@ -286,8 +225,8 @@ class ValidatorTestCase(unittest.TestCase):
         shutil.copytree(ROOT / "references", root / "references")
         shutil.copy2(ROOT / "AGENTS.md", root / "AGENTS.md")
         shutil.copy2(ROOT / "CLAUDE.md", root / "CLAUDE.md")
-        (root / "README.md").write_text(english_readme(), encoding="utf-8")
-        (root / "README_CN.md").write_text(chinese_readme(), encoding="utf-8")
+        shutil.copy2(ROOT / "README.md", root / "README.md")
+        shutil.copy2(ROOT / "README_CN.md", root / "README_CN.md")
         return root
 
     def make_install_fixture(self, nested: bool = False) -> Path:
@@ -320,6 +259,15 @@ class SourceValidationTests(ValidatorTestCase):
         result = run_cli("--root", root)
         self.assertEqual(result.returncode, 1)
         self.assertIn("dependency-setup.md", result.stdout)
+
+    def test_missing_new_companion_templates_fail(self) -> None:
+        for name in ("worker-policy-template.md", "execution-recovery-template.md"):
+            with self.subTest(name=name):
+                root = self.make_source_fixture()
+                (root / "references" / name).unlink()
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(name, result.stdout)
 
     def test_missing_planning_reference_fails(self) -> None:
         root = self.make_source_fixture()
@@ -412,13 +360,14 @@ class SourceValidationTests(ValidatorTestCase):
                 "After bootstrap changes the foundation, continue",
             ),
             (
-                "If bootstrap is creating or structurally repairing the "
-                "instruction surface",
+                "If bootstrap is creating, structurally repairing, or making the specific "
+                "semantic policy/recovery migration above",
                 "For the instruction surface",
             ),
             (
                 "Do not load an instruction template when only a companion or "
-                "archive surface is missing.",
+                "archive surface is missing and the canonical instruction has no "
+                "superseded NHK-owned policy or recovery text.",
                 "Use the matching template.",
             ),
         )
@@ -475,57 +424,55 @@ class SourceValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("shared verbatim", result.stdout.lower())
 
-    def test_missing_convergence_backstop_fails(self) -> None:
-        root = self.make_source_fixture()
-        for name in ("AGENTS-template.md", "CLAUDE-template.md"):
-            path = root / "references" / name
-            path.write_text(
-                path.read_text(encoding="utf-8").replace(
-                    f"- {CONVERGENCE_BACKSTOP}\n", ""
-                ),
-                encoding="utf-8",
-            )
-        result = run_cli("--root", root)
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("convergence backstop", result.stdout.lower())
-
-    def test_missing_on_demand_planning_pointer_fails(self) -> None:
-        root = self.make_source_fixture()
-        for name in ("AGENTS-template.md", "CLAUDE-template.md"):
-            path = root / "references" / name
-            path.write_text(
-                path.read_text(encoding="utf-8").replace(
-                    IMPLEMENTATION_PLANNING_POINTER,
-                    "Read the planning guide when useful.",
-                    1,
-                ),
-                encoding="utf-8",
-            )
-        result = run_cli("--root", root)
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("implementation-planning pointer", result.stdout.lower())
-
-    def test_claude_template_rejects_openai_model_names(self) -> None:
-        root = self.make_source_fixture()
-        path = root / "references" / "CLAUDE-template.md"
-        path.write_text(
-            path.read_text(encoding="utf-8").replace(
-                "Choose the lowest-cost configuration",
-                "Choose GPT-5.6 Luna max as the lowest-cost configuration",
-                1,
+    def test_instruction_templates_require_all_conditional_companion_routes(self) -> None:
+        cases = (
+            (
+                "`worker-policy.md` only when orchestrating, dispatching, or reviewing workers",
+                "`worker-policy.md` when useful",
             ),
+            (
+                "`execution-recovery.md` after five failed rounds on one acceptance gap, or earlier evidence of architectural stagnation",
+                "`execution-recovery.md` after problems",
+            ),
+        )
+        for template_name in ("AGENTS-template.md", "CLAUDE-template.md"):
+            for required, replacement in cases:
+                with self.subTest(template=template_name, required=required):
+                    root = self.make_source_fixture()
+                    path = root / "references" / template_name
+                    path.write_text(
+                        path.read_text(encoding="utf-8").replace(
+                            required, replacement, 1
+                        ),
+                        encoding="utf-8",
+                    )
+                    result = run_cli("--root", root)
+                    self.assertEqual(result.returncode, 1)
+                    self.assertIn("conditional companion route", result.stdout.lower())
+
+    def test_instruction_route_wording_elsewhere_does_not_satisfy_context_section(self) -> None:
+        root = self.make_source_fixture()
+        path = root / "references" / "AGENTS-template.md"
+        required = (
+            "- Read `worker-policy.md` only when orchestrating, dispatching, or reviewing "
+            "workers. Load its common sections and the current platform section."
+        )
+        path.write_text(
+            path.read_text(encoding="utf-8").replace(required, "", 1)
+            + f"\n{required}\n",
             encoding="utf-8",
         )
         result = run_cli("--root", root)
         self.assertEqual(result.returncode, 1)
-        self.assertIn("CLAUDE-template.md", result.stdout)
-        self.assertIn("model", result.stdout.lower())
+        self.assertIn("Context and Documentation", result.stdout)
 
     def test_template_source_line_limit_fails(self) -> None:
         root = self.make_source_fixture()
         path = root / "references" / "AGENTS-template.md"
         path.write_text(
-            path.read_text(encoding="utf-8") + ("\n" * 50), encoding="utf-8"
+            path.read_text(encoding="utf-8")
+            + "\n".join(f"extra {index}" for index in range(80)),
+            encoding="utf-8",
         )
         result = run_cli("--root", root)
         self.assertEqual(result.returncode, 1)
@@ -535,6 +482,8 @@ class SourceValidationTests(ValidatorTestCase):
         cases = (
             ("coding-agent-guide-template.md", 140),
             ("implementation-planning-template.md", 120),
+            ("worker-policy-template.md", 140),
+            ("execution-recovery-template.md", 140),
             ("documentation-governance-template.md", 160),
             ("archive-readme-template.md", 40),
         )
@@ -567,24 +516,24 @@ class SourceValidationTests(ValidatorTestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(token, result.stdout)
 
-    def test_codex_worker_routing_contract_fails(self) -> None:
+    def test_worker_policy_source_contract_fails(self) -> None:
         mutations = (
             (
                 CODEX_PRESET_BAND_LINES[0],
-                "Band 1: GPT-5.5 xhigh; GPT-5.6 Luna max",
+                "Band 1: GPT-5.6 Luna max.",
             ),
-            ("presets within a band are unordered", "use the listed order"),
-            ("explicitly specify both model and effort", "use a suitable worker"),
-            ("select the best task fit within that band", "use the first preset"),
-            ("split the packet before escalating", "escalate when useful"),
-            ("one band only", "one rung only"),
-            ("above the main thread's model or effort", "uses more capacity"),
-            ("specific packet and current run", "current project"),
+            ("Presets within a band are unordered task-fit choices", "Use the listed order"),
+            ("there is no mandatory Band 1 trial", "always start in Band 1"),
+            ("Escalate one band only", "Escalate whenever useful"),
+            (
+                "Ultra authorization and recursion authorization never imply each other",
+                "Ultra also authorizes recursion",
+            ),
         )
         for required, replacement in mutations:
             with self.subTest(required=required):
                 root = self.make_source_fixture()
-                path = root / "references" / "AGENTS-template.md"
+                path = root / "references" / "worker-policy-template.md"
                 path.write_text(
                     path.read_text(encoding="utf-8").replace(
                         required, replacement, 1
@@ -593,21 +542,22 @@ class SourceValidationTests(ValidatorTestCase):
                 )
                 result = run_cli("--root", root)
                 self.assertEqual(result.returncode, 1)
-                self.assertIn("worker routing", result.stdout.lower())
+                self.assertIn("worker-policy", result.stdout.lower())
 
-    def test_policy_surfaces_reject_models_outside_bands(self) -> None:
-        for model in ("GPT-9 max", "GPT-5.6 Orion max"):
-            with self.subTest(model=model):
-                root = self.make_source_fixture()
-                path = root / "README.md"
-                path.write_text(
-                    path.read_text(encoding="utf-8")
-                    + f"\nUse {model} for every worker.\n",
-                    encoding="utf-8",
-                )
-                result = run_cli("--root", root)
-                self.assertEqual(result.returncode, 1)
-                self.assertIn("unapproved versioned model", result.stdout.lower())
+    def test_worker_policy_source_rejects_models_outside_exact_bands(self) -> None:
+        root = self.make_source_fixture()
+        path = root / "references" / "worker-policy-template.md"
+        path.write_text(
+            path.read_text(encoding="utf-8").replace(
+                CODEX_PRESET_BAND_LINES[1],
+                CODEX_PRESET_BAND_LINES[1].replace("GPT-6 Astra medium", "GPT-6 Astra max"),
+                1,
+            ),
+            encoding="utf-8",
+        )
+        result = run_cli("--root", root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("exact unordered preset", result.stdout.lower())
 
     def test_policy_surfaces_reject_legacy_strict_ladder(self) -> None:
         root = self.make_source_fixture()
@@ -622,21 +572,21 @@ class SourceValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("strict preset ladder", result.stdout.lower())
 
-    def test_all_skills_require_the_planning_foundation(self) -> None:
+    def test_all_skills_require_every_companion_in_the_foundation(self) -> None:
         for skill in SKILLS:
-            with self.subTest(skill=skill):
-                root = self.make_source_fixture()
-                path = root / skill / "SKILL.md"
-                path.write_text(
-                    path.read_text(encoding="utf-8").replace(
-                        "`implementation-planning.md`",
-                        "`missing-planning.md`",
-                    ),
-                    encoding="utf-8",
-                )
-                result = run_cli("--root", root)
-                self.assertEqual(result.returncode, 1)
-                self.assertIn("planning foundation", result.stdout.lower())
+            for companion in COMPANION_ROUTES:
+                with self.subTest(skill=skill, companion=companion):
+                    root = self.make_source_fixture()
+                    path = root / skill / "SKILL.md"
+                    path.write_text(
+                        path.read_text(encoding="utf-8").replace(
+                            companion, "`missing-companion.md`"
+                        ),
+                        encoding="utf-8",
+                    )
+                    result = run_cli("--root", root)
+                    self.assertEqual(result.returncode, 1)
+                    self.assertIn("seven-surface foundation", result.stdout.lower())
 
     def test_forbidden_legacy_rule_fails(self) -> None:
         root = self.make_source_fixture()
@@ -684,19 +634,19 @@ class SourceValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("five recurring jobs", result.stdout.lower())
 
-    def test_readme_convergence_guidance_drift_fails(self) -> None:
+    def test_readme_recovery_guidance_drift_fails(self) -> None:
         root = self.make_source_fixture()
         for name in ("README.md", "README_CN.md"):
             path = root / name
             path.write_text(
                 path.read_text(encoding="utf-8").replace(
-                    "systematic-debugging", "ordinary debugging"
+                    "five-round limit", "unbounded task loop"
                 ),
                 encoding="utf-8",
             )
         result = run_cli("--root", root)
         self.assertEqual(result.returncode, 1)
-        self.assertIn("systematic-debugging", result.stdout.lower())
+        self.assertIn("five-round", result.stdout.lower())
 
     def test_readme_routing_and_claude_loading_drift_fails(self) -> None:
         root = self.make_source_fixture()
@@ -716,16 +666,16 @@ class SourceValidationTests(ValidatorTestCase):
 
     def test_readme_planning_and_worker_policy_drift_fails(self) -> None:
         cases = (
-            ("README.md", "eight controlled references", "several references"),
-            ("README.md", "five mandatory foundation surfaces", "the foundation"),
+            ("README.md", "ten controlled references", "several references"),
+            ("README.md", "seven required pieces", "the foundation"),
             ("README.md", "Superpowers overlay", "planning helper"),
             (
                 "README.md",
-                CODEX_PRESET_BAND_LINES[1],
-                "Band 2: choose a suitable worker",
+                "three practical Codex bands",
+                "several worker options",
             ),
-            ("README_CN.md", "八个受控 reference", "几份 reference"),
-            ("README_CN.md", "五个强制 foundation surface", "基础文档"),
+            ("README_CN.md", "十个受控 reference", "几份 reference"),
+            ("README_CN.md", "七项基础内容", "基础文档"),
             ("README_CN.md", "Superpowers overlay", "规划辅助"),
         )
         for name, required, replacement in cases:
@@ -757,6 +707,15 @@ class InstallValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("references", result.stdout.lower())
 
+    def test_missing_new_companion_templates_fail(self) -> None:
+        for name in ("worker-policy-template.md", "execution-recovery-template.md"):
+            with self.subTest(name=name):
+                root = self.make_install_fixture()
+                (root / "references" / name).unlink()
+                result = run_cli("--install-root", root)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(name, result.stdout)
+
     def test_missing_planning_reference_fails(self) -> None:
         root = self.make_install_fixture()
         (root / "references" / "implementation-planning-template.md").unlink(
@@ -783,20 +742,28 @@ class InstallValidationTests(ValidatorTestCase):
 
 class FinalValidationTests(ValidatorTestCase):
     def test_simple_medium_and_complex_standalone_pass(self) -> None:
-        for complexity in ("simple", "medium", "complex"):
-            with self.subTest(complexity=complexity):
-                path = self.write_final(standalone_text())
-                result = run_cli(
-                    "--final",
-                    path,
-                    "--kind",
-                    "agents",
-                    "--mode",
-                    "standalone",
-                    "--complexity",
-                    complexity,
-                )
-                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        for template_name, kind in (
+            ("AGENTS-template.md", "agents"),
+            ("CLAUDE-template.md", "claude"),
+        ):
+            for complexity in ("simple", "medium", "complex"):
+                with self.subTest(template=template_name, complexity=complexity):
+                    path = self.write_final(
+                        assemble_standalone(
+                            ROOT / "references" / template_name, complexity
+                        )
+                    )
+                    result = run_cli(
+                        "--final",
+                        path,
+                        "--kind",
+                        kind,
+                        "--mode",
+                        "standalone",
+                        "--complexity",
+                        complexity,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_simple_line_limit_fails(self) -> None:
         path = self.write_final(standalone_text(extra_lines=80))
@@ -814,22 +781,17 @@ class FinalValidationTests(ValidatorTestCase):
         self.assertIn("100", result.stdout)
 
     def test_standalone_requires_literal_companion_routes(self) -> None:
-        content = standalone_text()
-        content = content.replace("`coding-agent-guide.md`", "coding guide")
-        content = content.replace(
-            "`implementation-planning.md`", "implementation planning"
-        )
-        content = content.replace(
-            "`documentation-governance.md`", "documentation governance"
-        )
-        path = self.write_final(content)
-        result = run_cli(
-            "--final", path, "--kind", "claude", "--mode", "standalone"
-        )
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("coding-agent-guide.md", result.stdout)
-        self.assertIn("implementation-planning.md", result.stdout)
-        self.assertIn("documentation-governance.md", result.stdout)
+        for route in COMPANION_ROUTES:
+            with self.subTest(route=route):
+                content = assemble_standalone(
+                    ROOT / "references" / "CLAUDE-template.md", "simple"
+                ).replace(route, "the relevant companion")
+                path = self.write_final(content)
+                result = run_cli(
+                    "--final", path, "--kind", "claude", "--mode", "standalone"
+                )
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(route.strip("`"), result.stdout)
 
     def test_missing_heading_and_marker_leak_fail(self) -> None:
         content = standalone_text().replace("## Project Map", "## Project Overview", 1)
@@ -899,6 +861,8 @@ class FinalValidationTests(ValidatorTestCase):
         cases = (
             ("coding-guide", coding_guide_text()),
             ("planning-guide", planning_guide_text()),
+            ("worker-policy", worker_policy_text()),
+            ("execution-recovery", execution_recovery_text()),
             ("doc-governance", doc_governance_text()),
         )
         for kind, content in cases:
@@ -908,8 +872,10 @@ class FinalValidationTests(ValidatorTestCase):
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_standalone_allows_project_template_contract_language(self) -> None:
-        content = standalone_text().replace(
-            "- Project rule for Project Map.",
+        content = assemble_standalone(
+            ROOT / "references" / "AGENTS-template.md", "simple"
+        ).replace(
+            "- Atlas Notes is a Python CLI that turns reviewed Markdown notes into a local search index.",
             "- The email template contract is owned by `src/mail`.",
             1,
         )
@@ -930,6 +896,12 @@ class FinalValidationTests(ValidatorTestCase):
         cases = (
             ("coding-guide", coding_guide_text(extra_lines=80), 80),
             ("planning-guide", planning_guide_text(extra_lines=80), 80),
+            ("worker-policy", worker_policy_text() + ("extra\n" * 100), 100),
+            (
+                "execution-recovery",
+                execution_recovery_text() + ("extra\n" * 80),
+                80,
+            ),
             ("doc-governance", doc_governance_text(extra_lines=100), 100),
         )
         for kind, content, limit in cases:
@@ -938,6 +910,246 @@ class FinalValidationTests(ValidatorTestCase):
                 result = run_cli("--final", path, "--kind", kind)
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(str(limit), result.stdout)
+
+    def test_worker_policy_requires_exact_headings(self) -> None:
+        for heading in (
+            "Dispatch Contract",
+            "Review Gates",
+            "Codex Routing",
+            "Claude Routing",
+        ):
+            with self.subTest(heading=heading):
+                path = self.write_final(
+                    worker_policy_text().replace(f"## {heading}", f"## {heading} Notes", 1)
+                )
+                result = run_cli("--final", path, "--kind", "worker-policy")
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("headings", result.stdout.lower())
+
+    def test_worker_policy_accepts_reordered_exact_band_membership(self) -> None:
+        content = worker_policy_text().replace(
+            "Band 2: GPT-5.6 Sol medium; GPT-5.6 Sol high; GPT-6 Astra medium.",
+            "Band 2: GPT-6 Astra medium; GPT-5.6 Sol high; GPT-5.6 Sol medium.",
+            1,
+        )
+        path = self.write_final(content)
+        result = run_cli("--final", path, "--kind", "worker-policy")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_worker_policy_rejects_wrong_missing_extra_or_duplicate_presets(self) -> None:
+        valid = CODEX_PRESET_BAND_LINES[1]
+        invalid = (
+            valid.replace("GPT-6 Astra medium", "GPT-6 Astra max"),
+            valid.replace("GPT-6 Astra medium", "GPT-6 Astra high"),
+            valid.replace("GPT-6 Astra medium", "GPT-6 Astra xhigh"),
+            valid.replace("GPT-6 Astra medium", "GPT-5.6 Terra xhigh"),
+            valid.replace("GPT-6 Astra medium", "GPT-5.5 xhigh"),
+            valid.replace("GPT-5.6 Sol medium; ", ""),
+            valid.replace("GPT-6 Astra medium", "GPT-6 Astra medium; GPT-5.6 Luna max"),
+            valid.replace("GPT-6 Astra medium", "GPT-6 Astra medium; GPT-6 Astra medium"),
+            valid + "\n- Band 4: GPT-6 Astra xhigh.",
+        )
+        for replacement in invalid:
+            with self.subTest(replacement=replacement):
+                self.assertNotEqual(replacement, valid)
+                path = self.write_final(worker_policy_text().replace(valid, replacement, 1))
+                result = run_cli("--final", path, "--kind", "worker-policy")
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("exact unordered preset", result.stdout.lower())
+
+    def test_worker_policy_rejects_drift_in_review_and_special_roles(self) -> None:
+        mutations = (
+            (
+                "Both must pass; self-review is not a substitute.",
+                "Either verdict may pass; self-review is enough.",
+                "Review Gates",
+            ),
+            (
+                "GPT-5.6 Luna may perform low-risk scoped re-review, never an initial task review.",
+                "GPT-5.6 Luna may perform any initial task review.",
+                "Codex Routing",
+            ),
+            (
+                "GPT-6 Astra max is reserved for whole-change final review of a complex Superpowers plan, not ordinary implementation, debugging, or recovery.",
+                "GPT-6 Astra max may perform ordinary implementation and recovery.",
+                "Codex Routing",
+            ),
+            (
+                "Use Fable only when the human explicitly chooses or approves it for the main thread.",
+                "Use Fable for workers when it is available.",
+                "Claude Routing",
+            ),
+            (
+                "Ultra authorization and recursion authorization never imply each other.",
+                "Ultra authorization also authorizes recursion.",
+                "Codex Routing",
+            ),
+        )
+        for required, replacement, section in mutations:
+            with self.subTest(required=required):
+                path = self.write_final(
+                    worker_policy_text().replace(required, replacement, 1)
+                )
+                result = run_cli("--final", path, "--kind", "worker-policy")
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(section, result.stdout)
+
+    def test_worker_policy_requires_explicit_budget_clause(self) -> None:
+        content = worker_policy_text().replace(
+            "Explicit user budgets still bind.",
+            "The main thread's model and effort are the worker cost ceiling.",
+            1,
+        )
+        path = self.write_final(content)
+        result = run_cli("--final", path, "--kind", "worker-policy")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Dispatch Contract", result.stdout)
+
+    def test_worker_policy_allows_explicit_prohibitions(self) -> None:
+        content = worker_policy_text().replace(
+            "## Codex Routing",
+            """## Codex Routing
+
+- Do not use GPT-6 Astra max for ordinary implementation.
+- GPT-5.6 Luna max must not perform initial task reviews.
+- Ultra approval never authorizes recursive delegation.""",
+            1,
+        ).replace(
+            "## Claude Routing",
+            """## Claude Routing
+
+- Workers may not inherit Fable for ordinary coding.""",
+            1,
+        )
+        path = self.write_final(content)
+        result = run_cli("--final", path, "--kind", "worker-policy")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_worker_policy_section_false_positive_fails(self) -> None:
+        required = "Both must pass; self-review is not a substitute."
+        content = worker_policy_text().replace(required, "", 1)
+        content = content.replace(
+            "## Claude Routing", f"## Claude Routing\n\n- {required}", 1
+        )
+        path = self.write_final(content)
+        result = run_cli("--final", path, "--kind", "worker-policy")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Review Gates", result.stdout)
+
+    def test_execution_recovery_requires_exact_headings(self) -> None:
+        for heading in (
+            "Triggers and Accounting",
+            "Main-thread Reassessment",
+            "Independent Diagnosis",
+            "Recovery and Stop",
+        ):
+            with self.subTest(heading=heading):
+                path = self.write_final(
+                    execution_recovery_text().replace(
+                        f"## {heading}", f"## {heading} Notes", 1
+                    )
+                )
+                result = run_cli(
+                    "--final", path, "--kind", "execution-recovery"
+                )
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("headings", result.stdout.lower())
+
+    def test_execution_recovery_rejects_drift_in_gap_and_limit_clauses(self) -> None:
+        mutations = (
+            (
+                "Worker, session, model, commit, task rename, or replanning never "
+                "resets a task or gap count.",
+                "Changing the model resets the stable acceptance-gap count.",
+                "Triggers and Accounting",
+            ),
+            (
+                "at most one recovery fix wave and one independent re-review",
+                "An additional recovery fix wave is allowed after exhaustion.",
+                "Recovery and Stop",
+            ),
+            (
+                "An exhausted earlier gap cannot use final review as another repair allowance",
+                "Final review may repair an exhausted earlier gap afresh.",
+                "Recovery and Stop",
+            ),
+        )
+        for required, replacement, section in mutations:
+            with self.subTest(required=required):
+                content = execution_recovery_text().replace(
+                    required, replacement, 1
+                )
+                path = self.write_final(content)
+                result = run_cli(
+                    "--final", path, "--kind", "execution-recovery"
+                )
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(section, result.stdout)
+
+    def test_execution_recovery_allows_explicit_prohibitions(self) -> None:
+        content = execution_recovery_text().replace(
+            "## Triggers and Accounting",
+            """## Triggers and Accounting
+
+- Changing the model must not reset the stable acceptance-gap count.""",
+            1,
+        ).replace(
+            "## Recovery and Stop",
+            """## Recovery and Stop
+
+- No additional recovery fix wave is allowed after exhaustion.
+- Final review never grants another repair allowance for an exhausted gap.""",
+            1,
+        )
+        path = self.write_final(content)
+        result = run_cli("--final", path, "--kind", "execution-recovery")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_execution_recovery_scopes_gap_accounting_to_trigger_section(self) -> None:
+        required = (
+            "Worker, session, model, commit, task rename, or replanning never resets "
+            "a task or gap count."
+        )
+        content = execution_recovery_text().replace(required, "", 1)
+        content = content.replace(
+            "## Independent Diagnosis", f"## Independent Diagnosis\n\n- {required}", 1
+        )
+        path = self.write_final(content)
+        result = run_cli("--final", path, "--kind", "execution-recovery")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Triggers and Accounting", result.stdout)
+
+    def test_companion_final_rejects_active_companion_imports(self) -> None:
+        cases = (
+            (
+                "worker-policy",
+                worker_policy_text() + "\nRead @execution-recovery.md after exhaustion.\n",
+            ),
+            (
+                "execution-recovery",
+                execution_recovery_text() + "\nRead @worker-policy.md before dispatch.\n",
+            ),
+        )
+        for kind, content in cases:
+            with self.subTest(kind=kind):
+                path = self.write_final(content)
+                result = run_cli("--final", path, "--kind", kind)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("auto-imports companion", result.stdout.lower())
+
+    def test_ordinary_project_model_text_is_allowed(self) -> None:
+        content = assemble_standalone(
+            ROOT / "references" / "AGENTS-template.md", "simple"
+        ).replace(
+            "Atlas Notes is a Python CLI",
+            "Atlas Notes is a Python CLI that catalogs GPT-4 and GPT-6 API usage",
+            1,
+        )
+        path = self.write_final(content)
+        result = run_cli(
+            "--final", path, "--kind", "agents", "--mode", "standalone"
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_planning_guide_requires_exact_sections_and_task_contract(self) -> None:
         for heading in PLANNING_GUIDE_HEADINGS:
@@ -1066,6 +1278,15 @@ class FinalValidationTests(ValidatorTestCase):
                 standalone_text()
                 + "\nRead @./documentation-governance.md before editing.\n",
             ),
+            (
+                "thin",
+                "@AGENTS.md\n\nRead @worker-policy.md before dispatching.\n",
+            ),
+            (
+                "standalone",
+                standalone_text()
+                + "\nRead @./execution-recovery.md after failure.\n",
+            ),
         )
         for mode, content in cases:
             with self.subTest(mode=mode):
@@ -1080,12 +1301,20 @@ class FinalValidationTests(ValidatorTestCase):
         examples = (
             "`@coding-agent-guide.md`",
             "`@implementation-planning.md`",
+            "`@worker-policy.md`",
+            "`@execution-recovery.md`",
             "> @coding-agent-guide.md",
             "> @implementation-planning.md",
+            "> @worker-policy.md",
+            "> @execution-recovery.md",
             "<!-- @coding-agent-guide.md -->",
             "<!-- @implementation-planning.md -->",
+            "<!-- @worker-policy.md -->",
+            "<!-- @execution-recovery.md -->",
             "```md\n@coding-agent-guide.md\n```",
             "```md\n@implementation-planning.md\n```",
+            "```md\n@worker-policy.md\n```",
+            "```md\n@execution-recovery.md\n```",
         )
         for example in examples:
             with self.subTest(example=example):
@@ -1096,6 +1325,51 @@ class FinalValidationTests(ValidatorTestCase):
                     "--final", path, "--kind", "claude", "--mode", "thin"
                 )
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_comment_fence_text_cannot_hide_active_imports(self) -> None:
+        hidden_companion = self.write_final(
+            """@AGENTS.md
+
+<!--
+```md
+-->
+Read @worker-policy.md before dispatching.
+"""
+        )
+        result = run_cli(
+            "--final", hidden_companion, "--kind", "claude", "--mode", "thin"
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("worker-policy.md", result.stdout)
+
+        hidden_agents = self.write_final(
+            """<!--
+```md
+-->
+@AGENTS.md
+"""
+        )
+        result = run_cli(
+            "--final", hidden_agents, "--kind", "claude", "--mode", "thin"
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_comment_markers_inside_real_fence_do_not_change_comment_state(self) -> None:
+        path = self.write_final(
+            """```md
+<!--
+-->
+```
+@AGENTS.md
+Read @worker-policy.md before dispatching.
+"""
+        )
+        result = run_cli(
+            "--final", path, "--kind", "claude", "--mode", "thin"
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("worker-policy.md", result.stdout)
+        self.assertNotIn("valid import line", result.stdout)
 
 
 class CliContractTests(ValidatorTestCase):
@@ -1125,6 +1399,8 @@ class CliContractTests(ValidatorTestCase):
         kinds = (
             ("coding-guide", coding_guide_text()),
             ("planning-guide", planning_guide_text()),
+            ("worker-policy", worker_policy_text()),
+            ("execution-recovery", execution_recovery_text()),
             ("doc-governance", doc_governance_text()),
         )
         flags = (("--mode", "standalone"), ("--complexity", "simple"))
