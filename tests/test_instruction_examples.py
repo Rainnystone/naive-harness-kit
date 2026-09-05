@@ -313,9 +313,9 @@ class InstructionExampleTests(unittest.TestCase):
         codex = section_text(example, "Codex Routing")
         for token in (
             "fork_turns: none",
-            "GPT-5.5 xhigh",
+            "GPT-6 Astra low",
             "GPT-5.6 Luna",
-            "GPT-6 Astra xhigh or max",
+            "GPT-6 Astra max is reserved",
             "Ultra authorization and recursion authorization never imply each other",
         ):
             self.assertIn(token, codex)

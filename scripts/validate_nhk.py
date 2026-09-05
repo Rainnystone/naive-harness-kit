@@ -230,9 +230,9 @@ LEGACY_CODEX_PRESET_LADDER = (
 )
 
 CODEX_PRESET_BANDS = (
-    ("GPT-5.5 xhigh", "GPT-5.6 Luna max"),
-    ("GPT-5.6 Terra xhigh", "GPT-5.6 Sol medium", "GPT-5.6 Sol high", "GPT-6 Astra low"),
-    ("GPT-5.6 Sol xhigh", "GPT-6 Astra medium", "GPT-6 Astra high"),
+    ("GPT-5.6 Luna max", "GPT-6 Astra low"),
+    ("GPT-5.6 Sol medium", "GPT-5.6 Sol high", "GPT-6 Astra medium"),
+    ("GPT-5.6 Sol xhigh", "GPT-6 Astra xhigh"),
 )
 
 INSTRUCTION_COMPANION_ROUTES = (
@@ -432,7 +432,7 @@ def validate_worker_policy_contract(
             "Escalate one band only",
             "ordinary Band 3 ceiling",
             "GPT-5.6 Luna may perform low-risk scoped re-review, never an initial task review",
-            "GPT-6 Astra xhigh or max is reserved for whole-change final review of a complex Superpowers plan, not ordinary implementation, debugging, or recovery",
+            "GPT-6 Astra max is reserved for whole-change final review of a complex Superpowers plan, not ordinary implementation, debugging, or recovery",
             "Ultra requires human approval naming the packet and current run",
             "Ultra authorization and recursion authorization never imply each other",
         ),

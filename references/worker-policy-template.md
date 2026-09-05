@@ -40,17 +40,18 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 ### Codex Routing
 
 - Every fresh Codex worker uses `fork_turns: none` and receives a self-contained brief, required files, and binding global constraints.
-- Band 1: GPT-5.5 xhigh; GPT-5.6 Luna max.
-- Band 2: GPT-5.6 Terra xhigh; GPT-5.6 Sol medium; GPT-5.6 Sol high; GPT-6 Astra low.
-- Band 3: GPT-5.6 Sol xhigh; GPT-6 Astra medium; GPT-6 Astra high.
+- Runtime model IDs are `gpt-5.6-luna`, `gpt-5.6-sol`, and `gpt-6-astra`; UI Light / Extra High map to `low` / `xhigh`.
+- Band 1: GPT-5.6 Luna max; GPT-6 Astra low.
+- Band 2: GPT-5.6 Sol medium; GPT-5.6 Sol high; GPT-6 Astra medium.
+- Band 3: GPT-5.6 Sol xhigh; GPT-6 Astra xhigh.
 - Presets within a band are unordered task-fit choices. Band 1 fits mechanical, low-risk clear work; Band 2 fits ordinary implementation and bounded integration; Band 3 fits architecture, high uncertainty, and high risk.
 - Start in the band that fits the packet; there is no mandatory Band 1 trial.
 - If a preset is unavailable, choose a supported same-band substitute when possible. Treat whole-band unavailability as availability, not capability failure.
 - Repair oversized packets and missing context first. Escalate one band only when evidence shows a correctly sized packet is capability-limited.
 - At the ordinary Band 3 ceiling, enter execution recovery instead of borrowing special final-review presets.
-- Clear, small, low-risk initial reviews may use GPT-5.5 xhigh. Other initial reviews use Band 2 or Band 3.
+- Clear, small, low-risk initial reviews may use GPT-6 Astra low. Other initial reviews use Band 2 or Band 3.
 - GPT-5.6 Luna may perform low-risk scoped re-review, never an initial task review.
-- GPT-6 Astra xhigh or max is reserved for whole-change final review of a complex Superpowers plan, not ordinary implementation, debugging, or recovery.
+- GPT-6 Astra max is reserved for whole-change final review of a complex Superpowers plan, not ordinary implementation, debugging, or recovery.
 - Select post-review fixes and re-reviews for their own task. “Most capable upstream” means most capable within the task's authorization.
 - Ultra requires human approval naming the packet and current run. It never becomes a reusable project or session default.
 - Ultra authorization and recursion authorization never imply each other.

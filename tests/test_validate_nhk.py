@@ -82,9 +82,9 @@ LEGACY_CODEX_PRESET_LADDER = (
 )
 
 CODEX_PRESET_BAND_LINES = (
-    "Band 1: GPT-5.5 xhigh; GPT-5.6 Luna max.",
-    "Band 2: GPT-5.6 Terra xhigh; GPT-5.6 Sol medium; GPT-5.6 Sol high; GPT-6 Astra low.",
-    "Band 3: GPT-5.6 Sol xhigh; GPT-6 Astra medium; GPT-6 Astra high.",
+    "Band 1: GPT-5.6 Luna max; GPT-6 Astra low.",
+    "Band 2: GPT-5.6 Sol medium; GPT-5.6 Sol high; GPT-6 Astra medium.",
+    "Band 3: GPT-5.6 Sol xhigh; GPT-6 Astra xhigh.",
 )
 
 COMPANION_ROUTES = (
@@ -520,7 +520,7 @@ class SourceValidationTests(ValidatorTestCase):
         mutations = (
             (
                 CODEX_PRESET_BAND_LINES[0],
-                "Band 1: GPT-5.5 xhigh.",
+                "Band 1: GPT-5.6 Luna max.",
             ),
             ("Presets within a band are unordered task-fit choices", "Use the listed order"),
             ("there is no mandatory Band 1 trial", "always start in Band 1"),
@@ -550,7 +550,7 @@ class SourceValidationTests(ValidatorTestCase):
         path.write_text(
             path.read_text(encoding="utf-8").replace(
                 CODEX_PRESET_BAND_LINES[1],
-                CODEX_PRESET_BAND_LINES[1].replace("GPT-6 Astra low", "GPT-6 Astra max"),
+                CODEX_PRESET_BAND_LINES[1].replace("GPT-6 Astra medium", "GPT-6 Astra max"),
                 1,
             ),
             encoding="utf-8",
@@ -928,8 +928,8 @@ class FinalValidationTests(ValidatorTestCase):
 
     def test_worker_policy_accepts_reordered_exact_band_membership(self) -> None:
         content = worker_policy_text().replace(
-            "Band 2: GPT-5.6 Terra xhigh; GPT-5.6 Sol medium; GPT-5.6 Sol high; GPT-6 Astra low.",
-            "Band 2: GPT-6 Astra low; GPT-5.6 Sol high; GPT-5.6 Terra xhigh; GPT-5.6 Sol medium.",
+            "Band 2: GPT-5.6 Sol medium; GPT-5.6 Sol high; GPT-6 Astra medium.",
+            "Band 2: GPT-6 Astra medium; GPT-5.6 Sol high; GPT-5.6 Sol medium.",
             1,
         )
         path = self.write_final(content)
@@ -937,16 +937,21 @@ class FinalValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_worker_policy_rejects_wrong_missing_extra_or_duplicate_presets(self) -> None:
-        valid = "Band 2: GPT-5.6 Terra xhigh; GPT-5.6 Sol medium; GPT-5.6 Sol high; GPT-6 Astra low."
+        valid = CODEX_PRESET_BAND_LINES[1]
         invalid = (
-            valid.replace("GPT-6 Astra low", "GPT-6 Astra max"),
-            valid.replace("; GPT-5.6 Sol medium", ""),
-            valid.replace("GPT-6 Astra low", "GPT-6 Astra low; GPT-5.6 Luna max"),
-            valid.replace("GPT-6 Astra low", "GPT-6 Astra low; GPT-6 Astra low"),
+            valid.replace("GPT-6 Astra medium", "GPT-6 Astra max"),
+            valid.replace("GPT-6 Astra medium", "GPT-6 Astra high"),
+            valid.replace("GPT-6 Astra medium", "GPT-6 Astra xhigh"),
+            valid.replace("GPT-6 Astra medium", "GPT-5.6 Terra xhigh"),
+            valid.replace("GPT-6 Astra medium", "GPT-5.5 xhigh"),
+            valid.replace("GPT-5.6 Sol medium; ", ""),
+            valid.replace("GPT-6 Astra medium", "GPT-6 Astra medium; GPT-5.6 Luna max"),
+            valid.replace("GPT-6 Astra medium", "GPT-6 Astra medium; GPT-6 Astra medium"),
             valid + "\n- Band 4: GPT-6 Astra xhigh.",
         )
         for replacement in invalid:
             with self.subTest(replacement=replacement):
+                self.assertNotEqual(replacement, valid)
                 path = self.write_final(worker_policy_text().replace(valid, replacement, 1))
                 result = run_cli("--final", path, "--kind", "worker-policy")
                 self.assertEqual(result.returncode, 1)
@@ -965,8 +970,8 @@ class FinalValidationTests(ValidatorTestCase):
                 "Codex Routing",
             ),
             (
-                "GPT-6 Astra xhigh or max is reserved for whole-change final review of a complex Superpowers plan, not ordinary implementation, debugging, or recovery.",
-                "GPT-6 Astra xhigh or max may perform ordinary implementation and recovery.",
+                "GPT-6 Astra max is reserved for whole-change final review of a complex Superpowers plan, not ordinary implementation, debugging, or recovery.",
+                "GPT-6 Astra max may perform ordinary implementation and recovery.",
                 "Codex Routing",
             ),
             (

@@ -160,13 +160,13 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** One task finishes, then a complex Superpowers plan reaches whole-change final review.
 
-**Expected:** The task receives one independent read-only reviewer with separate spec-compliance and task-quality verdicts; either missing or failed verdict blocks completion, and self-review does not replace it. The special GPT-6 Astra xhigh/max configurations are limited to whole-change final review of a complex Superpowers plan, never ordinary implementation, debugging, recovery, post-review fixes, or scoped re-review.
+**Expected:** The task receives one independent read-only reviewer with separate spec-compliance and task-quality verdicts; either missing or failed verdict blocks completion, and self-review does not replace it. The special GPT-6 Astra max configuration is limited to whole-change final review of a complex Superpowers plan, never ordinary implementation, debugging, recovery, post-review fixes, or scoped re-review.
 
 ### D5. Initial-review route and upstream evidence
 
 **Setup:** A clear small low-risk change needs its initial review, then a low-risk scoped re-review is proposed. The reviewer receives a report, test evidence, fixed BASE and HEAD revisions, and binding constraints.
 
-**Expected:** The clear low-risk initial review may use GPT-5.5 xhigh; other initial reviews use the ordinary Band 2 or Band 3 routes. GPT-5.6 Luna may perform only the low-risk scoped re-review and never the initial task review. The reviewer uses the applicable upstream task-reviewer, re-review, or final-review prompt rather than a copied NHK prompt. It checks the implementer's claims against the fixed diff and test output.
+**Expected:** The clear low-risk initial review may use GPT-6 Astra low (UI: Light); other initial reviews use the ordinary Band 2 or Band 3 routes. GPT-5.6 Luna may perform only the low-risk scoped re-review and never the initial task review. The reviewer uses the applicable upstream task-reviewer, re-review, or final-review prompt rather than a copied NHK prompt. It checks the implementer's claims against the fixed diff and test output.
 
 ### D6. Scoped re-review and cannot-verify gate
 
