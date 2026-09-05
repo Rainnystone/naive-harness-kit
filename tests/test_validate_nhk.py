@@ -1188,7 +1188,7 @@ class FinalValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("headings", result.stdout.lower())
 
-                extra_example = worker_policy_text().replace(
+        extra_example = worker_policy_text().replace(
             "## Claude Routing",
             "## Claude Routing\n\n```md\n## Extra Catalog\n```",
             1,
