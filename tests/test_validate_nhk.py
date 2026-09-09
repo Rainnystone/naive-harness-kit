@@ -167,40 +167,16 @@ def doc_governance_text(extra_lines: int = 0) -> str:
 
 
 def planning_guide_text(extra_lines: int = 0) -> str:
-    sections = {
-        "Workflow Compatibility": (
-            "Keep the active Superpowers plan format, including Files, Interfaces, "
-            "TDD steps, commands, expected results, and necessary code."
-        ),
-        "Plan Layers": "Separate the plan outcome and approach from executable tasks.",
-        "Task Contract": (
-            "Each task declares these fields:\n\n"
-            "**Delivers:** one observable, independently acceptable result\n"
-            "**Blocked by:** task identifiers or None\n"
-            "**Worker class:** mechanical | standard | judgment"
-        ),
-        "Dependencies and Execution": (
-            "Blocked by records real dependencies; SDD implementation remains sequential."
-        ),
-        "Wide Changes": (
-            "Use expand, migrate batches, then contract. Use an integration branch and "
-            "an integrate-and-verify task when a batch cannot stay green alone."
-        ),
-        "Plan Review": (
-            "Reject a task that cannot deliver one worthwhile, independently acceptable "
-            "result with a complete implementation-and-verification loop. Each task must "
-            "fit one fresh implementer context, one coherent acceptance result, one reviewer "
-            "gate, and one independent return. A task may contain multiple necessary TDD "
-            "cycles. Split genuinely independent results, judgments, or ownership boundaries; "
-            "keep one transaction, permission decision, or recovery path together, and keep "
-            "setup, tests, configuration, and documentation with the result they enable."
-        ),
-    }
-    lines = ["# Implementation Planning", ""]
-    for heading, body in sections.items():
-        lines.extend((f"## {heading}", "", body, ""))
-    lines.extend(f"- extra {index}" for index in range(extra_lines))
-    return "\n".join(lines).rstrip() + "\n"
+    text = assemble_companion(
+        ROOT / "references" / "implementation-planning-template.md", "Implementation Planning"
+    )
+    for placeholder in (
+        "one observable, independently acceptable result",
+        "task identifiers, or None",
+        "mechanical | standard | judgment",
+    ):
+        text = text.replace(f"<{placeholder}>", placeholder)
+    return text.replace("```md\n", "").replace("```\n", "") + "extra\n" * extra_lines
 
 
 def worker_policy_text() -> str:
@@ -566,6 +542,33 @@ class SourceValidationTests(ValidatorTestCase):
         self.assertIn("Document Roles", result.stdout)
         self.assertIn("worker-policy.md", result.stdout)
 
+    def test_module_source_contract_rejects_additive_and_inactive_rules(self) -> None:
+        for filename, anchor, clause in (
+            ("worker-policy-template.md", "### Codex Routing", "Whole modules may use GPT-6 Astra low."),
+            ("worker-policy-template.md", "### Review Gates", "Consolidation resets the repair count."),
+            ("AGENTS-template.md", "## Subagents and Packets", "A wait return triggers a status check."),
+        ):
+            with self.subTest(filename=filename, clause=clause):
+                root = self.make_source_fixture()
+                path = root / "references" / filename
+                path.write_text(path.read_text().replace(anchor, anchor + "\n- " + clause))
+                if filename == "AGENTS-template.md":
+                    paired = root / "references" / "CLAUDE-template.md"
+                    paired.write_text(paired.read_text().replace(anchor, anchor + "\n- " + clause))
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1, result.stdout)
+        for filename, clause in (
+            ("worker-policy-template.md", "Whole module implementation, internal debugging, tests, integration, and initial independent module review use GPT-6 Astra medium (Band 2)."),
+            ("implementation-planning-template.md", "Group implementation, tests, configuration, migration, and documentation for the same capability and working context."),
+        ):
+            for inactive in ("<!-- " + clause + " -->", "```md\n" + clause + "\n```"):
+                root = self.make_source_fixture()
+                path = root / "references" / filename
+                self.assertIn(clause, path.read_text())
+                path.write_text(path.read_text().replace(clause, inactive))
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1, result.stdout)
+
     def test_worker_policy_source_contract_fails(self) -> None:
         mutations = (
             (
@@ -574,7 +577,7 @@ class SourceValidationTests(ValidatorTestCase):
             ),
             ("Presets within a band are unordered task-fit choices", "Use the listed order"),
             ("there is no mandatory Band 1 trial", "always start in Band 1"),
-            ("Escalate one band only", "Escalate whenever useful"),
+            ("roles determine permission", "Escalate whenever useful"),
             (
                 "Ultra authorization and recursion authorization never imply each other",
                 "Ultra also authorizes recursion",
@@ -640,9 +643,9 @@ class SourceValidationTests(ValidatorTestCase):
 
     def test_sdd_check_interval_and_exceptions_are_required(self) -> None:
         for old, new in (
-            ("at least 300 seconds", "at least 30 seconds"),
-            ("Worker-initiated messages, user instructions, or concrete problems warrant immediate responses", "All communication must wait"),
-            ("wait-tool returns and silence alone do not", "every wait-tool return warrants a progress check"),
+            ("at least 1800 seconds", "at least 30 seconds"),
+            ("Respond immediately: completion, questions, failures, user messages", "All communication must wait"),
+            ("Wait returns or silence alone never justify", "every wait-tool return warrants a progress check"),
         ):
             with self.subTest(old=old):
                 root = self.make_source_fixture()
@@ -986,6 +989,77 @@ class FinalValidationTests(ValidatorTestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(str(limit), result.stdout)
 
+    def test_module_contract_requires_active_correct_sections(self) -> None:
+        cases = (
+            ("worker-policy", worker_policy_text(), "Codex Routing", "Claude Routing",
+             "Whole module implementation, internal debugging, tests, integration, and initial independent module review use GPT-6 Astra medium (Band 2)."),
+            ("planning-guide", planning_guide_text(), "Plan Layers", "Plan Review",
+             "A Module is related work with a defined responsibility, prerequisites, interfaces, and complete acceptance; it need not match a file or directory. Default one Superpowers Task is one Module; independently dispatched mechanical work is the explicit exception."),
+        )
+        for kind, text, section, wrong_section, clause in cases:
+            for replacement in ("<!-- " + clause + " -->", "```md\n" + clause + "\n```", ""):
+                with self.subTest(kind=kind, replacement=replacement):
+                    self.assertIn(clause, text)
+                    mutated = text.replace(clause, replacement, 1)
+                    if not replacement:
+                        mutated = mutated.replace("## " + wrong_section, "## " + wrong_section + "\n" + clause, 1)
+                    result = run_cli("--final", self.write_final(mutated), "--kind", kind)
+                    self.assertEqual(result.returncode, 1, result.stdout)
+                    self.assertIn(section, result.stdout)
+
+    def test_module_contract_accepts_reuse_and_inactive_conflicts(self) -> None:
+        text = worker_policy_text()
+        self.assertIn("Prefer the original implementer", text)
+        self.assertIn("original independent reviewer", text)
+        self.assertIn("cause, intended behavior, approach, impact, and verification are clear", text)
+        self.assertIn("Standalone mechanical work must be independent", text)
+        for extra in ("<!-- Whole modules may use Band 1. -->", "```md\nWhole modules may use Band 1.\n```"):
+            result = run_cli("--final", self.write_final(text + "\n" + extra), "--kind", "worker-policy")
+            self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_standalone_wait_contract_preserves_project_timing_facts(self) -> None:
+        text = assemble_standalone(ROOT / "references" / "AGENTS-template.md", "simple")
+        text = text.replace("## Project Map", "## Project Map\n- Client timeout is 15 seconds; wait for index writes before reading.")
+        result = run_cli("--final", self.write_final(text), "--kind", "agents", "--mode", "standalone", "--complexity", "simple")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_standalone_wait_contract_rejects_old_and_additive_rules(self) -> None:
+        for template in ("AGENTS-template.md", "CLAUDE-template.md"):
+            text = assemble_standalone(ROOT / "references" / template, "simple")
+            for mutated in (
+                text.replace("at least 1800 seconds", "at least 300 seconds"),
+                text + "\nReplace workers after 1800 seconds.\n",
+                text + "\nReplace workers after\n1800 seconds.\n",
+                text + "\nA wait return triggers a status check.\n",
+                text.replace("In SDD, wait at least 1800 seconds after dispatch or resumption and between unsolicited progress checks.", "<!-- In SDD, wait at least 1800 seconds after dispatch or resumption and between unsolicited progress checks. -->"),
+            ):
+                with self.subTest(template=template, mutated=mutated[-90:]):
+                    result = run_cli("--final", self.write_final(mutated), "--kind", "agents" if template.startswith("AGENTS") else "claude", "--mode", "standalone", "--complexity", "simple")
+                    self.assertEqual(result.returncode, 1, result.stdout)
+
+    def test_module_routing_rejects_additive_authorizations(self) -> None:
+        for clause in (
+            "Whole modules may use GPT-6 Astra low.",
+            "Module implementation may use GPT-5.6 Luna max.",
+            "Mechanical fixes may include design judgment and use Band 1.",
+            "Initial module reviews may use Band 1.",
+        ):
+            with self.subTest(clause=clause):
+                text = worker_policy_text().replace("## Claude Routing", clause + "\n\n## Claude Routing")
+                result = run_cli("--final", self.write_final(text), "--kind", "worker-policy")
+                self.assertEqual(result.returncode, 1, result.stdout)
+
+    def test_module_review_rejects_additive_consolidation(self) -> None:
+        for clause in (
+            "A passed module review satisfies final review for a multi-module plan.",
+            "Reuse the module review after HEAD changes without re-evaluation.",
+            "Consolidation resets the repair count.",
+        ):
+            with self.subTest(clause=clause):
+                text = worker_policy_text().replace("## Codex Routing", clause + "\n\n## Codex Routing")
+                result = run_cli("--final", self.write_final(text), "--kind", "worker-policy")
+                self.assertEqual(result.returncode, 1, result.stdout)
+
     def test_worker_policy_requires_exact_headings(self) -> None:
         for heading in (
             "Dispatch Contract",
@@ -1075,7 +1149,7 @@ class FinalValidationTests(ValidatorTestCase):
             ("ordinary Band 2 ceiling", "ordinary Band 3 ceiling"),
             ("Other initial reviews use Band 2.", "Other initial reviews use Band 3."),
             (
-                "it never authorizes special final-review presets",
+                "never downgrade a module or use special final-review presets as fallback",
                 "it authorizes Astra xhigh or max when Band 2 is unavailable",
             ),
         )
@@ -1385,9 +1459,8 @@ class FinalValidationTests(ValidatorTestCase):
 
     def test_planning_guide_requires_field_syntax_in_task_contract(self) -> None:
         content = planning_guide_text().replace(
-            "Each task declares these fields:\n\n"
             "**Delivers:** one observable, independently acceptable result\n"
-            "**Blocked by:** task identifiers or None\n"
+            "**Blocked by:** task identifiers, or None\n"
             "**Worker class:** mechanical | standard | judgment",
             "Do not use Delivers, Blocked by, or Worker class. "
             "The forbidden worker classes are mechanical, standard, and judgment.",
@@ -1400,14 +1473,12 @@ class FinalValidationTests(ValidatorTestCase):
 
     def test_planning_guide_scopes_superpowers_details_to_workflow_section(self) -> None:
         content = planning_guide_text().replace(
-            "Keep the active Superpowers plan format, including Files, Interfaces, "
-            "TDD steps, commands, expected results, and necessary code.",
+            "Preserve its `Files`, `Interfaces`, exact TDD steps, commands, expected results, and necessary code.",
             "Keep the active Superpowers plan format.",
             1,
         ).replace(
-            "Reject a task that cannot produce one observable result",
-            "Mention Files, Interfaces, TDD steps, commands, expected results, and "
-            "necessary code here. Reject a task that cannot produce one observable result",
+            "## Plan Review",
+            "## Plan Review\nFiles, Interfaces, TDD steps, commands, expected results, and necessary code.",
             1,
         )
         path = self.write_final(content)

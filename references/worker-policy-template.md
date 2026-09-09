@@ -24,7 +24,8 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 
 - Authorization comes from the allowed role or preset for the packet, not the main thread's current model or effort. Explicit user budgets still bind.
 - Select an explicitly runtime-supported model and effort; never inherit a top preset silently.
-- Send routine fixes back to the original implementer. Give a fresh replacement a self-contained file handoff.
+- Prefer the original implementer for ordinary fixes and the original independent reviewer for scoped re-review. A lower-cost permission never requires changing worker or model.
+- Use a new cheaper worker only when a self-contained repair handoff makes total overhead worthwhile; batch suitable findings into one repair packet.
 - Handoff uses the task brief, report, and fixed diff. State objective, scope, read/write authority, acceptance, verification, forbidden actions, expected return, selected configuration, and binding interfaces and constraints.
 - Recursive delegation needs separate human authorization for a named packet.
 - Keep subagent-driven implementers sequential. Parallelize read-only work only when ownership, state, artifacts, services, and verification resources are independent.
@@ -33,11 +34,15 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 
 ### Review Gates
 
-- Every task gets one independent read-only reviewer with separate spec-compliance and task-quality verdicts. Both must pass; self-review is not a substitute.
+- Every module or standalone mechanical task gets one independent read-only reviewer with separate spec-compliance and task-quality verdicts. Both must pass; self-review is not a substitute.
+- Internal module steps do not dispatch separate reviewers.
 - Use the upstream task-reviewer, re-review, and final-review prompts. Do not maintain copied NHK review prompts.
 - Give reviewers fixed BASE and HEAD revisions, binding constraints, the report, and evidence. Check implementer claims against the diff and test output.
 - A scoped re-review checks prior findings and regressions from the fix. The main thread resolves every cannot-verify item before completion.
-- Run one whole-change final review after all tasks. Follow it with at most one concentrated fix wave and one scoped re-review.
+- A passed module review may satisfy final review only for a single-module non-complex plan covering all requirements, changes, and verification evidence at identical final scope and fixed version.
+- Re-evaluate consolidation when scope, version, or evidence changes; never reuse stale approval.
+- All other plans, including multi-module and complex plans, retain one whole-change final review. Final review allows at most one concentrated fix wave and one scoped re-review.
+- Consolidation never resets or extends module or acceptance-gap repair counts, execution recovery, or final fix-wave bounds.
 
 ### Codex Routing
 
@@ -45,15 +50,17 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 - Runtime model IDs are `gpt-5.6-luna` and `gpt-6-astra`; UI Light / Extra High map to `low` / `xhigh`.
 - Band 1: GPT-5.6 Luna max; GPT-6 Astra low.
 - Band 2: GPT-6 Astra medium.
-- Presets within a band are unordered task-fit choices. Band 1 fits mechanical, low-risk clear work; Band 2 fits ordinary implementation, bounded integration, and properly scoped architecture, high-uncertainty, or high-risk work.
-- Start in the band that fits the packet; there is no mandatory Band 1 trial.
-- If a preset is unavailable, choose a supported same-band substitute when possible. Report whole-band unavailability as availability, not capability failure; it never authorizes special final-review presets.
-- Repair oversized packets and missing context first. Escalate one band only when evidence shows a correctly sized packet is capability-limited.
-- At the ordinary Band 2 ceiling, enter execution recovery instead of borrowing special final-review presets.
-- Clear, small, low-risk initial reviews may use GPT-6 Astra low. Other initial reviews use Band 2.
+- Presets within a band are unordered task-fit choices; roles determine permission, and there is no mandatory Band 1 trial.
+- Whole module implementation, internal debugging, tests, integration, and initial independent module review use GPT-6 Astra medium (Band 2).
+- Standalone mechanical work must be independent, deterministic, clearly specified, and low-risk; it may use Band 1.
+- Initial review of standalone mechanical work may use GPT-6 Astra low. Other initial reviews use Band 2.
+- Local fixes and scoped re-reviews may use Band 1 only when cause, intended behavior, approach, impact, and verification are clear and no design or cross-module judgment is needed.
+- Small line count or a review finding alone does not qualify a fix. Keep judgment and integration with the original module owner or Band 2.
 - GPT-5.6 Luna may perform low-risk scoped re-review, never an initial task review.
+- Band 1 may substitute an available same-band preset only within the role's permissions.
+- At the ordinary Band 2 ceiling, non-convergence enters execution recovery. Report medium unavailability as availability; never downgrade a module or use special final-review presets as fallback.
 - GPT-6 Astra xhigh and GPT-6 Astra max are reserved for whole-change final review of a complex Superpowers plan, not ordinary implementation, debugging, or recovery.
-- Select post-review fixes and re-reviews for their own task. “Most capable upstream” means most capable within the task's authorization.
+- Select post-review fixes and re-reviews by the bounded repair role above. “Most capable upstream” means most capable within the task's authorization.
 - Ultra requires human approval naming the packet and current run. It never becomes a reusable project or session default.
 - Ultra authorization and recursion authorization never imply each other.
 
