@@ -542,6 +542,20 @@ class SourceValidationTests(ValidatorTestCase):
         self.assertIn("Document Roles", result.stdout)
         self.assertIn("worker-policy.md", result.stdout)
 
+    def test_worker_source_rejects_preamble_and_wrong_section_band_routes(self) -> None:
+        for anchor, clause in (
+            ("# Worker Policy Template", "Whole modules may use GPT-6 Astra low."),
+            ("## Required Final Shape", "Whole modules may use GPT-6 Astra low."),
+            ("### Dispatch Contract", "- Band 1: Whole modules may use GPT-6 Astra low."),
+        ):
+            for wrapper, expected in (("{}", 1), ("<!-- {} -->", 0), ("```md\n{}\n```", 0)):
+                with self.subTest(anchor=anchor, wrapper=wrapper):
+                    root = self.make_source_fixture()
+                    path = root / "references" / "worker-policy-template.md"
+                    path.write_text(path.read_text().replace(anchor, anchor + "\n\n" + wrapper.format(clause), 1))
+                    result = run_cli("--root", root)
+                    self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+
     def test_module_source_contract_rejects_additive_and_inactive_rules(self) -> None:
         for filename, anchor, clause in (
             ("worker-policy-template.md", "### Codex Routing", "Whole modules may use GPT-6 Astra low."),
@@ -988,6 +1002,29 @@ class FinalValidationTests(ValidatorTestCase):
                 result = run_cli("--final", path, "--kind", kind)
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(str(limit), result.stdout)
+
+    def test_worker_final_rejects_preamble_and_wrong_section_band_routes(self) -> None:
+        for anchor, clause in (
+            ("# Worker Policy", "Whole modules may use GPT-6 Astra low."),
+            ("## Dispatch Contract", "- Band 1: Whole modules may use GPT-6 Astra low."),
+        ):
+            for wrapper, expected in (("{}", 1), ("<!-- {} -->", 0), ("```md\n{}\n```", 0)):
+                with self.subTest(anchor=anchor, wrapper=wrapper):
+                    text = worker_policy_text().replace(anchor, anchor + "\n\n" + wrapper.format(clause), 1)
+                    result = run_cli("--final", self.write_final(text), "--kind", "worker-policy")
+                    self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+
+    def test_shared_contracts_scan_active_preambles(self) -> None:
+        for kind, text, clause, extra_args in (
+            ("planning-guide", planning_guide_text(), "Use the smallest-reviewable task.", ()),
+            ("agents", assemble_standalone(ROOT / "references" / "AGENTS-template.md", "simple"),
+             "Replace workers after 1800 seconds.", ("--mode", "standalone", "--complexity", "simple")),
+        ):
+            for wrapper, expected in (("{}", 1), ("<!-- {} -->", 0), ("```md\n{}\n```", 0)):
+                with self.subTest(kind=kind, wrapper=wrapper):
+                    content = wrapper.format(clause) + "\n\n" + text
+                    result = run_cli("--final", self.write_final(content), "--kind", kind, *extra_args)
+                    self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
 
     def test_module_contract_requires_active_correct_sections(self) -> None:
         cases = (

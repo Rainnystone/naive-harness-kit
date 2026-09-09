@@ -356,7 +356,9 @@ def heading_title(line: str) -> str | None:
 
 def second_level_sections(text: str) -> dict[str, str]:
     sections: dict[str, str] = {}
-    current: str | None = None
+    # The unnamed section retains active preamble text for conflict scans. It
+    # cannot satisfy any named-section contract and adds no heading requirement.
+    current: str | None = ""
     body: list[str] = []
     for _, line in active_markdown_lines(text):
         match = TOP_HEADING_RE.match(line)
@@ -382,8 +384,10 @@ def final_shape_sections(text: str) -> tuple[tuple[str, ...], dict[str, str]]:
 
     headings: list[str] = []
     sections: dict[str, str] = {}
-    current: str | None = None
-    body: list[str] = []
+    current: str | None = ""
+    # Include both the source preamble and the final-shape preamble, while
+    # keeping generation-only sections outside the declared final contract.
+    body = second_level_sections(text).get("", "").splitlines()
     for _, line in active_markdown_lines("\n".join(lines[start:end])):
         match = re.match(r"^###(?!#)\s+(.+?)\s*$", line)
         if match:
@@ -707,6 +711,21 @@ def validate_planning_modules(sections: dict[str, str], label: str, issues: list
         issues.append(f"{label} conflicts with module sizing")
 
 
+def without_valid_codex_catalogs(codex: str) -> str:
+    lines: list[str] = []
+    for line in codex.splitlines():
+        match = re.match(r"^\s*-\s*Band\s+(\d+):\s*(.*?)\s*$", line)
+        if match:
+            band = int(match.group(1))
+            members = [item.strip().removesuffix(".") for item in match.group(2).removesuffix(".").split(";") if item.strip()]
+            if 1 <= band <= len(CODEX_PRESET_BANDS):
+                expected = CODEX_PRESET_BANDS[band - 1]
+                if len(members) == len(expected) and set(members) == set(expected):
+                    continue
+        lines.append(line)
+    return "\n".join(lines)
+
+
 def validate_worker_policy_contract(
     text: str,
     headings: tuple[str, ...],
@@ -720,9 +739,11 @@ def validate_worker_policy_contract(
         )
 
     declared_sections = dict(sections)
-    # Band lines and explicit reserved-model prohibitions have separate checks.
+    # Only exact catalogs in their owning section are exempt from the conflict
+    # scan. Aggregate membership (including duplicate rows) is checked below.
     for heading, body in declared_sections.items():
-        body = re.sub(r"(?m)^\s*-\s*Band\s+\d+:.*$", "", body)
+        if heading == "Codex Routing":
+            body = without_valid_codex_catalogs(body)
         for preset in CODEX_RESERVED_DISPLAY_PRESETS:
             body = body.replace(f"Do not use {preset} for ordinary implementation.", "")
         for prohibition in (
