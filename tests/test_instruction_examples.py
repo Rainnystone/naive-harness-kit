@@ -315,7 +315,7 @@ class InstructionExampleTests(unittest.TestCase):
             "fork_turns: none",
             "GPT-6 Astra low",
             "GPT-5.6 Luna",
-            "GPT-6 Astra max is reserved",
+            "GPT-6 Astra xhigh and GPT-6 Astra max are reserved",
             "Ultra authorization and recursion authorization never imply each other",
         ):
             self.assertIn(token, codex)

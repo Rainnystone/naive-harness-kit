@@ -42,7 +42,7 @@ Start with `# Execution Recovery`, then use exactly these second-level headings 
 ### Independent Diagnosis
 
 - Use diagnosis only for competing explanations, review-versus-implementation conflict, or an unverified old premise.
-- Dispatch at most one fresh-context Band 3 or Opus read-only diagnostic worker to challenge one concrete hypothesis.
+- Dispatch at most one fresh-context Band 2 or Opus read-only diagnostic worker to challenge one concrete hypothesis.
 - Give it the original contract, authoritative execution record, relevant diff and evidence, and an explicit no-write boundary.
 - A diagnostic worker reports evidence and alternatives; it does not authorize a fix or replace the main thread's judgment.
 - If evidence remains insufficient, present blockers and options to the human. Do not start a diagnostic chain.

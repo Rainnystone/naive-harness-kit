@@ -83,8 +83,7 @@ LEGACY_CODEX_PRESET_LADDER = (
 
 CODEX_PRESET_BAND_LINES = (
     "Band 1: GPT-5.6 Luna max; GPT-6 Astra low.",
-    "Band 2: GPT-5.6 Sol medium; GPT-5.6 Sol high; GPT-6 Astra medium.",
-    "Band 3: GPT-5.6 Sol xhigh; GPT-6 Astra xhigh.",
+    "Band 2: GPT-6 Astra medium.",
 )
 
 COMPANION_ROUTES = (
@@ -690,7 +689,7 @@ class SourceValidationTests(ValidatorTestCase):
             ("README.md", "Superpowers overlay", "planning helper"),
             (
                 "README.md",
-                "three practical Codex bands",
+                "two practical Codex bands",
                 "several worker options",
             ),
             ("README_CN.md", "十个受控 reference", "几份 reference"),
@@ -947,8 +946,8 @@ class FinalValidationTests(ValidatorTestCase):
 
     def test_worker_policy_accepts_reordered_exact_band_membership(self) -> None:
         content = worker_policy_text().replace(
-            "Band 2: GPT-5.6 Sol medium; GPT-5.6 Sol high; GPT-6 Astra medium.",
-            "Band 2: GPT-6 Astra medium; GPT-5.6 Sol high; GPT-5.6 Sol medium.",
+            "Band 1: GPT-5.6 Luna max; GPT-6 Astra low.",
+            "Band 1: GPT-6 Astra low; GPT-5.6 Luna max.",
             1,
         )
         path = self.write_final(content)
@@ -963,10 +962,11 @@ class FinalValidationTests(ValidatorTestCase):
             valid.replace("GPT-6 Astra medium", "GPT-6 Astra xhigh"),
             valid.replace("GPT-6 Astra medium", "GPT-5.6 Terra xhigh"),
             valid.replace("GPT-6 Astra medium", "GPT-5.5 xhigh"),
-            valid.replace("GPT-5.6 Sol medium; ", ""),
+            valid.replace("GPT-6 Astra medium", ""),
+            valid.replace("GPT-6 Astra medium", "GPT-5.6 Sol medium"),
             valid.replace("GPT-6 Astra medium", "GPT-6 Astra medium; GPT-5.6 Luna max"),
             valid.replace("GPT-6 Astra medium", "GPT-6 Astra medium; GPT-6 Astra medium"),
-            valid + "\n- Band 4: GPT-6 Astra xhigh.",
+            valid + "\n- Band 3: GPT-6 Astra xhigh.",
         )
         for replacement in invalid:
             with self.subTest(replacement=replacement):
@@ -989,7 +989,7 @@ class FinalValidationTests(ValidatorTestCase):
                 "Codex Routing",
             ),
             (
-                "GPT-6 Astra max is reserved for whole-change final review of a complex Superpowers plan, not ordinary implementation, debugging, or recovery.",
+                "GPT-6 Astra xhigh and GPT-6 Astra max are reserved for whole-change final review of a complex Superpowers plan, not ordinary implementation, debugging, or recovery.",
                 "GPT-6 Astra max may perform ordinary implementation and recovery.",
                 "Codex Routing",
             ),
@@ -1012,6 +1012,34 @@ class FinalValidationTests(ValidatorTestCase):
                 result = run_cli("--final", path, "--kind", "worker-policy")
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(section, result.stdout)
+
+    def test_two_band_routing_rejects_old_ceiling_and_special_fallback(self) -> None:
+        mutations = (
+            ("ordinary Band 2 ceiling", "ordinary Band 3 ceiling"),
+            ("Other initial reviews use Band 2.", "Other initial reviews use Band 3."),
+            (
+                "it never authorizes special final-review presets",
+                "it authorizes Astra xhigh or max when Band 2 is unavailable",
+            ),
+        )
+        for required, replacement in mutations:
+            with self.subTest(required=required):
+                content = worker_policy_text()
+                self.assertIn(required, content)
+                path = self.write_final(content.replace(required, replacement, 1))
+                result = run_cli("--final", path, "--kind", "worker-policy")
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("Codex Routing", result.stdout)
+
+    def test_recovery_diagnosis_uses_ordinary_band(self) -> None:
+        for replacement in ("Band 3", "GPT-6 Astra xhigh", "GPT-6 Astra max"):
+            with self.subTest(replacement=replacement):
+                content = execution_recovery_text()
+                self.assertIn("Band 2 or Opus", content)
+                path = self.write_final(content.replace("Band 2 or Opus", f"{replacement} or Opus", 1))
+                result = run_cli("--final", path, "--kind", "execution-recovery")
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("Independent Diagnosis", result.stdout)
 
     def test_worker_policy_requires_explicit_budget_clause(self) -> None:
         content = worker_policy_text().replace(
@@ -1047,6 +1075,8 @@ class FinalValidationTests(ValidatorTestCase):
     def test_worker_policy_rejects_presets_declared_outside_band_lines(self) -> None:
         extras = (
             "GPT-9 Nova max is also approved for ordinary implementation.",
+            "GPT-5.6 Sol high is also approved for ordinary implementation.",
+            "gpt-5.6-sol is also approved for ordinary implementation.",
             "GPT-6 Nova max is also approved for ordinary implementation.",
             "GPT-5.5 xhigh is also approved for ordinary implementation.",
             "GPT-6 Astra ultra is also approved for ordinary implementation.",
