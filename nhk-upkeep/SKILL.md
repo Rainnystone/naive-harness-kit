@@ -1,11 +1,11 @@
 ---
 name: nhk-upkeep
-description: Repair NHK drift when an established workspace's instruction, routing, planning, governance, archive index, or tracking descriptions no longer match reality.
+description: Repair established NHK workspaces after NHK updates or when project instructions, companions, or tracking drift.
 ---
 
 # NHK Upkeep
 
-Use this skill only after the NHK foundation exists. It repairs active references and state descriptions; it does not bootstrap missing surfaces or perform an archive transition.
+Use this skill only after the NHK foundation exists. It reconciles NHK-owned rules with the currently installed references and repairs active project descriptions; it does not bootstrap missing surfaces or perform an archive transition.
 
 ## Router Handoff
 
@@ -15,18 +15,21 @@ Use the handoff's dependency, instruction, topology, and complete-foundation sta
 
 ## Maintenance Pass
 
-1. Compare the canonical instruction source and any thin adapter with the live workspace. If its structure needs repair or it retains superseded NHK-owned inline policy or recovery rules alongside the new companions, open only the matching `../references/AGENTS-template.md` or `../references/CLAUDE-template.md`.
-2. Compare the single Task Routing table in `coding-agent-guide.md` with current task routes, likely change surfaces, and targeted verification; keep the file at or below 80 lines. Open `../references/coding-agent-guide-template.md` only when this surface needs structural repair.
-3. Compare `implementation-planning.md` with the Superpowers-compatible task contract; keep it at or below 80 lines and load it only for plan work. Open `../references/implementation-planning-template.md` only when this surface needs structural repair.
-4. Compare `worker-policy.md` with its on-demand dispatch and review contract; keep it at or below 100 lines. Open `../references/worker-policy-template.md` only when this companion needs contract comparison or repair, not for unrelated upkeep.
-5. Compare `execution-recovery.md` with its on-demand exhausted-loop contract; keep it at or below 80 lines. Open `../references/execution-recovery-template.md` only when this companion needs contract comparison or repair, not for unrelated upkeep.
-6. Compare `documentation-governance.md` with actual document roles, active surfaces, workspace/document map, lifecycle, naming/loading rules, and archive invariants; keep it at or below 100 lines. Open `../references/documentation-governance-template.md` only when this surface needs structural repair.
-7. Verify `archive/README.md` remains a resolvable index of existing archived workstreams. Open `../references/archive-readme-template.md` only when its shape or row contract needs repair.
+On every upkeep run, compare NHK-owned rules against the currently installed reference contracts, even when workspace documents look complete and project facts have not changed. Read the matching canonical instruction template, all five companion templates, and the archive-index template through the paths below. Reuse applicable content already read in this context only when it is unchanged. This comparison uses the installed bundle; upkeep does not fetch or install NHK updates.
+
+1. Compare the canonical instruction and thin adapter, if present, against the live workspace and the matching `../references/AGENTS-template.md` or `../references/CLAUDE-template.md`; keep the canonical topology and applicable line budget.
+2. Compare the single Task Routing table in `coding-agent-guide.md` against current routes and `../references/coding-agent-guide-template.md`; keep it at or below 80 lines.
+3. Compare `implementation-planning.md` against `../references/implementation-planning-template.md`; keep its Superpowers-compatible task contract and 80-line limit.
+4. Compare `worker-policy.md` against `../references/worker-policy-template.md`; reconcile dispatch and review permissions within 100 lines.
+5. Compare `execution-recovery.md` against `../references/execution-recovery-template.md`; reconcile diagnosis, recovery, and stop rules within 80 lines.
+6. Compare `documentation-governance.md` against actual document roles and `../references/documentation-governance-template.md`; keep it at or below 100 lines.
+7. Compare `archive/README.md` against existing archived workstreams and `../references/archive-readme-template.md`; keep every index entry resolvable.
 8. Inspect existing implementation plans, task lists, `task_plan.md`, `progress.md`, and `findings.md` as active surfaces, not permanent assumptions.
 9. Repair inaccurate active references and status descriptions, replace any Claude companion `@` import with a literal on-demand path, then verify cross-links and instruction structure.
 
 ## Repair Boundaries
 
+- Reconcile only NHK-owned rules. Preserve correct project facts and human-authorized exceptions; surface any conflict requiring a new human decision rather than silently overwriting it.
 - Preserve the canonical source and a valid thin adapter; do not turn them back into a false two-file ambiguity.
 - Restore missing required instruction categories, remove leaked template markers or generation prompts, and enforce the selected final line limit without inventing new headings.
 - Update stale repository, dependency, routing, verification, active/archive, and loading-order statements.
@@ -54,4 +57,4 @@ If the workstream is ongoing, completion evidence is missing, or related materia
 
 ## Delivery
 
-Report the repaired surfaces, verification performed, and whether a workstream met the archive-question gate. If a dependency was adopted, state that it was not installed and its conventions were followed manually for this NHK run.
+Complete upkeep only when every compared surface matches the current installed contract or has a recorded human-authorized exception or unresolved conflict. Report the repaired surfaces, preserved exceptions, unresolved conflicts, verification performed, and whether a workstream met the archive-question gate. If a dependency was adopted, state that it was not installed and its conventions were followed manually for this NHK run.

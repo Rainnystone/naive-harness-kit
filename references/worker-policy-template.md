@@ -14,6 +14,8 @@ This companion owns worker configuration and orchestration detail. Canonical sta
 - Name this file from canonical instructions with a backticked literal path. Never use a Claude `@` import.
 - Preserve explicit human budgets and authorizations. Availability does not expand capability authority.
 
+- Keep named Astra xhigh/max declarations in the final-review reservation; refer to that reservation by role elsewhere rather than adding alternate preset permissions.
+
 ## Required Final Shape
 
 Start with `# Worker Policy`, then use exactly these second-level headings in order.

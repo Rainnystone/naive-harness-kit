@@ -87,6 +87,8 @@ The direct source for the governance layer is `references/documentation-governan
 
 If either file is missing, `nhk-bootstrap` adds it from the [worker policy template](references/worker-policy-template.md) or the [recovery template](references/execution-recovery-template.md), leaving existing project details in place. If older NHK rules are still sitting in the main instruction file, bootstrap or upkeep replaces just those outdated passages with links to the companions. Your project facts and explicitly approved exceptions stay intact.
 
+After updating your installed NHK bundle, run `welcome-to-nhk` and ask for upkeep in an existing project. Upkeep compares its NHK rules with the installed templates, even if the documents still look tidy. It preserves your project details and explicitly approved exceptions; missing foundation files go through bootstrap first. Updating the bundle alone does not rewrite project documents.
+
 ## Dependencies
 
 NHK expects these peer workflow systems:

@@ -87,6 +87,8 @@ NHK 在这里是故意有主张的：
 
 缺哪份，`nhk-bootstrap` 就按对应的[派工模板](references/worker-policy-template.md)或[恢复模板](references/execution-recovery-template.md)补哪份，已有的项目内容会留下。如果主指令文件里还放着旧版 NHK 的规则，bootstrap 或 upkeep 只把这些过时段落换成指向配套文件的说明。项目事实和你明确批准过的例外也会保留。
 
+更新本机安装的 NHK 后，可以在已有项目里从 `welcome-to-nhk` 开始，要求做一次 upkeep。它会对照当前安装的模板检查 NHK 规则，就算文档看起来还挺整齐，也不能因此跳过。项目事实和你明确批准过的例外会保留；缺少基础文件则先走 bootstrap。更新安装包本身不会顺手改写各个项目的文档。
+
 ## 依赖
 
 NHK 默认把下面两个工作流系统视为并列依赖：

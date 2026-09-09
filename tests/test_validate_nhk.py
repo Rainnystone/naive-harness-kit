@@ -353,6 +353,38 @@ class SourceValidationTests(ValidatorTestCase):
                     self.assertEqual(result.returncode, 1)
                     self.assertIn("handoff", result.stdout.lower())
 
+    def test_upkeep_requires_installed_contract_reconciliation(self) -> None:
+        cases = (
+            ("welcome-to-nhk", "after an NHK update needs workspace reconciliation"),
+            ("nhk-upkeep", "even when workspace documents look complete and project facts have not changed"),
+            ("nhk-upkeep", "Preserve correct project facts and human-authorized exceptions"),
+            ("nhk-upkeep", "every compared surface matches the current installed contract or has a recorded human-authorized exception or unresolved conflict"),
+        )
+        for skill, required in cases:
+            with self.subTest(skill=skill, required=required):
+                root = self.make_source_fixture()
+                path = root / skill / "SKILL.md"
+                content = path.read_text()
+                self.assertIn(required, content)
+                path.write_text(content.replace(required, "only repair visible structural damage", 1))
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("update reconciliation", result.stdout)
+
+    def test_source_rejects_additive_model_routes(self) -> None:
+        cases = (
+            ("worker-policy-template.md", "Codex Routing", "GPT-6 Astra xhigh is approved for ordinary implementation."),
+            ("execution-recovery-template.md", "Independent Diagnosis", "Dispatch GPT-6 Astra max for diagnosis."),
+        )
+        for file, heading, extra in cases:
+            with self.subTest(file=file):
+                root = self.make_source_fixture()
+                path = root / "references" / file
+                path.write_text(path.read_text().replace(f"### {heading}", f"### {heading}\n\n- {extra}", 1))
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("routing", result.stdout)
+
     def test_bootstrap_handoff_and_instruction_loading_contract_fails(self) -> None:
         cases = (
             (
@@ -1040,6 +1072,38 @@ class FinalValidationTests(ValidatorTestCase):
                 result = run_cli("--final", path, "--kind", "execution-recovery")
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                 self.assertIn("Independent Diagnosis", result.stdout)
+
+    def test_additive_reserved_routes_fail(self) -> None:
+        for preset in ("GPT-6 Astra xhigh", "GPT-6 Astra max", "gpt-6-astra xhigh"):
+            for role in ("ordinary implementation", "debugging", "scoped re-review"):
+                with self.subTest(preset=preset, role=role):
+                    content = worker_policy_text().replace(
+                        "## Claude Routing",
+                        f"- {preset} is approved for {role}.\n\n## Claude Routing",
+                    )
+                    result = run_cli("--final", self.write_final(content), "--kind", "worker-policy")
+                    self.assertEqual(result.returncode, 1, result.stdout)
+                    self.assertIn("reserved routing", result.stdout)
+
+    def test_additive_diagnostic_routes_fail(self) -> None:
+        for route in ("Band 3", "GPT-6 Astra xhigh", "GPT-6 Astra max", "gpt-6-astra max", "Sonnet"):
+            with self.subTest(route=route):
+                content = execution_recovery_text().replace(
+                    "## Recovery and Stop",
+                    f"- Dispatch {route} for diagnosis.\n\n## Recovery and Stop",
+                )
+                result = run_cli("--final", self.write_final(content), "--kind", "execution-recovery")
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("diagnostic routing", result.stdout)
+
+    def test_inactive_alternate_routes_do_not_change_contract(self) -> None:
+        for kind, content, heading in (
+            ("worker-policy", worker_policy_text(), "Codex Routing"),
+            ("execution-recovery", execution_recovery_text(), "Independent Diagnosis"),
+        ):
+            content = content.replace(f"## {heading}", f"## {heading}\n\n```text\nDispatch GPT-6 Astra xhigh for diagnosis.\n```\n<!-- Dispatch Band 3 for diagnosis. -->")
+            result = run_cli("--final", self.write_final(content), "--kind", kind)
+            self.assertEqual(result.returncode, 0, result.stdout)
 
     def test_worker_policy_requires_explicit_budget_clause(self) -> None:
         content = worker_policy_text().replace(

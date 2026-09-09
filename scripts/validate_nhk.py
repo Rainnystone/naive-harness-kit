@@ -471,6 +471,40 @@ def validate_codex_declared_presets(
         )
 
 
+# These checks recognize a bounded declaration format, not arbitrary prose intent.
+RESERVED_ROUTE = (
+    "GPT-6 Astra xhigh and GPT-6 Astra max are reserved for whole-change final review "
+    "of a complex Superpowers plan, not ordinary implementation, debugging, or recovery."
+)
+DIAGNOSTIC_ROUTE = (
+    "Dispatch at most one fresh-context Band 2 or Opus read-only diagnostic worker "
+    "to challenge one concrete hypothesis."
+)
+RESERVED_MENTION_RE = re.compile(
+    r"\b(?:GPT-6\s+Astra|gpt-6-astra)\s+`?(?:xhigh|max)\b", re.IGNORECASE
+)
+DIAGNOSTIC_MENTION_RE = re.compile(
+    r"\b(?:Band\s+\d+|GPT-\d[\w.-]*(?:\s+\w+)?|Sonnet|Opus|Fable|Haiku)\b",
+    re.IGNORECASE,
+)
+
+
+def validate_exclusive_routes(sections: dict[str, str], label: str, issues: list[str], *, recovery: bool) -> None:
+    body = "\n".join(sections.values())
+    # Normalize Markdown code spans and wrapping, while retaining all extra clauses.
+    body = " ".join(body.replace("`", "").split())
+    if recovery:
+        remaining = body.replace(DIAGNOSTIC_ROUTE, "")
+        if DIAGNOSTIC_MENTION_RE.search(remaining):
+            issues.append(f"{label} diagnostic routing must be declared only by the Band 2/Opus route; remove additional model or band declarations")
+    else:
+        remaining = body.replace(RESERVED_ROUTE, "")
+        for preset in CODEX_RESERVED_DISPLAY_PRESETS:
+            remaining = remaining.replace(f"Do not use {preset} for ordinary implementation.", "")
+        if RESERVED_MENTION_RE.search(remaining):
+            issues.append(f"{label} reserved routing must use the final-review reservation; remove additional xhigh/max declarations")
+
+
 def validate_worker_policy_contract(
     text: str,
     headings: tuple[str, ...],
@@ -544,6 +578,7 @@ def validate_worker_policy_contract(
         label,
         issues,
     )
+    validate_exclusive_routes(sections, label, issues, recovery=False)
     validate_exact_codex_bands(sections.get("Codex Routing", ""), label, issues)
     validate_codex_declared_presets(sections.get("Codex Routing", ""), label, issues)
 
@@ -554,6 +589,7 @@ def validate_execution_recovery_contract(
     label: str,
     issues: list[str],
 ) -> None:
+    validate_exclusive_routes(sections, label, issues, recovery=True)
     if headings != EXECUTION_RECOVERY_HEADINGS:
         issues.append(
             f"{label} headings must be exactly: "
@@ -945,6 +981,20 @@ def validate_skill(root: Path, name: str, issues: list[str]) -> None:
     for token in handoff_tokens:
         if token not in text:
             issues.append(f"{name}/SKILL.md: router handoff is missing {token!r}")
+
+    update_contracts = {
+        "welcome-to-nhk": ("when the user requests upkeep", "after an NHK update needs workspace reconciliation"),
+        "nhk-upkeep": (
+            "On every upkeep run, compare NHK-owned rules against the currently installed reference contracts",
+            "even when workspace documents look complete and project facts have not changed",
+            "Reuse applicable content already read in this context only when it is unchanged",
+            "Preserve correct project facts and human-authorized exceptions",
+            "every compared surface matches the current installed contract or has a recorded human-authorized exception or unresolved conflict",
+        ),
+    }
+    for token in update_contracts.get(name, ()):
+        if token not in text:
+            issues.append(f"{name}/SKILL.md: NHK update reconciliation is missing {token!r}")
 
     for companion in (
         "coding-agent-guide.md",

@@ -14,6 +14,8 @@ Ordinary bugs still use the installed or adopted Superpowers systematic-debuggin
 - Name this file from canonical instructions with a backticked literal path. Never use a Claude `@` import.
 - Stay within original scope and authority. Human approval is required to change acceptance, public contracts, or permissions.
 
+- Declare diagnostic model routing only in the Band 2/Opus dispatch sentence; keep other diagnosis prose about evidence and authority, not alternate model routes.
+
 ## Required Final Shape
 
 Start with `# Execution Recovery`, then use exactly these second-level headings in order.

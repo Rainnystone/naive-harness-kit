@@ -160,7 +160,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** One task finishes, then a complex Superpowers plan reaches whole-change final review.
 
-**Expected:** The task receives one independent read-only reviewer with separate spec-compliance and task-quality verdicts; either missing or failed verdict blocks completion, and self-review does not replace it. The special GPT-6 Astra xhigh and GPT-6 Astra max configurations are limited to whole-change final review of a complex Superpowers plan, never ordinary implementation, debugging, recovery, post-review fixes, or scoped re-review.
+**Expected:** The task receives one independent read-only reviewer with separate spec-compliance and task-quality verdicts; either missing or failed verdict blocks completion, and self-review does not replace it. Retaining the correct reservation and appending an ordinary-work authorization must fail deterministic validation. Named reserved presets belong in the reservation, with only the explicit “Do not use [preset] for ordinary implementation.” prohibition also accepted; other role references use the reservation without repeating model names. The checker enforces this bounded declaration format, not arbitrary prose semantics. The special GPT-6 Astra xhigh and GPT-6 Astra max configurations are limited to whole-change final review of a complex Superpowers plan, never ordinary implementation, debugging, recovery, post-review fixes, or scoped re-review.
 
 ### D5. Initial-review route and upstream evidence
 
@@ -208,7 +208,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** The fifth round fails. The main thread has either sufficient new causal evidence, competing explanations, or no discrimination from old hypotheses.
 
-**Expected:** It reassesses original intent, spec/public contracts, verification signal, attempts, and cross-task consequences, then classifies the failure. Before recovery it records a changed causal explanation, discriminating command/input/observation, and expected before-and-after result. Competing explanations, review conflict, or an unverified premise permit at most one fresh-context Band 2 or Opus read-only diagnostic worker to challenge one hypothesis. Insufficient evidence goes to the human; it does not start a diagnostic chain.
+**Expected:** It reassesses original intent, spec/public contracts, verification signal, attempts, and cross-task consequences, then classifies the failure. Before recovery it records a changed causal explanation, discriminating command/input/observation, and expected before-and-after result. Competing explanations, review conflict, or an unverified premise permit at most one fresh-context Band 2 or Opus read-only diagnostic worker to challenge one hypothesis. Insufficient evidence goes to the human; it does not start a diagnostic chain. Retaining the correct diagnostic sentence and appending Band 3 or Astra xhigh/max alternatives must fail source and final validation. Diagnosis has one model-routing declaration; additional named model or band declarations are rejected. Inactive fenced/commented examples do not change final-file routing.
 
 ### D13. One recovery wave and final-review boundary
 
@@ -235,6 +235,12 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 **Setup:** `implementation-planning.md`, `archive/README.md`, or any other foundation surface is missing.
 
 **Expected:** Upkeep routes through `welcome-to-nhk` to bootstrap before maintenance. It does not create the missing foundation inside upkeep.
+
+### E4. Installed NHK update with structurally healthy documents
+
+**Setup:** The installed bundle has the two-band rules, while a complete workspace retains the former three-band worker policy and Band 3 diagnosis. Project paths and document structure are still correct. One project fact and one explicitly authorized exception must remain.
+
+**Expected:** An update check or explicit upkeep request routes to upkeep; missing foundation files still route to bootstrap first. Every upkeep compares the canonical instruction, all five companions, and archive index against current installed references, not only visible structural drift. It repairs NHK-owned rules, preserves project facts and approved exceptions, and reports unresolved conflicts. Previously read references can be reused only when unchanged. It does not fetch updates, rewrite whole documents, or introduce version tracking. Completion accounts for every compared surface as aligned, explicitly excepted, or unresolved.
 
 ## F. Archive Transition
 
