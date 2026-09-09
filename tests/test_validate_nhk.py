@@ -192,6 +192,24 @@ def human_routing_exception(**overrides: str) -> str:
     return "- Human routing exception: " + json.dumps(record)
 
 
+def literal_routing_record_cases():
+    records = (
+        human_routing_exception(approval="decisions/gpt-6-astra-low.md#billing"),
+        human_routing_exception(approval="https://example.test/gpt-6-astra-xhigh.md#billing"),
+        human_routing_exception(target="gpt-6-astra-low-module"),
+        human_routing_exception(scope="src/gpt-6-astra-low/"),
+        human_routing_exception(scope="docs/GPT-6 Astra xhigh review.md"),
+    )
+    for record in records:
+        yield record, "", None, 0
+    record = records[0]
+    yield record, "Whole modules may use GPT-6 Astra low.", None, 1
+    yield record, "Use GPT-6 Astra xhigh for ordinary implementation.", None, 1
+    yield record, "", ("GPT-5.6 Luna max", "GPT-5.6 Luna high"), 1
+    yield human_routing_exception(approval="decisions/gpt-6-astra-low.md"), "", None, 1
+    yield human_routing_exception(preset="GPT-6 Astra xhigh"), "", None, 1
+
+
 def worker_policy_text() -> str:
     return assemble_companion(
         ROOT / "references" / "worker-policy-template.md", "Worker Policy"
@@ -616,6 +634,18 @@ class SourceValidationTests(ValidatorTestCase):
             path.write_text(path.read_text().replace(heading, heading + "\n" + record, 1))
             result = run_cli("--root", root)
             self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+
+    def test_review_source_literal_record_data_is_not_policy(self) -> None:
+        for record, adjacent, drift, expected in literal_routing_record_cases():
+            with self.subTest(record=record, adjacent=adjacent, drift=drift):
+                root = self.make_source_fixture()
+                path = root / "references" / "worker-policy-template.md"
+                text = path.read_text().replace("### Codex Routing", "### Codex Routing\n" + record + "\n" + adjacent, 1)
+                if drift:
+                    text = text.replace(*drift)
+                path.write_text(text)
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
 
     def test_review_source_exception_marker_cannot_move_to_another_file(self) -> None:
         root = self.make_source_fixture()
@@ -1206,6 +1236,15 @@ class FinalValidationTests(ValidatorTestCase):
         result = run_cli("--final", self.write_final(planning_guide_text() + "\n" + record), "--kind", "planning-guide")
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn("belongs only", result.stdout)
+
+    def test_review_final_literal_record_data_is_not_policy(self) -> None:
+        for record, adjacent, drift, expected in literal_routing_record_cases():
+            with self.subTest(record=record, adjacent=adjacent, drift=drift):
+                text = worker_policy_text().replace("## Codex Routing", "## Codex Routing\n" + record + "\n" + adjacent, 1)
+                if drift:
+                    text = text.replace(*drift)
+                result = run_cli("--final", self.write_final(text), "--kind", "worker-policy")
+                self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
 
     def test_review_inactive_exception_and_project_facts_remain_harmless(self) -> None:
         for wrapper in ("<!-- {} -->", "```md\n{}\n```"):

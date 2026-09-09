@@ -891,7 +891,8 @@ def validate_worker_policy_contract(
 
     if len(routing_exception_lines(text)) > len(routing_exception_lines("\n".join(sections.values()))):
         issues.append(f"{label} human routing exception belongs only in the declared Codex Routing section, not generation guidance")
-    declared_sections = without_routing_exceptions(sections, label, issues)
+    policy_sections = without_routing_exceptions(sections, label, issues)
+    declared_sections = dict(policy_sections)
     # Only exact catalogs in their owning section are exempt from the conflict
     # scan. Aggregate membership (including duplicate rows) is checked below.
     for heading, body in declared_sections.items():
@@ -911,9 +912,9 @@ def validate_worker_policy_contract(
         r"\b(?:Band\s*\d|GPT[- ]|gpt-|Astra|Luna|module|mechanical|review|consolidat\w*|repair|fix(?:es)?|Sonnet|Opus|Fable|Ultra)\b",
     )
     validate_ui_alias_routes(declared_sections, label, issues)
-    validate_exclusive_routes(sections, label, issues, recovery=False)
-    validate_exact_codex_bands(sections.get("Codex Routing", ""), label, issues)
-    validate_codex_declared_presets(sections.get("Codex Routing", ""), label, issues)
+    validate_exclusive_routes(policy_sections, label, issues, recovery=False)
+    validate_exact_codex_bands(policy_sections.get("Codex Routing", ""), label, issues)
+    validate_codex_declared_presets(policy_sections.get("Codex Routing", ""), label, issues)
 
 
 def validate_execution_recovery_contract(
