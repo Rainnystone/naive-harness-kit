@@ -29,6 +29,8 @@ On every upkeep run, compare NHK-owned rules against the currently installed ref
 
 Reconcile module sizing, role-bound implementation/review, worker reuse, review consolidation, and the canonical waiting contract from their owning templates. Preserve declared contract clauses in their required sections so source and generated validation agree; adapt project facts around them. Keep correct facts and explicit human exceptions. Updating rules does not automatically regroup a running plan or redispatch completed work; preserve stable task identifiers and progress when reconciling active surfaces.
 
+Preserve an ordinary Codex routing exception using the bounded JSON record in `../references/worker-policy-template.md`, inside `worker-policy.md`'s Codex Routing section. Derive its exact target, path scope, role, preset, and approval reference from a confirmed existing human decision; never invent approval or use a blanket exemption. Keep the normal clauses/catalogs and separate special approvals intact. Static acceptance of a record does not authenticate consent. Keep planning fields active as prescribed by the planning template; do not hide them in example fences.
+
 ## Repair Boundaries
 
 - Reconcile only NHK-owned rules. Preserve correct project facts and human-authorized exceptions; surface any conflict requiring a new human decision rather than silently overwriting it.

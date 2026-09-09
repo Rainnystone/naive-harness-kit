@@ -16,6 +16,14 @@ This companion owns worker configuration and orchestration detail. Canonical sta
 
 - Keep named Astra xhigh/max declarations in the final-review reservation; refer to that reservation by role elsewhere rather than adding alternate preset permissions.
 
+Optional exception illustration (generation guidance, not an actual approval): after confirming an existing decision, replace this synthetic record with its real target, scope, role, preset, and evidence. Omit records when no such decision exists.
+
+```md
+- Human routing exception: {"target":"billing-module","scope":"src/billing/","role":"module-implementation","preset":"GPT-6 Astra low","approval":"decisions/billing.md#low-route"}
+```
+
+The record must be one complete JSON object with unique keys and no trailing prose. Use a stable target identifier of up to 80 letters/digits/underscores/hyphens; literal path components may also contain spaces and dots. Unicode names are supported. Keep one record per target/scope/role, reject blanket targets (`all`, `any`, `global`, `default`, `current`, or their prefixed forms; also bare `project`, `workspace`, or `session`), and retain all normal clauses and catalogs.
+
 ## Required Final Shape
 
 Start with `# Worker Policy`, then use exactly these second-level headings in order.
@@ -63,6 +71,12 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 - Select post-review fixes and re-reviews by the bounded repair role above. “Most capable upstream” means most capable within the task's authorization.
 - Ultra requires human approval naming the packet and current run. It never becomes a reusable project or session default.
 - Ultra authorization and recursion authorization never imply each other.
+
+- Preserve an existing human routing exception only as an active `Human routing exception:` JSON bullet in Codex Routing with exactly `target`, `scope`, `role`, `preset`, and `approval` string fields.
+- The target names one packet or module; scope is a non-root repository-relative path without wildcards or traversal. Role is `module-implementation`, `initial-module-review`, `local-fix`, or `scoped-re-review`.
+- Apply the ordinary catalog preset only when target, scope, and role match the confirmed decision; all other work keeps the normal rules. Never turn a record into a project or session default.
+- Confirm the existing human decision from its Markdown-file-and-anchor or HTTPS-and-fragment approval reference; never invent consent. Static validation checks structure, not approval authenticity.
+- Records change only ordinary preset choice, not worker class, review gates, budgets, reserved final-review permissions, Ultra, or recursion. Initial reviews still exclude Luna.
 
 ### Claude Routing
 

@@ -10,6 +10,7 @@ This companion tightens task sizing and dependency edges. It does not replace Su
 
 - Final file hard limit: 80 lines. There is no minimum.
 - Replace explanatory examples with concise workspace facts and remove all template guidance.
+- Keep the three Task Contract field declarations active; adapt their right-hand placeholders only. Fenced or commented examples cannot supply required fields.
 - Keep stable planning rules here; keep project routes in `coding-agent-guide.md` and document lifecycle in `documentation-governance.md`.
 - Name this file from canonical instructions with a backticked literal path. Never use a Claude `@` import for it.
 - Load it only before writing, approving, or materially revising an implementation plan.
@@ -35,11 +36,9 @@ Start with `# Implementation Planning`, then use exactly the following second-le
 
 Keep Superpowers `Task N` headings. Each task starts with these fields before the workflow's ordinary implementation detail:
 
-```md
 **Delivers:** <one observable, independently acceptable result>
 **Blocked by:** <task identifiers, or None>
 **Worker class:** <mechanical | standard | judgment>
-```
 
 Then retain the workflow's `Files`, `Interfaces`, exact TDD steps, commands, expected results, and necessary code.
 

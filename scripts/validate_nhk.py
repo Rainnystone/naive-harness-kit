@@ -4,11 +4,13 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
+from urllib.parse import urlsplit
 
 
 SKILLS = (
@@ -593,7 +595,13 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['Authorization comes from the allow
                    'authorization.',
                    'Ultra requires human approval naming the packet and current run. It never '
                    'becomes a reusable project or session default.',
-                   'Ultra authorization and recursion authorization never imply each other.'],
+                   'Ultra authorization and recursion authorization never imply each other.',
+                   'Preserve an existing human routing exception only as an active `Human routing exception:` JSON bullet in Codex Routing with exactly `target`, `scope`, `role`, `preset`, and `approval` string fields.',
+                   'The target names one packet or module; scope is a non-root repository-relative path without wildcards or traversal. Role is `module-implementation`, `initial-module-review`, `local-fix`, or `scoped-re-review`.',
+                   'Apply the ordinary catalog preset only when target, scope, and role match the confirmed decision; all other work keeps the normal rules. Never turn a record into a project or session default.',
+                   'Confirm the existing human decision from its Markdown-file-and-anchor or HTTPS-and-fragment approval reference; never invent consent. Static validation checks structure, not approval authenticity.',
+                   'Records change only ordinary preset choice, not worker class, review gates, budgets, reserved final-review permissions, Ultra, or recursion. Initial reviews still exclude Luna.',
+                   ],
  'Claude Routing': ['Use Sonnet for ordinary implementation and review. Use Opus for '
                     'difficult work, debugging, architecture, final review, and a recommended '
                     'complex main thread.',
@@ -674,6 +682,28 @@ def validate_declared_clauses(
         issues.append(f"{label} contains additional routing or orchestration declarations; use the declared contract only")
 
 
+def undeclared_clauses(
+    sections: dict[str, str], declarations: dict[str, list[str]],
+) -> Iterable[str]:
+    for body in sections.values():
+        for clause in re.split(r"\n\s*\n|\n(?=\s*[-+*]\s)", body):
+            remaining = normalized_contract(clause)
+            for known in declarations.values():
+                for required in known:
+                    remaining = remaining.replace(normalized_contract(required), "")
+            if remaining:
+                yield remaining
+
+
+def validate_ui_alias_routes(sections: dict[str, str], label: str, issues: list[str]) -> None:
+    alias = re.compile(r"\b(?:Extra\s+High|Light)\b", re.IGNORECASE)
+    role = re.compile(r"\b(?:implementation|debugging|recovery|review|workers?|modules?|presets?|models?|effort)\b", re.IGNORECASE)
+    selection = re.compile(r"\b(?:use|select|choose)\s+(?:UI\s+)?(?:Extra\s+High|Light)(?=\s+(?:for|as|to)\b|[.;]|$)", re.IGNORECASE)
+    for clause in undeclared_clauses(sections, WORKER_DECLARATIONS):
+        if alias.search(clause) and (role.search(clause) or selection.search(clause)):
+            issues.append(f"{label} contains an additional UI alias routing declaration; preserve the declared Light/Extra High mapping and role permissions")
+
+
 def validate_wait_contract(sections: dict[str, str], label: str, issues: list[str]) -> None:
     # Project verification may have its own timeouts. Outside the orchestration
     # section, inspect only explicit worker/check-in declarations, not every time.
@@ -681,6 +711,11 @@ def validate_wait_contract(sections: dict[str, str], label: str, issues: list[st
         r"\b(?:workers?|subagents?|unsolicited|wait(?:-tool)? returns?|silence|poll\w*)\b",
         re.IGNORECASE,
     )
+    # A code helper function is not a worker. Outside orchestration, the alias
+    # requires both agent-control wording and progress/lifecycle context.
+    helper = re.compile(r"\bhelpers?\b(?![ -]+functions?\b)", re.IGNORECASE)
+    helper_lifecycle = re.compile(r"\b(?:progress|status|check-in|dispatch\w*|resum\w*|replac\w*|delegat\w*|interrupt\w*|remind\w*)\b", re.IGNORECASE)
+    helper_control = re.compile(r"\b(?:check\w*|probe\w*|quer\w*|ping\w*|ask\w*|monitor\w*|dispatch\w*|resum\w*|replac\w*|delegat\w*|interrupt\w*|remind\w*)\b", re.IGNORECASE)
     active = {
         heading: "\n".join(line for _, line in active_markdown_lines(body))
         for heading, body in sections.items()
@@ -688,7 +723,8 @@ def validate_wait_contract(sections: dict[str, str], label: str, issues: list[st
     sections = {
         heading: "\n".join(
             clause for clause in re.split(r"\n\s*\n|\n(?=\s*[-+*]\s)", body)
-            if heading == "Subagents and Packets" or worker_timing.search(clause)
+            if (heading == "Subagents and Packets" or worker_timing.search(clause)
+                or (helper.search(clause) and helper_lifecycle.search(clause) and helper_control.search(clause)))
         )
         for heading, body in active.items()
     }
@@ -709,6 +745,24 @@ def validate_planning_modules(sections: dict[str, str], label: str, issues: list
     body = normalized_contract("\n".join(sections.values()))
     if re.search(r"smallest[- ]reviewable|every internal step (?:is|becomes) (?:a |one )?task|split (?:by|based on) (?:file|commit|elapsed)", body, re.I):
         issues.append(f"{label} conflicts with module sizing")
+    for clause in undeclared_clauses(sections, PLANNING_MODULE_DECLARATIONS):
+        if (re.search(r"\bmodules?\b", clause, re.I)
+                and re.search(r"\b(?:mechanical|standard|judgment)\b", clause, re.I)
+                and re.search(r"\b(?:workers?|class|whole modules?|complete modules?)\b", clause, re.I)
+                and (re.search(r"\b(?:may|must|uses?|assign\w*|rout\w*|classif\w*|permi\w*|allow\w*|select\w*)\b", clause, re.I)
+                     or re.search(r"\bworker[ -]+class\s*(?::|\bis\b)", clause, re.I))):
+            issues.append(f"{label} contains an additional module worker-class declaration; preserve the declared standalone mechanical exception")
+    validate_planning_fields(sections, label, issues)
+
+
+def validate_planning_fields(sections: dict[str, str], label: str, issues: list[str]) -> None:
+    task_contract = sections.get("Task Contract", "")
+    for field, pattern in PLANNING_FIELD_PATTERNS.items():
+        if not pattern.search(task_contract):
+            issues.append(f"{label} Task Contract is missing field syntax for {field!r}")
+    for token in PLANNING_TASK_CONTRACT_TOKENS:
+        if token.lower() not in task_contract.lower():
+            issues.append(f"{label} Task Contract is missing {token!r}")
 
 
 def without_valid_codex_catalogs(codex: str) -> str:
@@ -726,6 +780,103 @@ def without_valid_codex_catalogs(codex: str) -> str:
     return "\n".join(lines)
 
 
+ROUTING_EXCEPTION_PREFIX = "- Human routing exception:"
+ROUTING_EXCEPTION_MARKER_RE = re.compile(r"^\s*-\s+Human routing exception\b", re.IGNORECASE)
+ROUTING_EXCEPTION_FIELDS = {"target", "scope", "role", "preset", "approval"}
+ROUTING_EXCEPTION_ROLES = {
+    "module-implementation", "initial-module-review", "local-fix", "scoped-re-review",
+}
+
+
+def routing_exception_lines(text: str) -> list[str]:
+    return [line for _, line in active_markdown_lines(text)
+            if ROUTING_EXCEPTION_MARKER_RE.match(line)]
+
+
+def unique_json_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    record = dict(pairs)
+    if len(record) != len(pairs):
+        raise ValueError("duplicate record key")
+    return record
+
+
+def concrete_relative_path(value: str) -> bool:
+    if not re.fullmatch(r"[\w .-]+(?:/[\w .-]+)*/?", value):
+        return False
+    return all(part not in {".", ".."} and part == part.strip()
+               for part in value.rstrip("/").split("/"))
+
+
+def approval_reference(value: str) -> bool:
+    if value.startswith("https://"):
+        try:
+            parsed = urlsplit(value)
+            hostname = parsed.hostname
+            parsed.port  # Reject malformed or out-of-range ports without fetching the reference.
+        except ValueError:
+            return False
+        return bool(hostname and parsed.path and parsed.fragment
+                    and not re.search(r"[\s\x00-\x1f\x7f]", value))
+    path, separator, fragment = value.partition("#")
+    return bool(separator and path.endswith(".md") and concrete_relative_path(path)
+                and re.fullmatch(r"\w[\w.-]*", fragment))
+
+
+def without_routing_exceptions(
+    sections: dict[str, str], label: str, issues: list[str],
+) -> dict[str, str]:
+    cleaned: dict[str, str] = {}
+    seen: set[tuple[str, str, str]] = set()
+    ordinary_presets = {preset for band in CODEX_PRESET_BANDS for preset in band}
+    for heading, body in sections.items():
+        retained: list[str] = []
+        for line in body.splitlines():
+            if not ROUTING_EXCEPTION_MARKER_RE.match(line):
+                retained.append(line)
+                continue
+            reason = ""
+            record = None
+            if not line.strip().startswith(ROUTING_EXCEPTION_PREFIX):
+                reason = "must start with the exact '- Human routing exception:' label"
+            elif heading != "Codex Routing":
+                reason = "belongs only in Codex Routing"
+            else:
+                try:
+                    record = json.loads(line.strip().removeprefix(ROUTING_EXCEPTION_PREFIX), object_pairs_hook=unique_json_object)
+                except (ValueError, TypeError):
+                    reason = "must be one complete JSON object with unique keys and no trailing text"
+            if not reason:
+                if (not isinstance(record, dict) or set(record) != ROUTING_EXCEPTION_FIELDS
+                        or any(not isinstance(value, str) or not value for value in record.values())):
+                    reason = "requires exactly five nonempty string fields: target, scope, role, preset, approval"
+                elif (not re.fullmatch(r"\w[\w-]{0,79}", record["target"])
+                        or re.match(r"^(?:all|any|global|default|current)(?:$|[-_])", record["target"], re.I)
+                        or record["target"].lower() in {"project", "workspace", "session"}):
+                    reason = "requires a named target, not a blanket or current-context target"
+                elif not concrete_relative_path(record["scope"]):
+                    reason = "requires a non-root repository-relative scope without traversal or wildcards"
+                elif record["role"] not in ROUTING_EXCEPTION_ROLES:
+                    reason = "must name one ordinary implementation or review role; it cannot authorize recursion"
+                elif record["preset"] not in ordinary_presets:
+                    reason = "may choose only an ordinary catalog preset, never reserved final-review or Ultra permissions"
+                elif record["role"] == "initial-module-review" and record["preset"] == "GPT-5.6 Luna max":
+                    reason = "does not authorize Luna initial reviews"
+                elif not approval_reference(record["approval"]):
+                    reason = "requires a specific Markdown-file anchor or HTTPS fragment approval reference"
+                else:
+                    key = (record["target"], record["scope"], record["role"])
+                    if key in seen:
+                        reason = "duplicates a target, scope, and role"
+                    seen.add(key)
+            if reason:
+                issues.append(f"{label} human routing exception {reason}")
+                retained.append(line)
+            # Only a validated record itself is excluded. It cannot exempt any
+            # nearby prose or replace the normal section-owned declarations.
+        cleaned[heading] = "\n".join(retained)
+    return cleaned
+
+
 def validate_worker_policy_contract(
     text: str,
     headings: tuple[str, ...],
@@ -738,7 +889,9 @@ def validate_worker_policy_contract(
             f"{label} headings must be exactly: " + ", ".join(WORKER_POLICY_HEADINGS)
         )
 
-    declared_sections = dict(sections)
+    if len(routing_exception_lines(text)) > len(routing_exception_lines("\n".join(sections.values()))):
+        issues.append(f"{label} human routing exception belongs only in the declared Codex Routing section, not generation guidance")
+    declared_sections = without_routing_exceptions(sections, label, issues)
     # Only exact catalogs in their owning section are exempt from the conflict
     # scan. Aggregate membership (including duplicate rows) is checked below.
     for heading, body in declared_sections.items():
@@ -757,6 +910,7 @@ def validate_worker_policy_contract(
         declared_sections, WORKER_DECLARATIONS, label, issues,
         r"\b(?:Band\s*\d|GPT[- ]|gpt-|Astra|Luna|module|mechanical|review|consolidat\w*|repair|fix(?:es)?|Sonnet|Opus|Fable|Ultra)\b",
     )
+    validate_ui_alias_routes(declared_sections, label, issues)
     validate_exclusive_routes(sections, label, issues, recovery=False)
     validate_exact_codex_bands(sections.get("Codex Routing", ""), label, issues)
     validate_codex_declared_presets(sections.get("Codex Routing", ""), label, issues)
@@ -1399,6 +1553,8 @@ def validate_forbidden_legacy(root: Path, issues: list[str]) -> None:
         except (OSError, UnicodeError):
             continue
         relative = path.relative_to(root)
+        if relative != Path("references/worker-policy-template.md") and routing_exception_lines(text):
+            issues.append(f"{relative}: human routing exception belongs only in the worker-policy Codex Routing contract")
         model_matches = list(versioned_model.finditer(text))
         if relative not in allowed_versioned_model_surfaces and model_matches:
             issues.append(
@@ -1621,6 +1777,8 @@ def validate_final(
         return issues
 
     lower = text.lower()
+    if kind != "worker-policy" and routing_exception_lines(text):
+        issues.append("human routing exception belongs only in worker-policy Codex Routing")
     for number, imported in active_companion_imports(text):
         issues.append(
             f"final file auto-imports companion {imported!r} at line {number}; "
@@ -1749,17 +1907,6 @@ def validate_final(
                     issues.append(
                         "planning-guide Workflow Compatibility is missing "
                         + repr(token)
-                    )
-            task_contract = sections.get("Task Contract", "")
-            for field, pattern in PLANNING_FIELD_PATTERNS.items():
-                if not pattern.search(task_contract):
-                    issues.append(
-                        f"planning-guide Task Contract is missing field syntax for {field!r}"
-                    )
-            for token in PLANNING_TASK_CONTRACT_TOKENS:
-                if token.lower() not in task_contract.lower():
-                    issues.append(
-                        f"planning-guide Task Contract is missing {token!r}"
                     )
             wide_changes = sections.get("Wide Changes", "")
             for token in PLANNING_WIDE_CHANGE_TOKENS:

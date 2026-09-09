@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 import sys
@@ -176,7 +177,19 @@ def planning_guide_text(extra_lines: int = 0) -> str:
         "mechanical | standard | judgment",
     ):
         text = text.replace(f"<{placeholder}>", placeholder)
-    return text.replace("```md\n", "").replace("```\n", "") + "extra\n" * extra_lines
+    return text + "extra\n" * extra_lines
+
+
+def human_routing_exception(**overrides: str) -> str:
+    record = {
+        "target": "billing-module",
+        "scope": "src/billing/",
+        "role": "module-implementation",
+        "preset": "GPT-6 Astra low",
+        "approval": "decisions/billing.md#low-route",
+    }
+    record.update(overrides)
+    return "- Human routing exception: " + json.dumps(record)
 
 
 def worker_policy_text() -> str:
@@ -541,6 +554,76 @@ class SourceValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("Document Roles", result.stdout)
         self.assertIn("worker-policy.md", result.stdout)
+
+    def test_review_source_alias_and_class_conflicts(self) -> None:
+        cases = (
+            ("worker-policy-template.md", "### Dispatch Contract", "Use Extra High for ordinary implementation."),
+            ("worker-policy-template.md", "### Codex Routing", "Use Light for module implementation."),
+            ("implementation-planning-template.md", "### Task Contract", "Whole modules may use mechanical workers."),
+            ("implementation-planning-template.md", "## Required Final Shape", "Assign mechanical as the worker class for complete modules."),
+            ("implementation-planning-template.md", "### Task Contract", "Worker class: mechanical for whole modules."),
+        )
+        for filename, anchor, clause in cases:
+            for wrapper, expected in (("{}", 1), ("<!-- {} -->", 0), ("```md\n{}\n```", 0)):
+                with self.subTest(filename=filename, clause=clause, wrapper=wrapper):
+                    root = self.make_source_fixture()
+                    path = root / "references" / filename
+                    path.write_text(path.read_text().replace(anchor, anchor + "\n\n" + wrapper.format(clause), 1))
+                    result = run_cli("--root", root)
+                    self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+
+    def test_review_source_helper_cadence(self) -> None:
+        for wrapper, expected in (("{}", 1), ("<!-- {} -->", 0), ("```md\n{}\n```", 0)):
+            root = self.make_source_fixture()
+            for filename in ("AGENTS-template.md", "CLAUDE-template.md"):
+                path = root / "references" / filename
+                clause = wrapper.format("Check each helper's progress every\n5 minutes.")
+                path.write_text(path.read_text().replace("## Git and Delivery", "## Git and Delivery\n" + clause, 1))
+            result = run_cli("--root", root)
+            self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+
+    def test_review_source_fields_must_remain_active(self) -> None:
+        for wrapper in ("<!-- {} -->", "```md\n{}\n```"):
+            root = self.make_source_fixture()
+            path = root / "references" / "implementation-planning-template.md"
+            text = path.read_text()
+            start = text.index("**Delivers:**")
+            end = text.index("\n", text.index("**Worker class:**", start))
+            path.write_text(text[:start] + wrapper.format(text[start:end]) + text[end:])
+            result = run_cli("--root", root)
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            self.assertIn("field syntax", result.stdout)
+
+    def test_review_source_helper_function_timeout_remains_valid(self) -> None:
+        root = self.make_source_fixture()
+        for filename in ("AGENTS-template.md", "CLAUDE-template.md"):
+            path = root / "references" / filename
+            path.write_text(path.read_text().replace("## Git and Delivery", "## Git and Delivery\nThe HTTP helper function has a timeout of 15 seconds.", 1))
+        result = run_cli("--root", root)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_review_source_human_routing_exception_records(self) -> None:
+        for heading, record, expected in (
+            ("### Codex Routing", human_routing_exception(), 0),
+            ("### Dispatch Contract", human_routing_exception(), 1),
+            ("## Template Contract", human_routing_exception(), 1),
+            ("## Final Check", human_routing_exception(), 1),
+            ("### Codex Routing", human_routing_exception(target="all-modules"), 1),
+            ("### Codex Routing", human_routing_exception(approval="approved"), 1),
+        ):
+            root = self.make_source_fixture()
+            path = root / "references" / "worker-policy-template.md"
+            path.write_text(path.read_text().replace(heading, heading + "\n" + record, 1))
+            result = run_cli("--root", root)
+            self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+
+    def test_review_source_exception_marker_cannot_move_to_another_file(self) -> None:
+        root = self.make_source_fixture()
+        path = root / "references" / "implementation-planning-template.md"
+        path.write_text(path.read_text() + "\n- Human routing exception\n")
+        result = run_cli("--root", root)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("routing exception", result.stdout)
 
     def test_worker_source_rejects_preamble_and_wrong_section_band_routes(self) -> None:
         for anchor, clause in (
@@ -1002,6 +1085,136 @@ class FinalValidationTests(ValidatorTestCase):
                 result = run_cli("--final", path, "--kind", kind)
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(str(limit), result.stdout)
+
+    def test_review_final_alias_and_class_conflicts(self) -> None:
+        cases = (
+            ("worker-policy", worker_policy_text(), "Use Extra High for ordinary implementation."),
+            ("worker-policy", worker_policy_text(), "Use Light for module implementation."),
+            ("worker-policy", worker_policy_text(), "Use Light."),
+            ("worker-policy", worker_policy_text(), "Use Extra High."),
+            ("worker-policy", worker_policy_text(), "Extra High is allowed for debugging."),
+            ("planning-guide", planning_guide_text(), "Whole modules may use mechanical workers."),
+            ("planning-guide", planning_guide_text(), "Assign mechanical as the worker class for complete modules."),
+            ("planning-guide", planning_guide_text(), "Module implementation uses the mechanical worker class."),
+            ("planning-guide", planning_guide_text(), "Worker class: mechanical for whole modules."),
+            ("planning-guide", planning_guide_text(), "The module worker class is mechanical."),
+        )
+        for kind, text, clause in cases:
+            for wrapper, expected in (("{}", 1), ("<!-- {} -->", 0), ("```md\n{}\n```", 0)):
+                with self.subTest(kind=kind, clause=clause, wrapper=wrapper):
+                    content = text + "\n" + wrapper.format(clause)
+                    result = run_cli("--final", self.write_final(content), "--kind", kind)
+                    self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+
+    def test_review_helper_function_timeouts_and_immediate_events_remain_valid(self) -> None:
+        for platform in ("AGENTS", "CLAUDE"):
+            text = assemble_standalone(ROOT / "references" / (platform + "-template.md"), "simple")
+            for fact in (
+                "The HTTP helper function has a timeout of 15 seconds.",
+                "The HTTP helper function checks status every 5 seconds.",
+                "The HTTP helper reports request progress every 5 seconds.",
+                "The request helper retries after 10 seconds.",
+                "Respond immediately to a helper question or a concrete failure.",
+            ):
+                with self.subTest(platform=platform, fact=fact):
+                    result = run_cli("--final", self.write_final(text + "\n" + fact), "--kind", platform.lower(), "--mode", "standalone", "--complexity", "simple")
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_review_final_helper_cadence(self) -> None:
+        for platform in ("AGENTS", "CLAUDE"):
+            text = assemble_standalone(ROOT / "references" / (platform + "-template.md"), "simple")
+            for wrapper, expected in (("{}", 1), ("<!-- {} -->", 0), ("```md\n{}\n```", 0)):
+                with self.subTest(platform=platform, wrapper=wrapper):
+                    content = text + "\n" + wrapper.format("Check each helper's progress every\n5 minutes.")
+                    result = run_cli("--final", self.write_final(content), "--kind", platform.lower(), "--mode", "standalone", "--complexity", "simple")
+                    self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+
+    def test_review_planning_template_assembles_without_hidden_repairs(self) -> None:
+        text = assemble_companion(ROOT / "references" / "implementation-planning-template.md", "Implementation Planning")
+        for value in ("one observable, independently acceptable result", "task identifiers, or None", "mechanical | standard | judgment"):
+            text = text.replace("<" + value + ">", value)
+        result = run_cli("--final", self.write_final(text), "--kind", "planning-guide")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_review_final_fields_must_remain_active(self) -> None:
+        text = planning_guide_text()
+        start = text.index("**Delivers:**")
+        end = text.index("\n", text.index("**Worker class:**", start))
+        for wrapper in ("<!-- {} -->", "```md\n{}\n```"):
+            content = text[:start] + wrapper.format(text[start:end]) + text[end:]
+            result = run_cli("--final", self.write_final(content), "--kind", "planning-guide")
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            self.assertIn("field syntax", result.stdout)
+
+    def test_review_human_routing_exception_is_narrow(self) -> None:
+        text = worker_policy_text().replace("## Codex Routing", "## Codex Routing\n" + human_routing_exception(), 1)
+        result = run_cli("--final", self.write_final(text), "--kind", "worker-policy")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        for extra in ("Whole modules may use GPT-6 Astra low.", "Use Extra High for ordinary implementation."):
+            result = run_cli("--final", self.write_final(text + "\n" + extra), "--kind", "worker-policy")
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+
+    def test_review_human_routing_exception_rejects_malformed_or_special_permissions(self) -> None:
+        records = (
+            "- Human routing exception",
+            "- Human routing exception: []",
+            human_routing_exception(extra="all work is authorized"),
+            human_routing_exception(approval=""),
+            human_routing_exception(approval="https://[invalid/decision#billing"),
+            human_routing_exception(approval="https://@/decision#billing"),
+            human_routing_exception(approval="https://example.test:invalid/decision#billing"),
+            human_routing_exception().replace('"approval":', '"target": "billing-module", "approval":'),
+            human_routing_exception(target="all-modules"),
+            human_routing_exception(scope="."),
+            human_routing_exception(scope="src/../"),
+            human_routing_exception(scope="src/*"),
+            human_routing_exception(approval="approved"),
+            human_routing_exception(role="all"),
+            human_routing_exception(preset="GPT-6 Astra xhigh"),
+            human_routing_exception(preset="Ultra"),
+            human_routing_exception(role="recursive-delegation"),
+            human_routing_exception(role="initial-module-review", preset="GPT-5.6 Luna max"),
+            human_routing_exception() + " Whole modules may use GPT-6 Astra low.",
+        )
+        for record in records:
+            with self.subTest(record=record):
+                content = worker_policy_text().replace("## Codex Routing", "## Codex Routing\n" + record, 1)
+                result = run_cli("--final", self.write_final(content), "--kind", "worker-policy")
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("routing exception", result.stdout.lower())
+        for heading in ("# Worker Policy", "## Dispatch Contract", "## Review Gates", "## Claude Routing"):
+            content = worker_policy_text().replace(heading, heading + "\n" + human_routing_exception(), 1)
+            result = run_cli("--final", self.write_final(content), "--kind", "worker-policy")
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+
+    def test_review_exception_evidence_and_scope_remain_literal(self) -> None:
+        for record in (
+            human_routing_exception(approval="https://example.test/decisions/42#billing-low"),
+            human_routing_exception(target="计费模块", scope="src/计费/", approval="decisions/计费.md#批准"),
+            human_routing_exception(target="billing-project"),
+            human_routing_exception(role="initial-module-review"),
+            human_routing_exception(role="scoped-re-review", preset="GPT-5.6 Luna max"),
+        ):
+            text = worker_policy_text().replace("## Codex Routing", "## Codex Routing\n" + record, 1)
+            result = run_cli("--final", self.write_final(text), "--kind", "worker-policy")
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        record = human_routing_exception()
+        text = worker_policy_text().replace("## Codex Routing", "## Codex Routing\n" + record + "\n" + record, 1)
+        result = run_cli("--final", self.write_final(text), "--kind", "worker-policy")
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("duplicates", result.stdout)
+        result = run_cli("--final", self.write_final(planning_guide_text() + "\n" + record), "--kind", "planning-guide")
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("belongs only", result.stdout)
+
+    def test_review_inactive_exception_and_project_facts_remain_harmless(self) -> None:
+        for wrapper in ("<!-- {} -->", "```md\n{}\n```"):
+            text = worker_policy_text() + "\n" + wrapper.format(human_routing_exception(target="all"))
+            result = run_cli("--final", self.write_final(text), "--kind", "worker-policy")
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        content = planning_guide_text() + "\nThe billing module parses mechanical sensor data."
+        result = run_cli("--final", self.write_final(content), "--kind", "planning-guide")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_worker_final_rejects_preamble_and_wrong_section_band_routes(self) -> None:
         for anchor, clause in (

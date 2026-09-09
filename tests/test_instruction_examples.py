@@ -32,6 +32,11 @@ COMPANION_PATHS = (
     "documentation-governance.md",
 )
 COMPANION_FINAL_CONTRACTS = {
+    "implementation-planning-template.md": (
+        80,
+        "Implementation Planning",
+        ("Workflow Compatibility", "Plan Layers", "Task Contract", "Dependencies and Execution", "Wide Changes", "Plan Review"),
+    ),
     "worker-policy-template.md": (
         100,
         "Worker Policy",
