@@ -128,7 +128,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** A standalone project instruction mentions its own “email template contract”; a planning guide moves required fields or Superpowers details outside their required sections; or a worker/recovery companion violates its required headings, line budget, routing boundary, or approved policy contract.
 
-**Expected:** The ordinary project phrase remains valid. Planning validation requires actual `Delivers`, `Blocked by`, and `Worker class` field syntax inside Task Contract and the preserved Superpowers details inside Workflow Compatibility. Companion validation rejects a malformed worker or recovery document without broad scans that mistake ordinary project facts for policy. It reads H1, second-level headings, and section bodies from active Markdown: fence delimiters count only when indented by at most three spaces, so a four-space-indented fence does not hide a following heading. Fenced or commented examples cannot satisfy those contracts, and it rejects versioned Codex presets declared outside the approved Band 1-3 sets and reserved GPT-6 Astra max, including unrecognized effort suffixes on an allowed family.
+**Expected:** The ordinary project phrase remains valid. Planning validation requires actual `Delivers`, `Blocked by`, and `Worker class` field syntax inside Task Contract and the preserved Superpowers details inside Workflow Compatibility. Companion validation rejects a malformed worker or recovery document without broad scans that mistake ordinary project facts for policy. It reads H1, second-level headings, and section bodies from active Markdown: fence delimiters count only when indented by at most three spaces, so a four-space-indented fence does not hide a following heading. Fenced or commented examples cannot satisfy those contracts, and it rejects versioned Codex presets declared outside the approved Band 1-2 sets and reserved GPT-6 Astra xhigh and GPT-6 Astra max, including unrecognized effort suffixes on an allowed family.
 
 ### C12. Companion budgets and measured instruction reduction
 
@@ -154,19 +154,19 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** A packet is clear low-risk work, an ordinary bounded implementation, or architecture/high-uncertainty work. In one run, the preferred selected-band configuration is unavailable.
 
-**Expected:** The policy's exact approved Codex catalog supplies unordered task-fit choices for each band. NHK starts in the fitting band without a mandatory Band 1 trial, chooses a same-band supported substitute when possible, and reports whole-band unavailability as availability rather than capability failure. It repairs oversizing or missing context first; only evidence that a correctly sized packet is capability-limited permits a one-band escalation.
+**Expected:** The policy's exact approved Codex catalog supplies unordered task-fit choices for each band. NHK starts in the fitting band without a mandatory Band 1 trial, chooses a same-band supported substitute when possible, and reports whole-band unavailability as availability rather than capability failure. It repairs oversizing or missing context first; only evidence that a correctly sized packet is capability-limited permits escalation from Band 1 to Band 2. Band 2 contains only GPT-6 Astra medium and is the ordinary ceiling, including properly scoped difficult work. If it cannot converge, enter execution recovery. If it is unavailable, report that limitation without substituting Astra xhigh/max.
 
 ### D4. Review gates and special final-review reservation
 
 **Setup:** One task finishes, then a complex Superpowers plan reaches whole-change final review.
 
-**Expected:** The task receives one independent read-only reviewer with separate spec-compliance and task-quality verdicts; either missing or failed verdict blocks completion, and self-review does not replace it. The special GPT-6 Astra max configuration is limited to whole-change final review of a complex Superpowers plan, never ordinary implementation, debugging, recovery, post-review fixes, or scoped re-review.
+**Expected:** The task receives one independent read-only reviewer with separate spec-compliance and task-quality verdicts; either missing or failed verdict blocks completion, and self-review does not replace it. Retaining the correct reservation and appending an ordinary-work authorization must fail deterministic validation. Named reserved presets belong in the reservation, with only the explicit “Do not use [preset] for ordinary implementation.” prohibition also accepted; other role references use the reservation without repeating model names. The checker enforces this bounded declaration format, not arbitrary prose semantics. The special GPT-6 Astra xhigh and GPT-6 Astra max configurations are limited to whole-change final review of a complex Superpowers plan, never ordinary implementation, debugging, recovery, post-review fixes, or scoped re-review.
 
 ### D5. Initial-review route and upstream evidence
 
 **Setup:** A clear small low-risk change needs its initial review, then a low-risk scoped re-review is proposed. The reviewer receives a report, test evidence, fixed BASE and HEAD revisions, and binding constraints.
 
-**Expected:** The clear low-risk initial review may use GPT-6 Astra low (UI: Light); other initial reviews use the ordinary Band 2 or Band 3 routes. GPT-5.6 Luna may perform only the low-risk scoped re-review and never the initial task review. The reviewer uses the applicable upstream task-reviewer, re-review, or final-review prompt rather than a copied NHK prompt. It checks the implementer's claims against the fixed diff and test output.
+**Expected:** The clear low-risk initial review may use GPT-6 Astra low (UI: Light); other initial reviews use the ordinary Band 2 route. GPT-5.6 Luna may perform only the low-risk scoped re-review and never the initial task review. The reviewer uses the applicable upstream task-reviewer, re-review, or final-review prompt rather than a copied NHK prompt. It checks the implementer's claims against the fixed diff and test output.
 
 ### D6. Scoped re-review and cannot-verify gate
 
@@ -208,7 +208,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** The fifth round fails. The main thread has either sufficient new causal evidence, competing explanations, or no discrimination from old hypotheses.
 
-**Expected:** It reassesses original intent, spec/public contracts, verification signal, attempts, and cross-task consequences, then classifies the failure. Before recovery it records a changed causal explanation, discriminating command/input/observation, and expected before-and-after result. Competing explanations, review conflict, or an unverified premise permit at most one fresh-context Band 3 or Opus read-only diagnostic worker to challenge one hypothesis. Insufficient evidence goes to the human; it does not start a diagnostic chain.
+**Expected:** It reassesses original intent, spec/public contracts, verification signal, attempts, and cross-task consequences, then classifies the failure. Before recovery it records a changed causal explanation, discriminating command/input/observation, and expected before-and-after result. Competing explanations, review conflict, or an unverified premise permit at most one fresh-context Band 2 or Opus read-only diagnostic worker to challenge one hypothesis. Insufficient evidence goes to the human; it does not start a diagnostic chain. Retaining the correct diagnostic sentence and appending Band 3 or Astra xhigh/max alternatives must fail source and final validation. Diagnosis has one model-routing declaration; additional named model or band declarations are rejected. Inactive fenced/commented examples do not change final-file routing.
 
 ### D13. One recovery wave and final-review boundary
 
@@ -235,6 +235,12 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 **Setup:** `implementation-planning.md`, `archive/README.md`, or any other foundation surface is missing.
 
 **Expected:** Upkeep routes through `welcome-to-nhk` to bootstrap before maintenance. It does not create the missing foundation inside upkeep.
+
+### E4. Installed NHK update with structurally healthy documents
+
+**Setup:** The installed bundle has the two-band rules, while a complete workspace retains the former three-band worker policy and Band 3 diagnosis. Project paths and document structure are still correct. One project fact and one explicitly authorized exception must remain.
+
+**Expected:** An update check or explicit upkeep request routes to upkeep; missing foundation files still route to bootstrap first. Every upkeep compares the canonical instruction, all five companions, and archive index against current installed references, not only visible structural drift. It repairs NHK-owned rules, preserves project facts and approved exceptions, and reports unresolved conflicts. Previously read references can be reused only when unchanged. It does not fetch updates, rewrite whole documents, or introduce version tracking. Completion accounts for every compared surface as aligned, explicitly excepted, or unresolved.
 
 ## F. Archive Transition
 

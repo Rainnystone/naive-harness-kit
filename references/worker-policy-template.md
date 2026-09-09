@@ -14,6 +14,8 @@ This companion owns worker configuration and orchestration detail. Canonical sta
 - Name this file from canonical instructions with a backticked literal path. Never use a Claude `@` import.
 - Preserve explicit human budgets and authorizations. Availability does not expand capability authority.
 
+- Keep named Astra xhigh/max declarations in the final-review reservation; refer to that reservation by role elsewhere rather than adding alternate preset permissions.
+
 ## Required Final Shape
 
 Start with `# Worker Policy`, then use exactly these second-level headings in order.
@@ -40,18 +42,17 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 ### Codex Routing
 
 - Every fresh Codex worker uses `fork_turns: none` and receives a self-contained brief, required files, and binding global constraints.
-- Runtime model IDs are `gpt-5.6-luna`, `gpt-5.6-sol`, and `gpt-6-astra`; UI Light / Extra High map to `low` / `xhigh`.
+- Runtime model IDs are `gpt-5.6-luna` and `gpt-6-astra`; UI Light / Extra High map to `low` / `xhigh`.
 - Band 1: GPT-5.6 Luna max; GPT-6 Astra low.
-- Band 2: GPT-5.6 Sol medium; GPT-5.6 Sol high; GPT-6 Astra medium.
-- Band 3: GPT-5.6 Sol xhigh; GPT-6 Astra xhigh.
-- Presets within a band are unordered task-fit choices. Band 1 fits mechanical, low-risk clear work; Band 2 fits ordinary implementation and bounded integration; Band 3 fits architecture, high uncertainty, and high risk.
+- Band 2: GPT-6 Astra medium.
+- Presets within a band are unordered task-fit choices. Band 1 fits mechanical, low-risk clear work; Band 2 fits ordinary implementation, bounded integration, and properly scoped architecture, high-uncertainty, or high-risk work.
 - Start in the band that fits the packet; there is no mandatory Band 1 trial.
-- If a preset is unavailable, choose a supported same-band substitute when possible. Treat whole-band unavailability as availability, not capability failure.
+- If a preset is unavailable, choose a supported same-band substitute when possible. Report whole-band unavailability as availability, not capability failure; it never authorizes special final-review presets.
 - Repair oversized packets and missing context first. Escalate one band only when evidence shows a correctly sized packet is capability-limited.
-- At the ordinary Band 3 ceiling, enter execution recovery instead of borrowing special final-review presets.
-- Clear, small, low-risk initial reviews may use GPT-6 Astra low. Other initial reviews use Band 2 or Band 3.
+- At the ordinary Band 2 ceiling, enter execution recovery instead of borrowing special final-review presets.
+- Clear, small, low-risk initial reviews may use GPT-6 Astra low. Other initial reviews use Band 2.
 - GPT-5.6 Luna may perform low-risk scoped re-review, never an initial task review.
-- GPT-6 Astra max is reserved for whole-change final review of a complex Superpowers plan, not ordinary implementation, debugging, or recovery.
+- GPT-6 Astra xhigh and GPT-6 Astra max are reserved for whole-change final review of a complex Superpowers plan, not ordinary implementation, debugging, or recovery.
 - Select post-review fixes and re-reviews for their own task. “Most capable upstream” means most capable within the task's authorization.
 - Ultra requires human approval naming the packet and current run. It never becomes a reusable project or session default.
 - Ultra authorization and recursion authorization never imply each other.

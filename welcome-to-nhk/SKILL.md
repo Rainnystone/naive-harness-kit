@@ -52,7 +52,7 @@ If any surface is missing or the instruction topology needs the user-approved re
 Only after the foundation is complete:
 
 - Route to `nhk-archive` when the user explicitly asks to archive a completed workstream or has already clearly confirmed that transition.
-- Route to `nhk-upkeep` when instruction, companion, governance, archive-index, or active tracking descriptions may have drifted.
+- Route to `nhk-upkeep` when the user requests upkeep, after an NHK update needs workspace reconciliation, or when instruction, companion, governance, archive-index, or active tracking descriptions may have drifted.
 - If nothing needs setup, repair, or archive handling, report that the foundation is ready and stop.
 
 ## Router Handoff

@@ -231,12 +231,11 @@ LEGACY_CODEX_PRESET_LADDER = (
 
 CODEX_PRESET_BANDS = (
     ("GPT-5.6 Luna max", "GPT-6 Astra low"),
-    ("GPT-5.6 Sol medium", "GPT-5.6 Sol high", "GPT-6 Astra medium"),
-    ("GPT-5.6 Sol xhigh", "GPT-6 Astra xhigh"),
+    ("GPT-6 Astra medium",),
 )
-CODEX_RESERVED_DISPLAY_PRESETS = ("GPT-6 Astra max",)
-CODEX_ALLOWED_FAMILY_NAMES = ("GPT-5.6 Luna", "GPT-5.6 Sol", "GPT-6 Astra")
-CODEX_ALLOWED_RUNTIME_IDS = ("gpt-5.6-luna", "gpt-5.6-sol", "gpt-6-astra")
+CODEX_RESERVED_DISPLAY_PRESETS = ("GPT-6 Astra xhigh", "GPT-6 Astra max")
+CODEX_ALLOWED_FAMILY_NAMES = ("GPT-5.6 Luna", "GPT-6 Astra")
+CODEX_ALLOWED_RUNTIME_IDS = ("gpt-5.6-luna", "gpt-6-astra")
 CODEX_QUALIFIER_STOPWORDS = (
     "a",
     "an",
@@ -421,10 +420,10 @@ def validate_exact_codex_bands(
             item.strip().removesuffix(".") for item in raw.split(";") if item.strip()
         )
 
-    for band in sorted(set(found) - {1, 2, 3}):
+    for band in sorted(set(found) - {1, 2}):
         issues.append(
             f"{label} Codex Routing has unexpected Band {band}; exact unordered "
-            "preset sets exist only for Bands 1-3"
+            "preset sets exist only for Bands 1-2"
         )
 
     for band, expected in enumerate(CODEX_PRESET_BANDS, 1):
@@ -455,8 +454,8 @@ def validate_codex_declared_presets(
         seen.add(declared)
         issues.append(
             f"{label} Codex Routing declares unapproved versioned preset "
-            f"{match.group(0)!r}; allowed presets are the Band 1-3 sets and "
-            "reserved GPT-6 Astra max"
+            f"{match.group(0)!r}; allowed presets are the Band 1-2 sets and "
+            "reserved GPT-6 Astra xhigh and GPT-6 Astra max"
         )
 
     leftover = CODEX_DISPLAY_PRESET_RE.sub(" ", codex)
@@ -467,9 +466,43 @@ def validate_codex_declared_presets(
         seen.add(token)
         issues.append(
             f"{label} Codex Routing declares unapproved versioned preset "
-            f"{match.group(0)!r}; allowed presets are the Band 1-3 sets and "
-            "reserved GPT-6 Astra max"
+            f"{match.group(0)!r}; allowed presets are the Band 1-2 sets and "
+            "reserved GPT-6 Astra xhigh and GPT-6 Astra max"
         )
+
+
+# These checks recognize a bounded declaration format, not arbitrary prose intent.
+RESERVED_ROUTE = (
+    "GPT-6 Astra xhigh and GPT-6 Astra max are reserved for whole-change final review "
+    "of a complex Superpowers plan, not ordinary implementation, debugging, or recovery."
+)
+DIAGNOSTIC_ROUTE = (
+    "Dispatch at most one fresh-context Band 2 or Opus read-only diagnostic worker "
+    "to challenge one concrete hypothesis."
+)
+RESERVED_MENTION_RE = re.compile(
+    r"\b(?:GPT-6\s+Astra|gpt-6-astra)\s+`?(?:xhigh|max)\b", re.IGNORECASE
+)
+DIAGNOSTIC_MENTION_RE = re.compile(
+    r"\b(?:Band\s+\d+|GPT-\d[\w.-]*(?:\s+\w+)?|Sonnet|Opus|Fable|Haiku)\b",
+    re.IGNORECASE,
+)
+
+
+def validate_exclusive_routes(sections: dict[str, str], label: str, issues: list[str], *, recovery: bool) -> None:
+    body = "\n".join(sections.values())
+    # Normalize Markdown code spans and wrapping, while retaining all extra clauses.
+    body = " ".join(body.replace("`", "").split())
+    if recovery:
+        remaining = body.replace(DIAGNOSTIC_ROUTE, "")
+        if DIAGNOSTIC_MENTION_RE.search(remaining):
+            issues.append(f"{label} diagnostic routing must be declared only by the Band 2/Opus route; remove additional model or band declarations")
+    else:
+        remaining = body.replace(RESERVED_ROUTE, "")
+        for preset in CODEX_RESERVED_DISPLAY_PRESETS:
+            remaining = remaining.replace(f"Do not use {preset} for ordinary implementation.", "")
+        if RESERVED_MENTION_RE.search(remaining):
+            issues.append(f"{label} reserved routing must use the final-review reservation; remove additional xhigh/max declarations")
 
 
 def validate_worker_policy_contract(
@@ -521,9 +554,11 @@ def validate_worker_policy_contract(
             "Presets within a band are unordered task-fit choices",
             "there is no mandatory Band 1 trial",
             "Escalate one band only",
-            "ordinary Band 3 ceiling",
+            "ordinary Band 2 ceiling",
+            "Other initial reviews use Band 2.",
+            "Report whole-band unavailability as availability, not capability failure; it never authorizes special final-review presets",
             "GPT-5.6 Luna may perform low-risk scoped re-review, never an initial task review",
-            "GPT-6 Astra max is reserved for whole-change final review of a complex Superpowers plan, not ordinary implementation, debugging, or recovery",
+            "GPT-6 Astra xhigh and GPT-6 Astra max are reserved for whole-change final review of a complex Superpowers plan, not ordinary implementation, debugging, or recovery",
             "Ultra requires human approval naming the packet and current run",
             "Ultra authorization and recursion authorization never imply each other",
         ),
@@ -543,6 +578,7 @@ def validate_worker_policy_contract(
         label,
         issues,
     )
+    validate_exclusive_routes(sections, label, issues, recovery=False)
     validate_exact_codex_bands(sections.get("Codex Routing", ""), label, issues)
     validate_codex_declared_presets(sections.get("Codex Routing", ""), label, issues)
 
@@ -553,6 +589,7 @@ def validate_execution_recovery_contract(
     label: str,
     issues: list[str],
 ) -> None:
+    validate_exclusive_routes(sections, label, issues, recovery=True)
     if headings != EXECUTION_RECOVERY_HEADINGS:
         issues.append(
             f"{label} headings must be exactly: "
@@ -596,7 +633,7 @@ def validate_execution_recovery_contract(
         "Independent Diagnosis",
         (
             "competing explanations, review-versus-implementation conflict, or an unverified old premise",
-            "at most one fresh-context Band 3 or Opus read-only diagnostic worker",
+            "at most one fresh-context Band 2 or Opus read-only diagnostic worker",
             "challenge one concrete hypothesis",
             "does not authorize a fix",
             "Do not start a diagnostic chain",
@@ -945,6 +982,20 @@ def validate_skill(root: Path, name: str, issues: list[str]) -> None:
         if token not in text:
             issues.append(f"{name}/SKILL.md: router handoff is missing {token!r}")
 
+    update_contracts = {
+        "welcome-to-nhk": ("when the user requests upkeep", "after an NHK update needs workspace reconciliation"),
+        "nhk-upkeep": (
+            "On every upkeep run, compare NHK-owned rules against the currently installed reference contracts",
+            "even when workspace documents look complete and project facts have not changed",
+            "Reuse applicable content already read in this context only when it is unchanged",
+            "Preserve correct project facts and human-authorized exceptions",
+            "every compared surface matches the current installed contract or has a recorded human-authorized exception or unresolved conflict",
+        ),
+    }
+    for token in update_contracts.get(name, ()):
+        if token not in text:
+            issues.append(f"{name}/SKILL.md: NHK update reconciliation is missing {token!r}")
+
     for companion in (
         "coding-agent-guide.md",
         "implementation-planning.md",
@@ -1033,7 +1084,7 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         "seven required pieces",
         "Superpowers overlay",
         "configuration allowed for the task",
-        "three practical Codex bands",
+        "two practical Codex bands",
         "both checks must pass",
         "one recovery fix and one independent re-review",
     ):
@@ -1043,7 +1094,7 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         "七项基础内容",
         "Superpowers overlay",
         "任务允许使用的配置",
-        "三个 Codex 档位，档内不排座次",
+        "两个 Codex 档位，档内不排座次",
         "是否符合需求、实现质量是否过关，两项都要通过",
         "一轮恢复修正和一次复审",
     ):

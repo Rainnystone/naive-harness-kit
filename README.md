@@ -87,6 +87,8 @@ The direct source for the governance layer is `references/documentation-governan
 
 If either file is missing, `nhk-bootstrap` adds it from the [worker policy template](references/worker-policy-template.md) or the [recovery template](references/execution-recovery-template.md), leaving existing project details in place. If older NHK rules are still sitting in the main instruction file, bootstrap or upkeep replaces just those outdated passages with links to the companions. Your project facts and explicitly approved exceptions stay intact.
 
+After updating your installed NHK bundle, run `welcome-to-nhk` and ask for upkeep in an existing project. Upkeep compares its NHK rules with the installed templates, even if the documents still look tidy. It preserves your project details and explicitly approved exceptions; missing foundation files go through bootstrap first. Updating the bundle alone does not rewrite project documents.
+
 ## Dependencies
 
 NHK expects these peer workflow systems:
@@ -165,7 +167,7 @@ Thin CLAUDE imports only AGENTS. The five companion docs stay as backticked lite
 
 ## Picking Helpers And Knowing When To Pause
 
-Letting every worker inherit the main thread's settings turned out to be a remarkably effective way to pay for deep thought about very small edits. NHK uses three practical Codex bands, with no ranking inside a band: clear, low-risk jobs; ordinary implementation and bounded integration; and difficult design or high-risk work. The main agent starts with the band that fits the job and explicitly selects a configuration allowed for the task. Your budget still counts.
+Letting every worker inherit the main thread's settings turned out to be a remarkably effective way to pay for deep thought about very small edits. NHK uses two practical Codex bands, with no ranking inside a band: clear, low-risk jobs; and the rest of implementation, integration, and harder design work, scoped so one helper can handle it. The main agent starts with the band that fits the job and explicitly selects a configuration allowed for the task. Your budget still counts.
 
 The current model list, availability rules, and conditions for using a stronger model live in the [worker policy template](references/worker-policy-template.md), which creates your workspace's `worker-policy.md`. Keeping one list gives us fewer opportunities to disagree with ourselves. It also spells out which configurations are reserved for the final review of a complex plan.
 
