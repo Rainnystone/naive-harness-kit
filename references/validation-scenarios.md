@@ -116,7 +116,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 ### C9. Executable task contract
 
-**Expected:** Every implementation-plan task adds `Delivers`, `Blocked by`, and `Worker class` (`mechanical`, `standard`, or `judgment`). It delivers one observable, independently acceptable result with one coherent acceptance result and a complete implementation-and-verification loop in one fresh implementer context, one reviewer gate, and one independent return. A task may contain multiple necessary TDD cycles. Split genuinely independent results, judgments, or ownership boundaries; keep one transaction, permission decision, or recovery path together, and keep supporting setup, tests, configuration, and documentation with the result they enable.
+**Expected:** Default one Superpowers Task is one Module: related work with responsibility, prerequisites, interfaces, and complete acceptance. It retains `Delivers`, `Blocked by`, `Worker class`, Files, Interfaces, and concrete internal steps. One synthetic export module keeps parser code, tests, configuration, migration, and docs together; internal mechanical edits remain with its owner. Whole modules use standard or judgment. Split only at unrelated outcomes, distinct authority, unresolved cross-module dependencies, or scope one implementer/reviewer cannot reliably assess. File/commit counts, elapsed time, and separately testable internal outputs alone do not split it. Wide migrations preserve expand → migrate batches → contract and explicit integration when batches cannot stay green independently. NHK sizing/routing/reuse/timing override conflicting generic workflow defaults without replacing Superpowers test or review prompts.
 
 ### C10. Superpowers task-brief compatibility
 
@@ -154,19 +154,19 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** A packet is clear low-risk work, an ordinary bounded implementation, or architecture/high-uncertainty work. In one run, the preferred selected-band configuration is unavailable.
 
-**Expected:** The policy's exact approved Codex catalog supplies unordered task-fit choices for each band. NHK starts in the fitting band without a mandatory Band 1 trial, chooses a same-band supported substitute when possible, and reports whole-band unavailability as availability rather than capability failure. It repairs oversizing or missing context first; only evidence that a correctly sized packet is capability-limited permits escalation from Band 1 to Band 2. Band 2 contains only GPT-6 Astra medium and is the ordinary ceiling, including properly scoped difficult work. If it cannot converge, enter execution recovery. If it is unavailable, report that limitation without substituting Astra xhigh/max.
+**Expected:** Exact unordered catalog membership remains Band 1 (GPT-6 Astra low and GPT-5.6 Luna max) and Band 2 (GPT-6 Astra medium). A synthetic export module, including internal debugging/tests/integration and first independent review, uses medium even when small. A standalone deterministic low-risk identifier conversion may use Band 1. Roles replace generic escalation: medium non-convergence enters recovery; medium unavailability is reported without module downgrade or reserved-preset fallback. Band 1 substitution stays within the role permission. Correct catalog text plus an extra whole-module low/Luna authorization fails source and final validation.
 
 ### D4. Review gates and special final-review reservation
 
 **Setup:** One task finishes, then a complex Superpowers plan reaches whole-change final review.
 
-**Expected:** The task receives one independent read-only reviewer with separate spec-compliance and task-quality verdicts; either missing or failed verdict blocks completion, and self-review does not replace it. Retaining the correct reservation and appending an ordinary-work authorization must fail deterministic validation. Named reserved presets belong in the reservation, with only the explicit “Do not use [preset] for ordinary implementation.” prohibition also accepted; other role references use the reservation without repeating model names. The checker enforces this bounded declaration format, not arbitrary prose semantics. The special GPT-6 Astra xhigh and GPT-6 Astra max configurations are limited to whole-change final review of a complex Superpowers plan, never ordinary implementation, debugging, recovery, post-review fixes, or scoped re-review.
+**Expected:** The task receives one independent read-only reviewer with separate spec-compliance and task-quality verdicts; either missing or failed verdict blocks completion, and self-review does not replace it. Retaining the correct reservation and appending an ordinary-work authorization must fail deterministic validation. Named reserved presets belong in the reservation, with only the explicit “Do not use [preset] for ordinary implementation.” prohibition also accepted; other role references use the reservation without repeating model names. The checker enforces this bounded declaration format, not arbitrary prose semantics. Active preambles are included in source and final conflict scans. Only exact catalog rows in Codex Routing are exempt; a Band-prefixed authorization in another section remains subject to conflict checks. Commented or fenced examples remain inactive. The special GPT-6 Astra xhigh and GPT-6 Astra max configurations are limited to whole-change final review of a complex Superpowers plan, never ordinary implementation, debugging, recovery, post-review fixes, or scoped re-review.
 
 ### D5. Initial-review route and upstream evidence
 
-**Setup:** A clear small low-risk change needs its initial review, then a low-risk scoped re-review is proposed. The reviewer receives a report, test evidence, fixed BASE and HEAD revisions, and binding constraints.
+**Setup:** A standalone mechanical change needs its initial review, then a low-risk scoped re-review is proposed. The reviewer receives a report, test evidence, fixed BASE and HEAD revisions, and binding constraints.
 
-**Expected:** The clear low-risk initial review may use GPT-6 Astra low (UI: Light); other initial reviews use the ordinary Band 2 route. GPT-5.6 Luna may perform only the low-risk scoped re-review and never the initial task review. The reviewer uses the applicable upstream task-reviewer, re-review, or final-review prompt rather than a copied NHK prompt. It checks the implementer's claims against the fixed diff and test output.
+**Expected:** The standalone mechanical initial review may use GPT-6 Astra low (UI: Light); other initial reviews use the ordinary Band 2 route. GPT-5.6 Luna may perform only the low-risk scoped re-review and never the initial task review. The reviewer uses the applicable upstream task-reviewer, re-review, or final-review prompt rather than a copied NHK prompt. It checks the implementer's claims against the fixed diff and test output.
 
 ### D6. Scoped re-review and cannot-verify gate
 
@@ -182,9 +182,29 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 ### D7a. Uninterrupted SDD work and responsive exceptions
 
-**Setup:** A worker has just been dispatched or resumed. A wait tool returns after half a minute without a completion event; later the worker asks a question. A separate run remains quiet for five minutes.
+**Setup:** A worker has just been dispatched or resumed. A wait tool returns after half a minute without a completion event; later the worker asks a question. A separate run remains quiet for thirty minutes.
 
-**Expected:** Generated AGENTS and standalone CLAUDE carry the same minimum five-minute interval after dispatch/resumption and between unsolicited progress checks. A wait-tool return or silence alone does not prompt a check-in. Worker-initiated communication, user instructions, or concrete problems receive immediate responses. The interval is not a task timeout or a reason to interrupt or replace the worker; thin CLAUDE inherits the rule through AGENTS. Static checks verify the clause and budgets, not real agent timing compliance.
+**Expected:** Both canonical templates require at least 1800 seconds after dispatch/resumption and between unsolicited progress checks. Prefer longer event waits within tool limits and higher-priority instructions, not deliberately frequent empty short polls. Completion, questions, concrete failures, and user messages remain immediate. A wait return or silence alone does not justify checks, reminders, interruption, replacement, or duplicate investigation. The interval is no timeout, mandatory polling schedule, cache TTL, or runtime change; shorter generic workflow cadences do not override it. Thin CLAUDE inherits through AGENTS. Source/final checks reject the old cadence, forced replacement at the interval, and checks triggered by empty waits; inactive or wrong-section declarations cannot satisfy the contract. Unrelated project timing facts remain valid. Static checks do not prove live 30-minute compliance or quota savings.
+
+### D7b. Repairs reuse context within bounded roles
+
+**Setup:** An export module review finds two deterministic mapping mistakes and one unresolved ownership decision.
+
+**Expected:** Ordinary fixes prefer the original implementer; scoped re-review prefers the original independent reviewer. The two mapping fixes may use Band 1 only when cause, intended behavior, approach, impact, and verification are clear without design/cross-module judgment. The ownership decision stays with the original module owner or medium. Small line count and reviewer origin do not make it mechanical. Band 1 permission never requires a new worker. A cheaper fresh worker needs a worthwhile self-contained handoff; batch the suitable findings. Appending judgment-bearing mechanical permission fails validation.
+
+### D7c. Review consolidation preserves scope and recovery bounds
+
+**Setup:** One non-complex export module passes specification and quality review at fixed BASE/HEAD with complete evidence. Compare a multi-module plan, a complex plan, changed HEAD, and newly discovered evidence.
+
+**Expected:** Only the single-module non-complex plan with all requirements, changes, evidence, and identical final scope/version can reuse the passed module review as final review. The other cases retain whole-change review or require re-evaluation; a stale approval cannot close them. Each module has one initial independent read-only reviewer; no internal-step reviewers. Scoped re-review addresses original findings and fix regressions, not an unlimited fresh review. Resolve cannot-verify before completion. Consolidation never resets or extends module/gap counts, recovery, or the final fix-wave bounds. Additional conflicting consolidation declarations fail source/final validation.
+
+### D7d. Aliases and preserved ordinary routing decisions
+
+**Setup:** A valid worker policy adds ordinary-work authorization through Extra High, or a planning guide authorizes mechanical workers for whole modules. A separate synthetic billing-module decision explicitly permits a lower ordinary preset. A helper progress check is scheduled every five minutes outside the orchestration section.
+
+**Expected:** Source/final checks reject active routing conflicts using the declared Light/Extra High aliases and module worker-class permissions, while the canonical mapping and inactive examples remain valid. Helper progress/status/lifecycle timing is checked even outside Subagents and Packets; unrelated HTTP/helper-function timeout facts and immediate questions/failures remain valid. Direct planning-template assembly adapts only the three right-hand placeholders; the active fields pass without stripping any fence. Fenced/commented fields still cannot satisfy the required active contract.
+
+**Exception record:** Preserve the confirmed billing decision as one active `Human routing exception:` JSON bullet in Codex Routing, with exactly target, scope, role, preset, and approval strings. It names one packet/module, a non-root relative path, one supported ordinary role, an ordinary catalog preset, and a specific file-anchor or HTTPS-fragment decision reference. The static check verifies this structure, not the authenticity of consent; bootstrap/upkeep must confirm the existing human decision. The normal clauses/catalogs remain required. Missing/duplicate/extra fields, broad or wildcard scopes/targets, wrong headings/files, duplicate target/scope/role records, trailing authorizations, reserved presets, Ultra, recursion and Luna initial reviews are rejected. A valid record exempts only itself from ordinary conflict scanning; neighboring unrecorded authorizations still fail. Inactive record examples do not grant permission. Worker classes, review gates, budgets and separate special approval boundaries remain unchanged.
 
 ### D8. Ultra and recursion are separate approvals
 
@@ -247,6 +267,12 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 **Setup:** The installed bundle has the two-band rules, while a complete workspace retains the former three-band worker policy and Band 3 diagnosis. Project paths and document structure are still correct. One project fact and one explicitly authorized exception must remain.
 
 **Expected:** An update check or explicit upkeep request routes to upkeep; missing foundation files still route to bootstrap first. Every upkeep compares the canonical instruction, all five companions, and archive index against current installed references, not only visible structural drift. It repairs NHK-owned rules, preserves project facts and approved exceptions, and reports unresolved conflicts. Previously read references can be reused only when unchanged. It does not fetch updates, rewrite whole documents, or introduce version tracking. Completion accounts for every compared surface as aligned, explicitly excepted, or unresolved.
+
+### E5. Module policy migration preserves active work
+
+**Setup:** A complete synthetic workspace has older small-task routing, an active plan with stable Task identifiers, and a completed task awaiting integration.
+
+**Expected:** Bootstrap/upkeep reconcile the planning, worker, and canonical waiting contracts while preserving correct facts and human exceptions. They retain task identifiers and progress; a rule update does not automatically regroup running plans or redispatch completed work. Generated contract clauses stay active in their required sections. Source and final validators recognize declared clauses and bounded additional routing conflicts, not arbitrary natural-language equivalence or live agent behavior.
 
 ## F. Archive Transition
 

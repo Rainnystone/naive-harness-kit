@@ -32,6 +32,11 @@ COMPANION_PATHS = (
     "documentation-governance.md",
 )
 COMPANION_FINAL_CONTRACTS = {
+    "implementation-planning-template.md": (
+        80,
+        "Implementation Planning",
+        ("Workflow Compatibility", "Plan Layers", "Task Contract", "Dependencies and Execution", "Wide Changes", "Plan Review"),
+    ),
     "worker-policy-template.md": (
         100,
         "Worker Policy",
@@ -255,8 +260,8 @@ class InstructionExampleTests(unittest.TestCase):
                     self.assertNotIn("Replace this guidance", example)
                     self.assertNotIn("Write two to four bullets", example)
                     self.assertLessEqual(max(word_count(line) for line in lines), 32)
-                    self.assertIn('During subagent-driven development, wait at least 300 seconds after dispatch or resumption and between unsolicited progress checks.', " ".join(example.split()))
-                    self.assertIn('Worker-initiated messages, user instructions, or concrete problems warrant immediate responses; wait-tool returns and silence alone do not.', " ".join(example.split()))
+                    self.assertIn('In SDD, wait at least 1800 seconds after dispatch or resumption and between unsolicited progress checks.', " ".join(example.split()))
+                    self.assertIn('Respond immediately: completion, questions, failures, user messages. Wait returns or silence alone never justify checks, reminders, interruption, replacement, or duplicate investigation.', " ".join(example.split()))
                     for path in COMPANION_PATHS:
                         self.assertIn(f"`{path}`", example)
 

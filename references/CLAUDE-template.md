@@ -73,14 +73,15 @@ Include only a real safety boundary that cannot fit in Project Map. Route task-s
 [[FINAL_VERBATIM:BEGIN]]
 ## Subagents and Packets
 
-- Dispatch only an independent, reviewable packet and use the fewest workers needed.
-- Apply `worker-policy.md`; reuse unchanged loaded rules.
-- Keep each dispatch brief self-contained with its binding constraints, acceptance, authority, verification, and return contract.
-- Run writes sequentially when files, generated artifacts, mutable state, services, or verification resources overlap.
-- During subagent-driven development, wait at least 300 seconds after dispatch or resumption and between unsolicited progress checks.
-  Worker-initiated messages, user instructions, or concrete problems warrant immediate responses; wait-tool returns and silence alone do not.
-- Check actual worker progress and lifecycle before acting on a timeout or replacing a worker.
-- The main thread owns integration, cross-packet verification, and the final result.
+- Use independent, reviewable packets and the fewest workers.
+- Apply `worker-policy.md`; reuse unchanged rules.
+- Keep each brief self-contained.
+- Run writes sequentially across overlapping files, artifacts, state, services, and verification resources.
+- In SDD, wait at least 1800 seconds after dispatch or resumption and between unsolicited progress checks.
+- Prefer long event waits within tool limits and higher-priority instructions; avoid empty short polls. NHK overrides shorter workflow cadences.
+- Respond immediately: completion, questions, failures, user messages. Wait returns or silence alone never justify checks, reminders, interruption, replacement, or duplicate investigation.
+- No timeout, polling schedule, cache TTL, or runtime changes; check progress and lifecycle before replacement.
+- The main thread owns integration, verification, delivery.
 [[FINAL_VERBATIM:END]]
 
 [[FINAL_VERBATIM:BEGIN]]
