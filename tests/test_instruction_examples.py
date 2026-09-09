@@ -255,6 +255,8 @@ class InstructionExampleTests(unittest.TestCase):
                     self.assertNotIn("Replace this guidance", example)
                     self.assertNotIn("Write two to four bullets", example)
                     self.assertLessEqual(max(word_count(line) for line in lines), 32)
+                    self.assertIn('During subagent-driven development, wait at least 300 seconds after dispatch or resumption and between unsolicited progress checks.', " ".join(example.split()))
+                    self.assertIn('Worker-initiated messages, user instructions, or concrete problems warrant immediate responses; wait-tool returns and silence alone do not.', " ".join(example.split()))
                     for path in COMPANION_PATHS:
                         self.assertIn(f"`{path}`", example)
 

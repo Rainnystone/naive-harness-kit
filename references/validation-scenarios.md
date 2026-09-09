@@ -180,6 +180,12 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Expected:** Every fresh Codex worker uses `fork_turns: none`. The initial brief and any fresh replacement carry a self-contained objective, scope, read/write authority, acceptance, verification, forbidden actions, expected return, selected configuration, and binding interfaces/constraints through brief, report, and fixed diff handoff. Normal fixes resume the original implementer. Implementers remain sequential; read-only parallel work is allowed only when ownership, state, artifacts, services, and verification resources are independent. The main thread checks real progress and lifecycle before treating a timeout as a blocker, and owns integration and the final result.
 
+### D7a. Uninterrupted SDD work and responsive exceptions
+
+**Setup:** A worker has just been dispatched or resumed. A wait tool returns after half a minute without a completion event; later the worker asks a question. A separate run remains quiet for five minutes.
+
+**Expected:** Generated AGENTS and standalone CLAUDE carry the same minimum five-minute interval after dispatch/resumption and between unsolicited progress checks. A wait-tool return or silence alone does not prompt a check-in. Worker-initiated communication, user instructions, or concrete problems receive immediate responses. The interval is not a task timeout or a reason to interrupt or replace the worker; thin CLAUDE inherits the rule through AGENTS. Static checks verify the clause and budgets, not real agent timing compliance.
+
 ### D8. Ultra and recursion are separate approvals
 
 **Setup:** A worker request uses Ultra without current-run named-packet approval; a separate request has recursion approval but no Ultra approval; a third has Ultra approval but no recursion approval.

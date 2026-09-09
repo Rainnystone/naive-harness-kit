@@ -638,6 +638,31 @@ class SourceValidationTests(ValidatorTestCase):
                     self.assertEqual(result.returncode, 1)
                     self.assertIn("seven-surface foundation", result.stdout.lower())
 
+    def test_sdd_check_interval_and_exceptions_are_required(self) -> None:
+        for old, new in (
+            ("at least 300 seconds", "at least 30 seconds"),
+            ("Worker-initiated messages, user instructions, or concrete problems warrant immediate responses", "All communication must wait"),
+            ("wait-tool returns and silence alone do not", "every wait-tool return warrants a progress check"),
+        ):
+            with self.subTest(old=old):
+                root = self.make_source_fixture()
+                for template in ("AGENTS-template.md", "CLAUDE-template.md"):
+                    path = root / "references" / template
+                    content = path.read_text()
+                    self.assertIn(old, content)
+                    path.write_text(content.replace(old, new, 1))
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("shared worker contract", result.stdout)
+
+    def test_check_interval_does_not_allow_fixed_worker_timeouts(self) -> None:
+        root = self.make_source_fixture()
+        path = root / "references" / "AGENTS-template.md"
+        path.write_text(path.read_text() + "\nReplace a worker after 300 seconds.\n")
+        result = run_cli("--root", root)
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("fixed timeout", result.stdout)
+
     def test_forbidden_legacy_rule_fails(self) -> None:
         root = self.make_source_fixture()
         path = root / "welcome-to-nhk" / "SKILL.md"

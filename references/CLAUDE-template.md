@@ -74,9 +74,11 @@ Include only a real safety boundary that cannot fit in Project Map. Route task-s
 ## Subagents and Packets
 
 - Dispatch only an independent, reviewable packet and use the fewest workers needed.
-- Before dispatch or review, apply `worker-policy.md`; reuse unchanged rules already loaded for the current orchestration run.
+- Apply `worker-policy.md`; reuse unchanged loaded rules.
 - Keep each dispatch brief self-contained with its binding constraints, acceptance, authority, verification, and return contract.
 - Run writes sequentially when files, generated artifacts, mutable state, services, or verification resources overlap.
+- During subagent-driven development, wait at least 300 seconds after dispatch or resumption and between unsolicited progress checks.
+  Worker-initiated messages, user instructions, or concrete problems warrant immediate responses; wait-tool returns and silence alone do not.
 - Check actual worker progress and lifecycle before acting on a timeout or replacing a worker.
 - The main thread owns integration, cross-packet verification, and the final result.
 [[FINAL_VERBATIM:END]]
@@ -116,7 +118,6 @@ Replace this block with real targeted and final verification commands. Include o
 
 - Preserve unrelated human changes and use destructive Git operations only with explicit authorization.
 - Record only repository policies that exist; omit unknown branch, commit, review, merge, or release conventions.
-- Keep active plans and task tracking current as work completes.
 - Report the result, verification, remaining uncertainty, and any action still needed from the human.
 [[FINAL_VERBATIM:END]]
 

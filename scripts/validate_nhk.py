@@ -72,6 +72,9 @@ REFERENCES = (
     "validation-scenarios.md",
 )
 
+SDD_PROGRESS_CHECK_RULE = 'During subagent-driven development, wait at least 300 seconds after dispatch or resumption and between unsolicited progress checks.'
+SDD_PROGRESS_CHECK_EXCEPTIONS = 'Worker-initiated messages, user instructions, or concrete problems warrant immediate responses; wait-tool returns and silence alone do not.'
+
 FINAL_HEADINGS = (
     "Project Map",
     "Execution Rules",
@@ -902,10 +905,12 @@ def validate_shared_templates(
     worker_contract_tokens = (
         "independent, reviewable packet",
         "fewest workers",
-        "apply `worker-policy.md`",
+        "Apply `worker-policy.md`",
         "brief self-contained",
         "Run writes sequentially",
         "progress and lifecycle",
+        SDD_PROGRESS_CHECK_RULE,
+        SDD_PROGRESS_CHECK_EXCEPTIONS,
         "main thread owns integration",
     )
     for token in worker_contract_tokens:
@@ -1221,7 +1226,14 @@ def validate_forbidden_legacy(root: Path, issues: list[str]) -> None:
                 f"{model_matches[0].group(0)}"
             )
         for label, pattern in patterns:
-            match = pattern.search(text)
+            scan_text = text
+            if label == "fixed timeout" and relative in {
+                Path("references/AGENTS-template.md"),
+                Path("references/CLAUDE-template.md"),
+            }:
+                # The approved check-in interval is not a worker timeout.
+                scan_text = scan_text.replace(SDD_PROGRESS_CHECK_RULE, "")
+            match = pattern.search(scan_text)
             if match:
                 issues.append(f"{relative}: forbidden {label}: {match.group(0)}")
 
