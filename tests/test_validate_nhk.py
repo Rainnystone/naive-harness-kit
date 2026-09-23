@@ -37,6 +37,7 @@ REFERENCES = (
     "execution-recovery-template.md",
     "documentation-governance-template.md",
     "archive-readme-template.md",
+    "claude-agents-template.md",
     "dependency-setup.md",
     "validation-scenarios.md",
 )
@@ -83,8 +84,9 @@ LEGACY_CODEX_PRESET_LADDER = (
 )
 
 CODEX_PRESET_BAND_LINES = (
-    "Band 1: GPT-5.6 Luna max; GPT-6 Astra low.",
+    "Band 1: GPT-6 Luna max.",
     "Band 2: GPT-6 Astra medium.",
+    "Band 3: GPT-6 Astra xhigh.",
 )
 
 COMPANION_ROUTES = (
@@ -185,7 +187,7 @@ def human_routing_exception(**overrides: str) -> str:
         "target": "billing-module",
         "scope": "src/billing/",
         "role": "module-implementation",
-        "preset": "GPT-6 Astra low",
+        "preset": "GPT-6 Astra xhigh",
         "approval": "decisions/billing.md#low-route",
     }
     record.update(overrides)
@@ -205,9 +207,9 @@ def literal_routing_record_cases():
     record = records[0]
     yield record, "Whole modules may use GPT-6 Astra low.", None, 1
     yield record, "Use GPT-6 Astra xhigh for ordinary implementation.", None, 1
-    yield record, "", ("GPT-5.6 Luna max", "GPT-5.6 Luna high"), 1
+    yield record, "", ("GPT-6 Luna max", "GPT-6 Luna high"), 1
     yield human_routing_exception(approval="decisions/gpt-6-astra-low.md"), "", None, 1
-    yield human_routing_exception(preset="GPT-6 Astra xhigh"), "", None, 1
+    yield human_routing_exception(preset="GPT-6 Astra max"), "", None, 1
 
 
 def worker_policy_text() -> str:
@@ -685,7 +687,7 @@ class SourceValidationTests(ValidatorTestCase):
                 result = run_cli("--root", root)
                 self.assertEqual(result.returncode, 1, result.stdout)
         for filename, clause in (
-            ("worker-policy-template.md", "Whole module implementation, internal debugging, tests, integration, and initial independent module review use GPT-6 Astra medium (Band 2)."),
+            ("worker-policy-template.md", "Default module implementation, internal debugging, tests, and integration to Band 2."),
             ("implementation-planning-template.md", "Group implementation, tests, configuration, migration, and documentation for the same capability and working context."),
         ):
             for inactive in ("<!-- " + clause + " -->", "```md\n" + clause + "\n```"):
@@ -853,6 +855,45 @@ class SourceValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("five-round", result.stdout.lower())
 
+    def test_readme_main_thread_guidance_removal_fails(self) -> None:
+        cases = (("README.md",), ("README_CN.md",), ("README.md", "README_CN.md"))
+        for names in cases:
+            with self.subTest(names=names):
+                root = self.make_source_fixture()
+                for name in names:
+                    path = root / name
+                    paragraphs = path.read_text(encoding="utf-8").split("\n\n")
+                    guidance = [p for p in paragraphs if "GPT-6 Sol" in p]
+                    self.assertEqual(len(guidance), 1)
+                    paragraphs.remove(guidance[0])
+                    path.write_text("\n\n".join(paragraphs), encoding="utf-8")
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                for name in names:
+                    self.assertIn(f"{name}: missing required fact", result.stdout)
+
+    def test_readme_main_thread_guidance_drift_fails(self) -> None:
+        cases = (
+            ("README.md", "we suggest GPT-6 Sol", "we suggest another available model"),
+            ("README.md", "human-facing suggestion only", "mandatory main-thread policy"),
+            ("README.md", "you choose the main-thread model and effort", "NHK chooses the main-thread model and effort"),
+            ("README.md", "NHK worker permissions do not depend on that choice", "NHK worker permissions depend on that choice"),
+            ("README_CN.md", "建议考虑 GPT-6 Sol", "建议考虑其他可用型号"),
+            ("README_CN.md", "这只是给使用者的建议", "这是强制的主线程规则"),
+            ("README_CN.md", "主线程型号和 effort 由你选择", "主线程型号和 effort 由 NHK 选择"),
+            ("README_CN.md", "NHK 的 worker 权限不依赖该选择", "NHK 的 worker 权限依赖该选择"),
+        )
+        for name, required, replacement in cases:
+            with self.subTest(name=name, required=required):
+                root = self.make_source_fixture()
+                path = root / name
+                content = path.read_text(encoding="utf-8")
+                self.assertIn(required, content)
+                path.write_text(content.replace(required, replacement, 1), encoding="utf-8")
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn(f"{name}: missing required fact", result.stdout)
+
     def test_readme_routing_and_claude_loading_drift_fails(self) -> None:
         root = self.make_source_fixture()
         replacements = (
@@ -871,15 +912,19 @@ class SourceValidationTests(ValidatorTestCase):
 
     def test_readme_planning_and_worker_policy_drift_fails(self) -> None:
         cases = (
-            ("README.md", "ten controlled references", "several references"),
+            ("README.md", "eleven controlled references", "several references"),
+            ("README.md", "Every Claude helper runs Opus", "Claude helpers use a model"),
+            ("README.md", "Claude Code main thread, we suggest Opus", "Claude Code main thread, pick anything"),
             ("README.md", "seven required pieces", "the foundation"),
             ("README.md", "Superpowers overlay", "planning helper"),
             (
                 "README.md",
-                "two practical Codex bands",
+                "three practical Codex bands",
                 "several worker options",
             ),
-            ("README_CN.md", "十个受控 reference", "几份 reference"),
+            ("README_CN.md", "十一个受控 reference", "几份 reference"),
+            ("README_CN.md", "Claude 的帮手全部使用 Opus", "Claude 的帮手随便选"),
+            ("README_CN.md", "Claude Code 主线程，建议使用 Opus", "Claude Code 主线程随意"),
             ("README_CN.md", "七项基础内容", "基础文档"),
             ("README_CN.md", "Superpowers overlay", "规划辅助"),
         )
@@ -896,6 +941,54 @@ class SourceValidationTests(ValidatorTestCase):
                 result = run_cli("--root", root)
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(required, result.stdout)
+
+    def test_claude_agents_template_contract(self) -> None:
+        mutations = (
+            ("model: opus\neffort: medium", "model: inherit\neffort: medium", "model: opus"),
+            ("effort: low", "effort: max", "effort"),
+            ("effort: high", "effort: low", "effort"),
+            ("disallowedTools: Write, Edit, NotebookEdit\n", "", "disallowedTools"),
+            (
+                "description: NHK standard band worker.",
+                "description: NHK standard band worker. Use proactively.",
+                "proactive",
+            ),
+            ("name: nhk-deep", "name: nhk-heavy", "nhk-deep"),
+            ("## Shared Body", "## Shared Body\n\nPrefer Sonnet when it is cheaper.", "Sonnet"),
+        )
+        for required, replacement, message in mutations:
+            with self.subTest(required=required, replacement=replacement):
+                root = self.make_source_fixture()
+                path = root / "references" / "claude-agents-template.md"
+                text = path.read_text(encoding="utf-8")
+                self.assertIn(required, text)
+                path.write_text(text.replace(required, replacement, 1), encoding="utf-8")
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("claude-agents-template.md", result.stdout)
+                self.assertIn(message.lower(), result.stdout.lower())
+
+    def test_missing_claude_agents_template_fails(self) -> None:
+        root = self.make_source_fixture()
+        (root / "references" / "claude-agents-template.md").unlink()
+        result = run_cli("--root", root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("claude-agents-template.md", result.stdout)
+
+    def test_skills_route_claude_agent_definitions(self) -> None:
+        for skill in ("nhk-bootstrap", "nhk-upkeep"):
+            with self.subTest(skill=skill):
+                root = self.make_source_fixture()
+                path = root / skill / "SKILL.md"
+                text = path.read_text(encoding="utf-8")
+                self.assertIn("../references/claude-agents-template.md", text)
+                path.write_text(
+                    text.replace("../references/claude-agents-template.md", "the agent notes"),
+                    encoding="utf-8",
+                )
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("claude-agents-template.md", result.stdout)
 
 
 class InstallValidationTests(ValidatorTestCase):
@@ -1118,6 +1211,8 @@ class FinalValidationTests(ValidatorTestCase):
 
     def test_review_final_alias_and_class_conflicts(self) -> None:
         cases = (
+            ("worker-policy", worker_policy_text(), "Use max for ordinary implementation."),
+            ("worker-policy", worker_policy_text(), "Use xhigh for ordinary implementation."),
             ("worker-policy", worker_policy_text(), "Use Extra High for ordinary implementation."),
             ("worker-policy", worker_policy_text(), "Use Light for module implementation."),
             ("worker-policy", worker_policy_text(), "Use Light."),
@@ -1200,10 +1295,10 @@ class FinalValidationTests(ValidatorTestCase):
             human_routing_exception(scope="src/*"),
             human_routing_exception(approval="approved"),
             human_routing_exception(role="all"),
-            human_routing_exception(preset="GPT-6 Astra xhigh"),
+            human_routing_exception(preset="GPT-6 Astra max"),
             human_routing_exception(preset="Ultra"),
             human_routing_exception(role="recursive-delegation"),
-            human_routing_exception(role="initial-module-review", preset="GPT-5.6 Luna max"),
+            human_routing_exception(role="initial-module-review", preset="GPT-6 Luna max"),
             human_routing_exception() + " Whole modules may use GPT-6 Astra low.",
         )
         for record in records:
@@ -1223,7 +1318,7 @@ class FinalValidationTests(ValidatorTestCase):
             human_routing_exception(target="计费模块", scope="src/计费/", approval="decisions/计费.md#批准"),
             human_routing_exception(target="billing-project"),
             human_routing_exception(role="initial-module-review"),
-            human_routing_exception(role="scoped-re-review", preset="GPT-5.6 Luna max"),
+            human_routing_exception(role="scoped-re-review", preset="GPT-6 Luna max"),
         ):
             text = worker_policy_text().replace("## Codex Routing", "## Codex Routing\n" + record, 1)
             result = run_cli("--final", self.write_final(text), "--kind", "worker-policy")
@@ -1281,7 +1376,7 @@ class FinalValidationTests(ValidatorTestCase):
     def test_module_contract_requires_active_correct_sections(self) -> None:
         cases = (
             ("worker-policy", worker_policy_text(), "Codex Routing", "Claude Routing",
-             "Whole module implementation, internal debugging, tests, integration, and initial independent module review use GPT-6 Astra medium (Band 2)."),
+             "Default module implementation, internal debugging, tests, and integration to Band 2."),
             ("planning-guide", planning_guide_text(), "Plan Layers", "Plan Review",
              "A Module is related work with a defined responsibility, prerequisites, interfaces, and complete acceptance; it need not match a file or directory. Default one Superpowers Task is one Module; independently dispatched mechanical work is the explicit exception."),
         )
@@ -1329,7 +1424,7 @@ class FinalValidationTests(ValidatorTestCase):
     def test_module_routing_rejects_additive_authorizations(self) -> None:
         for clause in (
             "Whole modules may use GPT-6 Astra low.",
-            "Module implementation may use GPT-5.6 Luna max.",
+            "Module implementation may use GPT-6 Luna max.",
             "Mechanical fixes may include design judgment and use Band 1.",
             "Initial module reviews may use Band 1.",
         ):
@@ -1364,14 +1459,38 @@ class FinalValidationTests(ValidatorTestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertIn("headings", result.stdout.lower())
 
-    def test_worker_policy_accepts_reordered_exact_band_membership(self) -> None:
-        content = worker_policy_text().replace(
-            "Band 1: GPT-5.6 Luna max; GPT-6 Astra low.",
-            "Band 1: GPT-6 Astra low; GPT-5.6 Luna max.",
-            1,
-        )
-        path = self.write_final(content)
-        result = run_cli("--final", path, "--kind", "worker-policy")
+    def test_gpt6_routing_defaults_to_medium_with_bounded_xhigh(self) -> None:
+        content = worker_policy_text()
+        for clause in (
+            "Band 1: GPT-6 Luna max.",
+            "Band 2: GPT-6 Astra medium.",
+            "Band 3: GPT-6 Astra xhigh.",
+            "Default module implementation, internal debugging, tests, and integration to Band 2.",
+            "Select Band 3 only for a concrete reasoning difficulty remaining after sizing and context checks, or demonstrated Band 2 capability limits.",
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(clause, content)
+                mutated = content.replace(clause, "", 1)
+                result = run_cli("--final", self.write_final(mutated), "--kind", "worker-policy")
+                self.assertEqual(result.returncode, 1, result.stdout)
+
+    def test_planning_requires_sizing_before_capability_and_no_fragmentation(self) -> None:
+        content = planning_guide_text()
+        for clause in (
+            "Before increasing capability, separate unrelated decisions and resolve missing interfaces or context; preserve tightly coupled logic and its verification.",
+            "When many tasks need higher capability, recheck boundaries and shared constraints; use no fixed quota and keep irreducible difficult modules intact.",
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(clause, content)
+                result = run_cli("--final", self.write_final(content.replace(clause, "", 1)), "--kind", "planning-guide")
+                self.assertEqual(result.returncode, 1, result.stdout)
+
+    def test_worker_policy_accepts_reordered_exact_band_rows(self) -> None:
+        content = worker_policy_text()
+        original = "\n- ".join(CODEX_PRESET_BAND_LINES)
+        self.assertIn(original, content)
+        content = content.replace(original, "\n- ".join(reversed(CODEX_PRESET_BAND_LINES)), 1)
+        result = run_cli("--final", self.write_final(content), "--kind", "worker-policy")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_worker_policy_rejects_wrong_missing_extra_or_duplicate_presets(self) -> None:
@@ -1384,7 +1503,7 @@ class FinalValidationTests(ValidatorTestCase):
             valid.replace("GPT-6 Astra medium", "GPT-5.5 xhigh"),
             valid.replace("GPT-6 Astra medium", ""),
             valid.replace("GPT-6 Astra medium", "GPT-5.6 Sol medium"),
-            valid.replace("GPT-6 Astra medium", "GPT-6 Astra medium; GPT-5.6 Luna max"),
+            valid.replace("GPT-6 Astra medium", "GPT-6 Astra medium; GPT-6 Luna max"),
             valid.replace("GPT-6 Astra medium", "GPT-6 Astra medium; GPT-6 Astra medium"),
             valid + "\n- Band 3: GPT-6 Astra xhigh.",
         )
@@ -1404,12 +1523,12 @@ class FinalValidationTests(ValidatorTestCase):
                 "Review Gates",
             ),
             (
-                "GPT-5.6 Luna may perform low-risk scoped re-review, never an initial task review.",
-                "GPT-5.6 Luna may perform any initial task review.",
+                "GPT-6 Luna may perform low-risk scoped re-review, never an initial task review.",
+                "GPT-6 Luna may perform any initial task review.",
                 "Codex Routing",
             ),
             (
-                "GPT-6 Astra xhigh and GPT-6 Astra max are reserved for whole-change final review of a complex Superpowers plan, not ordinary implementation, debugging, or recovery.",
+                "Independent diagnosis and complex whole-change final review use Band 3, or GPT-6 Astra max when deeper reasoning is needed. Max is limited to these read-only roles; after a failed Band 3 implementation it may be selected directly for the one independent diagnosis.",
                 "GPT-6 Astra max may perform ordinary implementation and recovery.",
                 "Codex Routing",
             ),
@@ -1433,36 +1552,35 @@ class FinalValidationTests(ValidatorTestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(section, result.stdout)
 
-    def test_two_band_routing_rejects_old_ceiling_and_special_fallback(self) -> None:
+    def test_three_band_routing_rejects_default_ceiling_and_fallback_drift(self) -> None:
         mutations = (
-            ("ordinary Band 2 ceiling", "ordinary Band 3 ceiling"),
-            ("Other initial reviews use Band 2.", "Other initial reviews use Band 3."),
-            (
-                "never downgrade a module or use special final-review presets as fallback",
-                "it authorizes Astra xhigh or max when Band 2 is unavailable",
-            ),
+            ("ordinary Band 3 ceiling", "ordinary Band 2 ceiling"),
+            ("Initial independent reviews default to Band 2", "Initial independent reviews default to Band 3"),
+            ("it does not authorize a different band, an older model, or a special-role preset as fallback",
+             "it authorizes Astra max when Band 2 is unavailable"),
+            ("Default module implementation, internal debugging, tests, and integration to Band 2.",
+             "Default module implementation, internal debugging, tests, and integration to Band 3."),
         )
         for required, replacement in mutations:
             with self.subTest(required=required):
                 content = worker_policy_text()
                 self.assertIn(required, content)
-                path = self.write_final(content.replace(required, replacement, 1))
-                result = run_cli("--final", path, "--kind", "worker-policy")
+                result = run_cli("--final", self.write_final(content.replace(required, replacement, 1)), "--kind", "worker-policy")
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                 self.assertIn("Codex Routing", result.stdout)
 
-    def test_recovery_diagnosis_uses_ordinary_band(self) -> None:
-        for replacement in ("Band 3", "GPT-6 Astra xhigh", "GPT-6 Astra max"):
+    def test_recovery_diagnosis_uses_worker_policy_role(self) -> None:
+        route = "using the independent diagnosis role in `worker-policy.md`"
+        for replacement in ("using Band 2", "using Band 3", "using GPT-6 Astra max"):
             with self.subTest(replacement=replacement):
                 content = execution_recovery_text()
-                self.assertIn("Band 2 or Opus", content)
-                path = self.write_final(content.replace("Band 2 or Opus", f"{replacement} or Opus", 1))
-                result = run_cli("--final", path, "--kind", "execution-recovery")
+                self.assertIn(route, content)
+                result = run_cli("--final", self.write_final(content.replace(route, replacement, 1)), "--kind", "execution-recovery")
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                 self.assertIn("Independent Diagnosis", result.stdout)
 
     def test_additive_reserved_routes_fail(self) -> None:
-        for preset in ("GPT-6 Astra xhigh", "GPT-6 Astra max", "gpt-6-astra xhigh"):
+        for preset in ("GPT-6 Astra max", "gpt-6-astra max"):
             for role in ("ordinary implementation", "debugging", "scoped re-review"):
                 with self.subTest(preset=preset, role=role):
                     content = worker_policy_text().replace(
@@ -1474,7 +1592,7 @@ class FinalValidationTests(ValidatorTestCase):
                     self.assertIn("reserved routing", result.stdout)
 
     def test_additive_diagnostic_routes_fail(self) -> None:
-        for route in ("Band 3", "GPT-6 Astra xhigh", "GPT-6 Astra max", "gpt-6-astra max", "Sonnet"):
+        for route in ("Band 3", "GPT-6 Astra xhigh", "GPT-6 Astra max", "gpt-6-astra max", "Sonnet", "max", "xhigh", "Extra High"):
             with self.subTest(route=route):
                 content = execution_recovery_text().replace(
                     "## Recovery and Stop",
@@ -1510,7 +1628,7 @@ class FinalValidationTests(ValidatorTestCase):
             """## Codex Routing
 
 - Do not use GPT-6 Astra max for ordinary implementation.
-- GPT-5.6 Luna max must not perform initial task reviews.
+- GPT-6 Luna max must not perform initial task reviews.
 - Ultra approval never authorizes recursive delegation.""",
             1,
         ).replace(
@@ -1527,6 +1645,9 @@ class FinalValidationTests(ValidatorTestCase):
     def test_worker_policy_rejects_presets_declared_outside_band_lines(self) -> None:
         extras = (
             "GPT-9 Nova max is also approved for ordinary implementation.",
+            "GPT-5.6 Luna max is also approved for ordinary implementation.",
+            "GPT-6 Astra low is also approved for ordinary implementation.",
+            "GPT-6 Sol xhigh is also approved for ordinary implementation.",
             "GPT-5.6 Sol high is also approved for ordinary implementation.",
             "gpt-5.6-sol is also approved for ordinary implementation.",
             "GPT-6 Nova max is also approved for ordinary implementation.",
@@ -1966,6 +2087,41 @@ Read @worker-policy.md before dispatching.
         self.assertEqual(result.returncode, 1)
         self.assertIn("worker-policy.md", result.stdout)
         self.assertNotIn("valid import line", result.stdout)
+
+    def test_claude_routing_is_opus_only_by_band(self) -> None:
+        mutations = (
+            ("Every Claude worker runs Opus.", "Every Claude worker runs Sonnet."),
+            ("Initial reviews start at `nhk-standard`.", "It may also perform initial reviews."),
+            (
+                "Built-in agents also receive `model: opus` explicitly, so Fable is never inherited.",
+                "Built-in agents inherit the main thread model.",
+            ),
+            (
+                "continue that worker with the open items, at most twice.",
+                "continue that worker until it finishes.",
+            ),
+        )
+        for required, replacement in mutations:
+            with self.subTest(required=required):
+                text = worker_policy_text()
+                self.assertIn(required, text)
+                result = run_cli(
+                    "--final", self.write_final(text.replace(required, replacement, 1)),
+                    "--kind", "worker-policy",
+                )
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("Claude Routing", result.stdout)
+
+    def test_claude_routing_rejects_additional_routes(self) -> None:
+        for extra in (
+            "Use Sonnet for ordinary implementation and review.",
+            "Use `nhk-deep` for every module implementation.",
+            "Dispatch `nhk-diagnosis` for ordinary fixes.",
+        ):
+            with self.subTest(extra=extra):
+                content = worker_policy_text().rstrip() + f"\n- {extra}\n"
+                result = run_cli("--final", self.write_final(content), "--kind", "worker-policy")
+                self.assertEqual(result.returncode, 1, result.stdout)
 
 
 class CliContractTests(ValidatorTestCase):

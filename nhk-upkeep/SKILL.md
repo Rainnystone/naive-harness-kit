@@ -15,7 +15,7 @@ Use the handoff's dependency, instruction, topology, and complete-foundation sta
 
 ## Maintenance Pass
 
-On every upkeep run, compare NHK-owned rules against the currently installed reference contracts, even when workspace documents look complete and project facts have not changed. Read the matching canonical instruction template, all five companion templates, and the archive-index template through the paths below. Reuse applicable content already read in this context only when it is unchanged. This comparison uses the installed bundle; upkeep does not fetch or install NHK updates.
+On every upkeep run, compare NHK-owned rules against the currently installed reference contracts, even when workspace documents look complete and project facts have not changed. Read the matching canonical instruction template, all five companion templates, and the archive-index template through the paths below, plus the agent-definition template only when NHK agent definitions exist. Reuse applicable content already read in this context only when it is unchanged. This comparison uses the installed bundle; upkeep does not fetch or install NHK updates.
 
 1. Compare the canonical instruction and thin adapter, if present, against the live workspace and the matching `../references/AGENTS-template.md` or `../references/CLAUDE-template.md`; keep the canonical topology and applicable line budget.
 2. Compare the single Task Routing table in `coding-agent-guide.md` against current routes and `../references/coding-agent-guide-template.md`; keep it at or below 80 lines.
@@ -24,8 +24,9 @@ On every upkeep run, compare NHK-owned rules against the currently installed ref
 5. Compare `execution-recovery.md` against `../references/execution-recovery-template.md`; reconcile diagnosis, recovery, and stop rules within 80 lines.
 6. Compare `documentation-governance.md` against actual document roles and `../references/documentation-governance-template.md`; keep it at or below 100 lines.
 7. Compare `archive/README.md` against existing archived workstreams and `../references/archive-readme-template.md`; keep every index entry resolvable.
-8. Inspect existing implementation plans, task lists, `task_plan.md`, `progress.md`, and `findings.md` as active surfaces, not permanent assumptions.
-9. Repair inaccurate active references and status descriptions, replace any Claude companion `@` import with a literal on-demand path, then verify cross-links and instruction structure.
+8. When `.claude/agents/nhk-*.md` definitions exist, compare them against `../references/claude-agents-template.md` and reconcile their frontmatter and shared body. An absent set stays absent; the human declined or was never offered it.
+9. Inspect existing implementation plans, task lists, `task_plan.md`, `progress.md`, and `findings.md` as active surfaces, not permanent assumptions.
+10. Repair inaccurate active references and status descriptions, replace any Claude companion `@` import with a literal on-demand path, then verify cross-links and instruction structure.
 
 Reconcile module sizing, role-bound implementation/review, worker reuse, review consolidation, and the canonical waiting contract from their owning templates. Preserve declared contract clauses in their required sections so source and generated validation agree; adapt project facts around them. Keep correct facts and explicit human exceptions. Updating rules does not automatically regroup a running plan or redispatch completed work; preserve stable task identifiers and progress when reconciling active surfaces.
 

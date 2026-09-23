@@ -70,6 +70,7 @@ REFERENCES = (
     "execution-recovery-template.md",
     "documentation-governance-template.md",
     "archive-readme-template.md",
+    "claude-agents-template.md",
     "dependency-setup.md",
     "validation-scenarios.md",
 )
@@ -119,6 +120,7 @@ PLAIN_REFERENCE_SOURCE_LIMITS = {
     "execution-recovery-template.md": 140,
     "documentation-governance-template.md": 160,
     "archive-readme-template.md": 40,
+    "claude-agents-template.md": 80,
 }
 
 FINAL_LIMITS = {"simple": 100, "medium": 125, "complex": 150}
@@ -238,12 +240,13 @@ LEGACY_CODEX_PRESET_LADDER = (
 )
 
 CODEX_PRESET_BANDS = (
-    ("GPT-5.6 Luna max", "GPT-6 Astra low"),
+    ("GPT-6 Luna max",),
     ("GPT-6 Astra medium",),
+    ("GPT-6 Astra xhigh",),
 )
-CODEX_RESERVED_DISPLAY_PRESETS = ("GPT-6 Astra xhigh", "GPT-6 Astra max")
-CODEX_ALLOWED_FAMILY_NAMES = ("GPT-5.6 Luna", "GPT-6 Astra")
-CODEX_ALLOWED_RUNTIME_IDS = ("gpt-5.6-luna", "gpt-6-astra")
+CODEX_RESERVED_DISPLAY_PRESETS = ("GPT-6 Astra max",)
+CODEX_ALLOWED_FAMILY_NAMES = ("GPT-6 Luna", "GPT-6 Astra")
+CODEX_ALLOWED_RUNTIME_IDS = ("gpt-6-luna", "gpt-6-astra")
 CODEX_QUALIFIER_STOPWORDS = (
     "a",
     "an",
@@ -321,6 +324,13 @@ VALIDATOR_COMPANION_COMMANDS = (
     "python3 -B scripts/validate_nhk.py --final <execution-recovery.md> --kind execution-recovery",
     "python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance",
 )
+
+# Band order is the contract; the effort values themselves are calibrated only in
+# claude-agents-template.md so a new Opus generation is a one-file edit.
+CLAUDE_AGENT_BANDS = ("nhk-light", "nhk-standard", "nhk-deep", "nhk-diagnosis")
+CLAUDE_WORKER_EFFORTS = ("low", "medium", "high", "xhigh")
+CLAUDE_READ_ONLY_BAND = "nhk-diagnosis"
+CLAUDE_AGENT_SKILLS = ("nhk-bootstrap", "nhk-upkeep")
 
 
 @dataclass(frozen=True)
@@ -432,10 +442,10 @@ def validate_exact_codex_bands(
             item.strip().removesuffix(".") for item in raw.split(";") if item.strip()
         )
 
-    for band in sorted(set(found) - {1, 2}):
+    for band in sorted(set(found) - set(range(1, len(CODEX_PRESET_BANDS) + 1))):
         issues.append(
             f"{label} Codex Routing has unexpected Band {band}; exact unordered "
-            "preset sets exist only for Bands 1-2"
+            "preset sets exist only for Bands 1-3"
         )
 
     for band, expected in enumerate(CODEX_PRESET_BANDS, 1):
@@ -466,8 +476,8 @@ def validate_codex_declared_presets(
         seen.add(declared)
         issues.append(
             f"{label} Codex Routing declares unapproved versioned preset "
-            f"{match.group(0)!r}; allowed presets are the Band 1-2 sets and "
-            "reserved GPT-6 Astra xhigh and GPT-6 Astra max"
+            f"{match.group(0)!r}; allowed presets are the Band 1-3 sets and "
+            "role-restricted GPT-6 Astra max"
         )
 
     leftover = CODEX_DISPLAY_PRESET_RE.sub(" ", codex)
@@ -478,25 +488,26 @@ def validate_codex_declared_presets(
         seen.add(token)
         issues.append(
             f"{label} Codex Routing declares unapproved versioned preset "
-            f"{match.group(0)!r}; allowed presets are the Band 1-2 sets and "
-            "reserved GPT-6 Astra xhigh and GPT-6 Astra max"
+            f"{match.group(0)!r}; allowed presets are the Band 1-3 sets and "
+            "role-restricted GPT-6 Astra max"
         )
 
 
 # These checks recognize a bounded declaration format, not arbitrary prose intent.
 RESERVED_ROUTE = (
-    "GPT-6 Astra xhigh and GPT-6 Astra max are reserved for whole-change final review "
-    "of a complex Superpowers plan, not ordinary implementation, debugging, or recovery."
+    "Independent diagnosis and complex whole-change final review use Band 3, or GPT-6 Astra max "
+    "when deeper reasoning is needed. Max is limited to these read-only roles; after a failed "
+    "Band 3 implementation it may be selected directly for the one independent diagnosis."
 )
 DIAGNOSTIC_ROUTE = (
-    "Dispatch at most one fresh-context Band 2 or Opus read-only diagnostic worker "
-    "to challenge one concrete hypothesis."
+    "Dispatch at most one fresh-context read-only diagnostic worker using the independent "
+    "diagnosis role in `worker-policy.md` to challenge one concrete hypothesis."
 )
 RESERVED_MENTION_RE = re.compile(
-    r"\b(?:GPT-6\s+Astra|gpt-6-astra)\s+`?(?:xhigh|max)\b", re.IGNORECASE
+    r"\b(?:GPT-6\s+Astra|gpt-6-astra)\s+`?max\b", re.IGNORECASE
 )
 DIAGNOSTIC_MENTION_RE = re.compile(
-    r"\b(?:Band\s+\d+|GPT-\d[\w.-]*(?:\s+\w+)?|Sonnet|Opus|Fable|Haiku)\b",
+    r"\b(?:Band\s+\d+|GPT-\d[\w.-]*(?:\s+\w+)?|Sonnet|Opus|Fable|Haiku|Astra|Luna|Sol|Extra\s+High|Light|xhigh|max)\b",
     re.IGNORECASE,
 )
 
@@ -506,15 +517,15 @@ def validate_exclusive_routes(sections: dict[str, str], label: str, issues: list
     # Normalize Markdown code spans and wrapping, while retaining all extra clauses.
     body = " ".join(body.replace("`", "").split())
     if recovery:
-        remaining = body.replace(DIAGNOSTIC_ROUTE, "")
+        remaining = body.replace(normalized_contract(DIAGNOSTIC_ROUTE), "")
         if DIAGNOSTIC_MENTION_RE.search(remaining):
-            issues.append(f"{label} diagnostic routing must be declared only by the Band 2/Opus route; remove additional model or band declarations")
+            issues.append(f"{label} diagnostic routing must use the worker-policy role reference; remove additional model or band declarations")
     else:
         remaining = body.replace(RESERVED_ROUTE, "")
         for preset in CODEX_RESERVED_DISPLAY_PRESETS:
             remaining = remaining.replace(f"Do not use {preset} for ordinary implementation.", "")
         if RESERVED_MENTION_RE.search(remaining):
-            issues.append(f"{label} reserved routing must use the final-review reservation; remove additional xhigh/max declarations")
+            issues.append(f"{label} reserved routing must use the special-role declaration; remove additional max declarations")
 
 
 # Declared routing/review clauses are a bounded format, not a prose interpreter.
@@ -565,31 +576,46 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['Authorization comes from the allow
                   'counts, execution recovery, or final fix-wave bounds.'],
  'Codex Routing': ['Every fresh Codex worker uses `fork_turns: none` and receives a '
                    'self-contained brief, required files, and binding global constraints.',
-                   'Runtime model IDs are `gpt-5.6-luna` and `gpt-6-astra`; UI Light / Extra '
-                   'High map to `low` / `xhigh`.',
+                   'Runtime model IDs are `gpt-6-luna` and `gpt-6-astra`; UI Extra High maps to '
+                   '`xhigh`.',
                    'Presets within a band are unordered task-fit choices; roles determine '
                    'permission, and there is no mandatory Band 1 trial.',
-                   'Whole module implementation, internal debugging, tests, integration, and '
-                   'initial independent module review use GPT-6 Astra medium (Band 2).',
+                   'Default module implementation, internal debugging, tests, and integration to '
+                   'Band 2.',
                    'Standalone mechanical work must be independent, deterministic, clearly '
                    'specified, and low-risk; it may use Band 1.',
-                   'Initial review of standalone mechanical work may use GPT-6 Astra low. '
-                   'Other initial reviews use Band 2.',
+                   'Before selecting Band 3, check packet size, interfaces, and context; repair '
+                   'these first. Load `implementation-planning.md` if the plan needs material '
+                   'revision.',
+                   'Select Band 3 only for a concrete reasoning difficulty remaining after sizing '
+                   'and context checks, or demonstrated Band 2 capability limits. State that '
+                   'difficulty in one sentence in the existing brief; a known hard task may start '
+                   'here without a failed lower-band trial.',
+                   'First classify failures as scope, context, environment, verification, or '
+                   'capability. Escalate one band only for demonstrated capability limits of a '
+                   'correctly sized packet; failure count alone is not a reason to escalate.',
+                   'Initial independent reviews default to Band 2; use Band 3 when the review '
+                   'itself meets its difficulty condition. Assess review difficulty separately '
+                   'from implementation.',
                    'Local fixes and scoped re-reviews may use Band 1 only when cause, '
                    'intended behavior, approach, impact, and verification are clear and no '
                    'design or cross-module judgment is needed.',
                    'Small line count or a review finding alone does not qualify a fix. Keep '
-                   'judgment and integration with the original module owner or Band 2.',
-                   'GPT-5.6 Luna may perform low-risk scoped re-review, never an initial task '
+                   'judgment and integration with the original module owner or select Band 2/3 '
+                   'under the difficulty rules.',
+                   'GPT-6 Luna may perform low-risk scoped re-review, never an initial task '
                    'review.',
-                   'Band 1 may substitute an available same-band preset only within the '
-                   "role's permissions.",
-                   'At the ordinary Band 2 ceiling, non-convergence enters execution '
-                   'recovery. Report medium unavailability as availability; never downgrade a '
-                   'module or use special final-review presets as fallback.',
-                   'GPT-6 Astra xhigh and GPT-6 Astra max are reserved for whole-change final '
-                   'review of a complex Superpowers plan, not ordinary implementation, '
-                   'debugging, or recovery.',
+                   'Report preset unavailability as availability; it does not authorize a '
+                   'different band, an older model, or a special-role preset as fallback.',
+                   'At the ordinary Band 3 ceiling, non-convergence enters execution recovery; '
+                   'earlier stagnation or the five-round bound also triggers reassessment. Model '
+                   'changes never reset counts.',
+                   'Independent diagnosis and complex whole-change final review use Band 3, or '
+                   'GPT-6 Astra max when deeper reasoning is needed. Max is limited to these '
+                   'read-only roles; after a failed Band 3 implementation it may be selected '
+                   'directly for the one independent diagnosis.',
+                   'Other whole-change final reviews default to Band 2 and use Band 3 when the '
+                   'review meets its difficulty condition.',
                    'Select post-review fixes and re-reviews by the bounded repair role above. '
                    "“Most capable upstream” means most capable within the task's "
                    'authorization.',
@@ -600,16 +626,39 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['Authorization comes from the allow
                    'The target names one packet or module; scope is a non-root repository-relative path without wildcards or traversal. Role is `module-implementation`, `initial-module-review`, `local-fix`, or `scoped-re-review`.',
                    'Apply the ordinary catalog preset only when target, scope, and role match the confirmed decision; all other work keeps the normal rules. Never turn a record into a project or session default.',
                    'Confirm the existing human decision from its Markdown-file-and-anchor or HTTPS-and-fragment approval reference; never invent consent. Static validation checks structure, not approval authenticity.',
-                   'Records change only ordinary preset choice, not worker class, review gates, budgets, reserved final-review permissions, Ultra, or recursion. Initial reviews still exclude Luna.',
-                   ],
- 'Claude Routing': ['Use Sonnet for ordinary implementation and review. Use Opus for '
-                    'difficult work, debugging, architecture, final review, and a recommended '
-                    'complex main thread.',
+                   'Records change only ordinary preset choice, not worker class, review gates, '
+                   'budgets, special-role permissions, Ultra, or recursion. Initial reviews still '
+                   'exclude Luna.'],
+ 'Claude Routing': ['Every Claude worker runs Opus. When `.claude/agents/nhk-*.md` definitions '
+                    'exist, dispatch through them and omit the per-invocation model so each '
+                    'definition stays authoritative.',
+                    'Without those definitions, pass `model: opus` on every dispatch; the worker '
+                    'then runs at session effort, as the human chose when declining them.',
+                    'The definitions alone carry model and effort. Route by band name: '
+                    '`nhk-light`, `nhk-standard`, `nhk-deep`, or `nhk-diagnosis`.',
+                    '`nhk-light`: standalone mechanical work, and local fixes or scoped '
+                    're-reviews whose cause, intended behavior, approach, impact, and '
+                    'verification are clear without design or cross-module judgment. Initial '
+                    'reviews start at `nhk-standard`.',
+                    '`nhk-standard`: the default for module implementation, internal debugging, '
+                    'tests, integration, initial reviews, and other whole-change final reviews.',
+                    '`nhk-deep`: a concrete reasoning difficulty that remains after sizing and '
+                    'context checks, stated in one sentence in the brief, or demonstrated '
+                    '`nhk-standard` limits. Reviews meeting that difficulty condition also use it.',
+                    '`nhk-diagnosis`: read-only independent diagnosis and complex whole-change '
+                    'final review. The highest effort levels stay with the human-chosen main '
+                    'thread.',
+                    'Delegate a packet only when it is independent and larger than the main '
+                    'thread finishes in a handful of tool calls; use one worker when one '
+                    'suffices.',
+                    'A worker report with open acceptance items and no named blocker is a '
+                    'report, not completion: continue that worker with the open items, at most '
+                    'twice. Continuations are not repair rounds; afterwards classify the '
+                    'failure.',
                     'Use Fable only when the human explicitly chooses or approves it for the '
                     'main thread.',
-                    'Specify Sonnet or Opus for every worker so Fable is never inherited.',
-                    'Use available versions and configurations. Do not add a Haiku band or '
-                    'maintain a version-pinned catalog.']}
+                    'Built-in agents also receive `model: opus` explicitly, so Fable is never '
+                    'inherited.']}
 PLANNING_MODULE_DECLARATIONS = {'Workflow Compatibility': ['The installed or explicitly adopted Superpowers workflow '
                             'supplies plan shape, test workflow, and review prompts; NHK '
                             'module sizing, role routing, reuse, and waiting rules override '
@@ -627,7 +676,10 @@ PLANNING_MODULE_DECLARATIONS = {'Workflow Compatibility': ['The installed or exp
                  'Keep concrete incremental internal steps and timely verification. A module '
                  'may contain multiple necessary TDD cycles.',
                  'Group implementation, tests, configuration, migration, and documentation '
-                 'for the same capability and working context.'],
+                 'for the same capability and working context.',
+                 'Size modules for the default implementation role: reduce independent decisions '
+                 'without fragmenting delivery or requiring the main thread to pre-solve local '
+                 'design.'],
  'Task Contract': ['One module must fit one implementer context, one complete acceptance '
                    'result, one independent reviewer, and one return.',
                    'Split at unrelated outcomes, distinct authority, unresolved cross-module '
@@ -638,10 +690,10 @@ PLANNING_MODULE_DECLARATIONS = {'Workflow Compatibility': ['The installed or exp
                    'Internal mechanical steps stay with the module implementer; they never '
                    'automatically become new dispatches. Batch independent same-shape '
                    'mechanical work when it shares acceptance and verification.',
-                   '`mechanical` is for standalone deterministic low-risk work. Whole modules '
-                   'use `standard` for clear implementation or `judgment` for '
-                   'integration/design uncertainty; both route to medium under the Codex '
-                   'worker policy.'],
+                   '`mechanical` is for standalone deterministic low-risk work. Whole modules use '
+                   '`standard` for clear implementation or `judgment` for integration/design '
+                   'uncertainty; worker class describes the work, not a model tier. Both start '
+                   'from the default implementation role in `worker-policy.md`.'],
  'Dependencies and Execution': ['`Blocked by` lists only real prerequisite tasks and uses '
                                 '`None` when there is no dependency.',
                                 'Under subagent-driven development, implementation tasks '
@@ -656,8 +708,15 @@ PLANNING_MODULE_DECLARATIONS = {'Workflow Compatibility': ['The installed or exp
                                 'self-contained file handoff.',
                                 'Before dispatch, apply the module boundaries above; internal '
                                 'steps remain with their module owner.',
+                                'Before increasing capability, separate unrelated decisions and '
+                                'resolve missing interfaces or context; preserve tightly coupled '
+                                'logic and its verification.',
+                                'When investigation is necessary, give it an observable result and '
+                                'the default implementation role unless its own difficulty '
+                                'justifies more capability.',
                                 'Apply `worker-policy.md` for dispatch and review choices. '
-                                'Apply `execution-recovery.md` only when its triggers fire.']}
+                                'Apply `execution-recovery.md` only when its triggers fire.'],
+ 'Plan Review': ['When many tasks need higher capability, recheck boundaries and shared constraints; use no fixed quota and keep irreducible difficult modules intact.']}
 
 def normalized_contract(text: str) -> str:
     return " ".join(text.replace("`", "").split())
@@ -696,12 +755,12 @@ def undeclared_clauses(
 
 
 def validate_ui_alias_routes(sections: dict[str, str], label: str, issues: list[str]) -> None:
-    alias = re.compile(r"\b(?:Extra\s+High|Light)\b", re.IGNORECASE)
+    alias = re.compile(r"\b(?:Extra\s+High|Light|xhigh|max)\b", re.IGNORECASE)
     role = re.compile(r"\b(?:implementation|debugging|recovery|review|workers?|modules?|presets?|models?|effort)\b", re.IGNORECASE)
-    selection = re.compile(r"\b(?:use|select|choose)\s+(?:UI\s+)?(?:Extra\s+High|Light)(?=\s+(?:for|as|to)\b|[.;]|$)", re.IGNORECASE)
+    selection = re.compile(r"\b(?:use|select|choose)\s+(?:UI\s+)?(?:Extra\s+High|Light|xhigh|max)(?=\s+(?:for|as|to)\b|[.;]|$)", re.IGNORECASE)
     for clause in undeclared_clauses(sections, WORKER_DECLARATIONS):
         if alias.search(clause) and (role.search(clause) or selection.search(clause)):
-            issues.append(f"{label} contains an additional UI alias routing declaration; preserve the declared Light/Extra High mapping and role permissions")
+            issues.append(f"{label} contains an additional effort or UI alias routing declaration; preserve the declared role permissions")
 
 
 def validate_wait_contract(sections: dict[str, str], label: str, issues: list[str]) -> None:
@@ -858,8 +917,8 @@ def without_routing_exceptions(
                 elif record["role"] not in ROUTING_EXCEPTION_ROLES:
                     reason = "must name one ordinary implementation or review role; it cannot authorize recursion"
                 elif record["preset"] not in ordinary_presets:
-                    reason = "may choose only an ordinary catalog preset, never reserved final-review or Ultra permissions"
-                elif record["role"] == "initial-module-review" and record["preset"] == "GPT-5.6 Luna max":
+                    reason = "may choose only an ordinary catalog preset, never special-role or Ultra permissions"
+                elif record["role"] == "initial-module-review" and record["preset"] == "GPT-6 Luna max":
                     reason = "does not authorize Luna initial reviews"
                 elif not approval_reference(record["approval"]):
                     reason = "requires a specific Markdown-file anchor or HTTPS fragment approval reference"
@@ -902,7 +961,7 @@ def validate_worker_policy_contract(
             body = body.replace(f"Do not use {preset} for ordinary implementation.", "")
         for prohibition in (
             "Workers may not inherit Fable for ordinary coding.",
-            "GPT-5.6 Luna max must not perform initial task reviews.",
+            "GPT-6 Luna max must not perform initial task reviews.",
             "Ultra approval never authorizes recursive delegation.",
         ):
             body = body.replace(prohibition, "")
@@ -936,6 +995,7 @@ def validate_execution_recovery_contract(
         (
             "systematic-debugging",
             "architecture check after three failed fixes",
+            "five rounds are a ceiling, not a waiting requirement",
             "five fix-review rounds per task",
             "five rounds for the same stable acceptance gap across tasks",
             "Reaching either the task-round bound or stable-gap bound stops ordinary fixing",
@@ -967,8 +1027,9 @@ def validate_execution_recovery_contract(
         "Independent Diagnosis",
         (
             "competing explanations, review-versus-implementation conflict, or an unverified old premise",
-            "at most one fresh-context Band 2 or Opus read-only diagnostic worker",
-            "challenge one concrete hypothesis",
+            DIAGNOSTIC_ROUTE,
+            "Separate observations from prior hypotheses",
+            "supporting evidence or a discriminating experiment with expected outcomes",
             "does not authorize a fix",
             "Do not start a diagnostic chain",
         ),
@@ -1349,6 +1410,12 @@ def validate_skill(root: Path, name: str, issues: list[str]) -> None:
                 f"`{companion}`"
             )
 
+    if name in CLAUDE_AGENT_SKILLS and "../references/claude-agents-template.md" not in text:
+        issues.append(
+            f"{name}/SKILL.md: Claude agent definitions must route through "
+            "`../references/claude-agents-template.md`"
+        )
+
     reference_root = (root / "references").resolve()
     for match in REFERENCE_RE.finditer(text):
         relative = match.group(0)
@@ -1420,23 +1487,35 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
     for token in ("scripts/", "tests/", "不属于运行时", "可选", "刷新", "可发现"):
         require_text(chinese, token, "README_CN.md", issues, case_sensitive=False)
     for token in (
-        "ten controlled references",
+        "eleven controlled references",
+        "Every Claude helper runs Opus",
+        "Claude Code main thread, we suggest Opus",
         "seven required pieces",
         "Superpowers overlay",
         "permissions tied to the role",
-        "two practical Codex bands",
+        "three practical Codex bands",
         "both must pass",
         "one recovery fix and one independent re-review",
+        "Codex main thread, we suggest GPT-6 Sol",
+        "human-facing suggestion only",
+        "you choose the main-thread model and effort",
+        "NHK worker permissions do not depend on that choice",
     ):
         require_text(english, token, "README.md", issues, case_sensitive=False)
     for token in (
-        "十个受控 reference",
+        "十一个受控 reference",
+        "Claude 的帮手全部使用 Opus",
+        "Claude Code 主线程，建议使用 Opus",
         "七项基础内容",
         "Superpowers overlay",
         "权限按工作角色确定",
-        "两个 Codex 档位，档内不排序",
+        "三个 Codex 档位",
         "需求符合度与实现质量结论，两项都要通过",
         "一轮恢复修正和一次复审",
+        "Codex 主线程，建议考虑 GPT-6 Sol",
+        "这只是给使用者的建议",
+        "主线程型号和 effort 由你选择",
+        "NHK 的 worker 权限不依赖该选择",
     ):
         require_text(chinese, token, "README_CN.md", issues, case_sensitive=False)
     for token in ("five-round limit", "same unresolved problem across tasks"):
@@ -1556,7 +1635,10 @@ def validate_forbidden_legacy(root: Path, issues: list[str]) -> None:
         relative = path.relative_to(root)
         if relative != Path("references/worker-policy-template.md") and routing_exception_lines(text):
             issues.append(f"{relative}: human routing exception belongs only in the worker-policy Codex Routing contract")
-        model_matches = list(versioned_model.finditer(text))
+        model_text = text
+        if relative in {Path("README.md"), Path("README_CN.md")}:
+            model_text = model_text.replace("GPT-6 Sol", "")
+        model_matches = list(versioned_model.finditer(model_text))
         if relative not in allowed_versioned_model_surfaces and model_matches:
             issues.append(
                 f"{relative}: forbidden versioned model outside Codex policy surfaces: "
@@ -1573,6 +1655,60 @@ def validate_forbidden_legacy(root: Path, issues: list[str]) -> None:
             match = pattern.search(scan_text)
             if match:
                 issues.append(f"{relative}: forbidden {label}: {match.group(0)}")
+
+
+def validate_claude_agents_template(text: str, issues: list[str]) -> None:
+    label = "claude-agents-template.md"
+    blocks = re.findall(r"```yaml\n---\n(.*?)\n---\n```", text, re.DOTALL)
+    bands: list[tuple[str, dict[str, str]]] = []
+    for block in blocks:
+        fields: dict[str, str] = {}
+        for line in block.splitlines():
+            key, separator, value = line.partition(":")
+            if separator:
+                fields[key.strip()] = value.strip()
+        bands.append((fields.get("name", ""), fields))
+
+    names = tuple(name for name, _ in bands)
+    if names != CLAUDE_AGENT_BANDS:
+        issues.append(
+            f"{label}: bands must be exactly {', '.join(CLAUDE_AGENT_BANDS)} in order; "
+            f"found {', '.join(names) or 'none'}"
+        )
+
+    ranks: list[int] = []
+    for name, fields in bands:
+        if fields.get("model") != "opus":
+            issues.append(f"{label}: {name} must declare model: opus")
+        effort = fields.get("effort", "")
+        if effort not in CLAUDE_WORKER_EFFORTS:
+            issues.append(
+                f"{label}: {name} effort must be one of {', '.join(CLAUDE_WORKER_EFFORTS)}; "
+                "the top effort level stays with the main thread"
+            )
+        else:
+            ranks.append(CLAUDE_WORKER_EFFORTS.index(effort))
+        description = fields.get("description", "")
+        if "worker-policy.md" not in description or re.search(r"proactiv", description, re.IGNORECASE):
+            issues.append(
+                f"{label}: {name} description must point back to worker-policy.md and "
+                "never invite proactive delegation"
+            )
+        denied = {tool.strip() for tool in fields.get("disallowedTools", "").split(",")}
+        if name == CLAUDE_READ_ONLY_BAND and not {"Write", "Edit"} <= denied:
+            issues.append(f"{label}: {name} must deny Write and Edit through disallowedTools")
+    if len(ranks) == len(CLAUDE_AGENT_BANDS) and not (ranks[0] < ranks[1] < ranks[2] <= ranks[3]):
+        issues.append(f"{label}: effort must rise with band order")
+
+    forbidden = re.search(r"\b(?:Sonnet|Haiku|Fable|inherit)\b", text, re.IGNORECASE)
+    if forbidden:
+        issues.append(
+            f"{label}: Opus-only bands must not name {forbidden.group(0)!r}"
+        )
+    if "## Shared Body" not in text or "Your final message ends your run" not in text:
+        issues.append(f"{label}: Shared Body must define the worker's final report")
+    for token in ("Source-template hard limit: 80 lines", "Never use a Claude `@` import"):
+        require_text(text, token, label, issues)
 
 
 def validate_source(root: Path) -> list[str]:
@@ -1673,6 +1809,14 @@ def validate_source(root: Path) -> list[str]:
             "Never use a Claude `@` import",
         ):
             require_text(worker_template, token, "worker-policy-template.md", issues)
+
+    claude_agents_template = read_text(
+        root / "references" / "claude-agents-template.md",
+        issues,
+        "references/claude-agents-template.md",
+    )
+    if claude_agents_template is not None:
+        validate_claude_agents_template(claude_agents_template, issues)
 
     recovery_template = read_text(
         root / "references" / "execution-recovery-template.md",

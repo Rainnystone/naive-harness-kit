@@ -118,6 +118,12 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Expected:** Default one Superpowers Task is one Module: related work with responsibility, prerequisites, interfaces, and complete acceptance. It retains `Delivers`, `Blocked by`, `Worker class`, Files, Interfaces, and concrete internal steps. One synthetic export module keeps parser code, tests, configuration, migration, and docs together; internal mechanical edits remain with its owner. Whole modules use standard or judgment. Split only at unrelated outcomes, distinct authority, unresolved cross-module dependencies, or scope one implementer/reviewer cannot reliably assess. File/commit counts, elapsed time, and separately testable internal outputs alone do not split it. Wide migrations preserve expand → migrate batches → contract and explicit integration when batches cannot stay green independently. NHK sizing/routing/reuse/timing override conflicting generic workflow defaults without replacing Superpowers test or review prompts.
 
+### C9a. Sizing and capability reinforce each other
+
+**Setup:** A plan contains several unrelated decisions in one task, a missing shared interface, standalone same-shape mechanical work, and one tightly coupled concurrency problem. Another plan marks most tasks for higher capability.
+
+**Expected:** Separate unrelated decisions, resolve missing interfaces/context, and batch standalone mechanical work under one acceptance loop. Preserve coupled logic and its verification; do not fragment a module or have the main thread pre-solve all local design to force the default role. Necessary investigation has an observable result and defaults to the ordinary implementation role. Worker class is not a model tier: standard and judgment both start with the default role. Recheck boundaries/shared constraints when many tasks need higher capability, without quotas; the irreducible concurrency problem may remain intact and qualify for the harder band. Static source/final checks require these rules; representative dispatch review is needed to assess their application.
+
 ### C10. Superpowers task-brief compatibility
 
 **Setup:** A temporary Superpowers plan task includes the three NHK fields followed by its ordinary Files, Interfaces, steps, commands, expected results, and code.
@@ -128,7 +134,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** A standalone project instruction mentions its own “email template contract”; a planning guide moves required fields or Superpowers details outside their required sections; or a worker/recovery companion violates its required headings, line budget, routing boundary, or approved policy contract.
 
-**Expected:** The ordinary project phrase remains valid. Planning validation requires actual `Delivers`, `Blocked by`, and `Worker class` field syntax inside Task Contract and the preserved Superpowers details inside Workflow Compatibility. Companion validation rejects a malformed worker or recovery document without broad scans that mistake ordinary project facts for policy. It reads H1, second-level headings, and section bodies from active Markdown: fence delimiters count only when indented by at most three spaces, so a four-space-indented fence does not hide a following heading. Fenced or commented examples cannot satisfy those contracts, and it rejects versioned Codex presets declared outside the approved Band 1-2 sets and reserved GPT-6 Astra xhigh and GPT-6 Astra max, including unrecognized effort suffixes on an allowed family.
+**Expected:** The ordinary project phrase remains valid. Planning validation requires actual `Delivers`, `Blocked by`, and `Worker class` field syntax inside Task Contract and the preserved Superpowers details inside Workflow Compatibility. Companion validation rejects a malformed worker or recovery document without broad scans that mistake ordinary project facts for policy. It reads H1, second-level headings, and section bodies from active Markdown: fence delimiters count only when indented by at most three spaces, so a four-space-indented fence does not hide a following heading. Fenced or commented examples cannot satisfy those contracts, and it rejects versioned Codex presets declared outside the approved Band 1-3 sets and role-restricted GPT-6 Astra max, including unrecognized effort suffixes on an allowed family.
 
 ### C12. Companion budgets and measured instruction reduction
 
@@ -148,25 +154,25 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Prompt:** “Use a worker for this clear, low-risk mechanical change.”
 
-**Expected:** The main thread chooses an explicitly runtime-supported configuration allowed for that worker role and packet. It does not inherit its own model or effort, even when that configuration is more capable. Explicit user budgets remain binding. A configuration outside the allowed role/preset is refused rather than silently substituted with an unapproved top preset.
+**Expected:** The main thread chooses an explicitly runtime-supported configuration allowed for that worker role and packet. It does not inherit its own model or effort, even when that configuration is more capable. The only inherited effort is a Claude worker's session effort after the human declined NHK agent definitions (D9a). Explicit user budgets remain binding. A configuration outside the allowed role/preset is refused rather than silently substituted with an unapproved top preset.
 
 ### D3. Task-fit bands and availability
 
 **Setup:** A packet is clear low-risk work, an ordinary bounded implementation, or architecture/high-uncertainty work. In one run, the preferred selected-band configuration is unavailable.
 
-**Expected:** Exact unordered catalog membership remains Band 1 (GPT-6 Astra low and GPT-5.6 Luna max) and Band 2 (GPT-6 Astra medium). A synthetic export module, including internal debugging/tests/integration and first independent review, uses medium even when small. A standalone deterministic low-risk identifier conversion may use Band 1. Roles replace generic escalation: medium non-convergence enters recovery; medium unavailability is reported without module downgrade or reserved-preset fallback. Band 1 substitution stays within the role permission. Correct catalog text plus an extra whole-module low/Luna authorization fails source and final validation.
+**Expected:** The exact catalog is Band 1 (GPT-6 Luna max), Band 2 (GPT-6 Astra medium), and Band 3 (GPT-6 Astra xhigh). A complete export module defaults to Band 2; an independent deterministic low-risk conversion may use Band 1. Before Band 3, check sizing, interfaces, and context. A concrete remaining reasoning difficulty permits direct Band 3 dispatch with a one-sentence reason; no lower-band failure is required. Failure classification distinguishes scope/context/environment/verification from capability; only demonstrated capability limits justify escalation by one band. The ordinary ceiling is Band 3, with earlier stagnation and five-round recovery bounds intact. Unavailability does not authorize another band, older model, or special-role fallback. Initial reviews independently default to Band 2. Main-thread model/effort does not constrain these permissions. Static checks validate declared rules, not actual task difficulty or cost savings.
 
-### D4. Review gates and special final-review reservation
+### D4. Review gates and special roles
 
 **Setup:** One task finishes, then a complex Superpowers plan reaches whole-change final review.
 
-**Expected:** The task receives one independent read-only reviewer with separate spec-compliance and task-quality verdicts; either missing or failed verdict blocks completion, and self-review does not replace it. Retaining the correct reservation and appending an ordinary-work authorization must fail deterministic validation. Named reserved presets belong in the reservation, with only the explicit “Do not use [preset] for ordinary implementation.” prohibition also accepted; other role references use the reservation without repeating model names. The checker enforces this bounded declaration format, not arbitrary prose semantics. Active preambles are included in source and final conflict scans. Only exact catalog rows in Codex Routing are exempt; a Band-prefixed authorization in another section remains subject to conflict checks. Commented or fenced examples remain inactive. The special GPT-6 Astra xhigh and GPT-6 Astra max configurations are limited to whole-change final review of a complex Superpowers plan, never ordinary implementation, debugging, recovery, post-review fixes, or scoped re-review.
+**Expected:** Each module or standalone mechanical task receives one independent read-only reviewer with separate spec-compliance and task-quality verdicts; both must pass. Complex whole-change final review and independent diagnosis use Band 3, with GPT-6 Astra max available for deeper reasoning. Max remains confined to those read-only roles, including direct selection after failed Band 3 implementation. Ordinary final review defaults to Band 2; review difficulty may justify Band 3. Fixes and re-reviews use their own roles. Retaining the correct declaration and appending blanket xhigh or max implementation permissions fails source/final validation. Active preambles and misplaced catalogs are checked; fenced/commented examples stay inactive. The validator recognizes bounded declarations, not arbitrary prose semantics.
 
 ### D5. Initial-review route and upstream evidence
 
 **Setup:** A standalone mechanical change needs its initial review, then a low-risk scoped re-review is proposed. The reviewer receives a report, test evidence, fixed BASE and HEAD revisions, and binding constraints.
 
-**Expected:** The standalone mechanical initial review may use GPT-6 Astra low (UI: Light); other initial reviews use the ordinary Band 2 route. GPT-5.6 Luna may perform only the low-risk scoped re-review and never the initial task review. The reviewer uses the applicable upstream task-reviewer, re-review, or final-review prompt rather than a copied NHK prompt. It checks the implementer's claims against the fixed diff and test output.
+**Expected:** All initial reviews default to Band 2, including standalone mechanical work; Band 3 requires difficulty in the review itself. GPT-6 Luna may perform low-risk scoped re-review, never initial review. Implementer configuration does not automatically determine reviewer configuration. Use the applicable upstream task-reviewer, re-review, or final-review prompt and verify claims against fixed revisions, constraints, diff, and test evidence.
 
 ### D6. Scoped re-review and cannot-verify gate
 
@@ -190,7 +196,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** An export module review finds two deterministic mapping mistakes and one unresolved ownership decision.
 
-**Expected:** Ordinary fixes prefer the original implementer; scoped re-review prefers the original independent reviewer. The two mapping fixes may use Band 1 only when cause, intended behavior, approach, impact, and verification are clear without design/cross-module judgment. The ownership decision stays with the original module owner or medium. Small line count and reviewer origin do not make it mechanical. Band 1 permission never requires a new worker. A cheaper fresh worker needs a worthwhile self-contained handoff; batch the suitable findings. Appending judgment-bearing mechanical permission fails validation.
+**Expected:** Ordinary fixes prefer the original implementer; scoped re-review prefers the original independent reviewer. The two mapping fixes may use Band 1 only when cause, intended behavior, approach, impact, and verification are clear without design/cross-module judgment. The ownership decision stays with the original module owner or Band 2/3 under the difficulty rules. Small line count and reviewer origin do not make it mechanical. Band 1 permission never requires a new worker. A cheaper fresh worker needs a worthwhile self-contained handoff; batch the suitable findings. Appending judgment-bearing mechanical permission fails validation.
 
 ### D7c. Review consolidation preserves scope and recovery bounds
 
@@ -202,7 +208,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** A valid worker policy adds ordinary-work authorization through Extra High, or a planning guide authorizes mechanical workers for whole modules. A separate synthetic billing-module decision explicitly permits a lower ordinary preset. A helper progress check is scheduled every five minutes outside the orchestration section.
 
-**Expected:** Source/final checks reject active routing conflicts using the declared Light/Extra High aliases and module worker-class permissions, while the canonical mapping and inactive examples remain valid. Helper progress/status/lifecycle timing is checked even outside Subagents and Packets; unrelated HTTP/helper-function timeout facts and immediate questions/failures remain valid. Direct planning-template assembly adapts only the three right-hand placeholders; the active fields pass without stripping any fence. Fenced/commented fields still cannot satisfy the required active contract.
+**Expected:** Source/final checks reject active routing conflicts using Extra High, bare xhigh/max, or the removed Light alias and module worker-class permissions, while the canonical mapping and inactive examples remain valid. Helper progress/status/lifecycle timing is checked even outside Subagents and Packets; unrelated HTTP/helper-function timeout facts and immediate questions/failures remain valid. Direct planning-template assembly adapts only the three right-hand placeholders; the active fields pass without stripping any fence. Fenced/commented fields still cannot satisfy the required active contract.
 
 **Exception record:** Preserve the confirmed billing decision as one active `Human routing exception:` JSON bullet in Codex Routing, with exactly target, scope, role, preset, and approval strings. It names one packet/module, a non-root relative path, one supported ordinary role, an ordinary catalog preset, and a specific file-anchor or HTTPS-fragment decision reference. The static check verifies this structure, not the authenticity of consent; bootstrap/upkeep must confirm the existing human decision. The normal clauses/catalogs remain required. Missing/duplicate/extra fields, broad or wildcard scopes/targets, wrong headings/files, duplicate target/scope/role records, trailing authorizations, reserved presets, Ultra, recursion and Luna initial reviews are rejected. A valid record exempts only itself from ordinary conflict scanning; neighboring unrecorded authorizations still fail. Inactive record examples do not grant permission. Worker classes, review gates, budgets and separate special approval boundaries remain unchanged.
 
@@ -214,9 +220,21 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 ### D9. Claude worker permissions
 
-**Setup:** Dispatch an ordinary implementation, a difficult debugging task, and a worker after the main thread selected Fable.
+**Setup:** In a Claude Code workspace with NHK agent definitions, dispatch a clear mechanical change, a module implementation, a task with a stated reasoning difficulty, an independent diagnosis, and a built-in agent after the main thread selected Fable.
 
-**Expected:** The policy routes ordinary implementation/review to Sonnet and difficult work, debugging, architecture, or final review to Opus. Fable is permitted only when the human explicitly chooses or approves it for the main thread. Every worker explicitly receives Sonnet or Opus, so it never inherits Fable. The policy has no Haiku band or version-pinned catalog.
+**Expected:** Every Claude worker runs Opus. The mechanical change uses `nhk-light`, the module and its initial review use `nhk-standard`, the stated difficulty uses `nhk-deep`, and the diagnosis uses read-only `nhk-diagnosis`; an initial review never starts at `nhk-light`. Dispatch through a definition omits the per-invocation model. `worker-policy.md` names bands only, while the definitions carry model and effort; the top effort level stays with the human-chosen main thread. Fable is permitted only when the human explicitly chooses or approves it for the main thread, and the built-in agent receives `model: opus`, so no worker inherits Fable.
+
+### D9a. Optional Claude agent definitions
+
+**Setup:** Bootstrap runs in a Claude Code workspace without `.claude/agents/nhk-*.md`; in one run the human agrees, in another the human declines. Separately, a Codex-only workspace is bootstrapped.
+
+**Expected:** Bootstrap offers the definitions from `claude-agents-template.md`, recommends them, and creates the four files only after agreement, telling the human that a new `.claude/agents/` directory needs a fresh session. A decline leaves the seven-surface foundation complete; workers then receive `model: opus` and run at session effort. The Codex-only workspace is never offered Claude definitions. Source validation checks the four bands in order, `model: opus`, rising worker effort below the top level, policy-pointing descriptions without proactive delegation, and write denial for `nhk-diagnosis`; it does not verify the runtime effort a live worker receives.
+
+### D9b. Claude delegation threshold and unfinished reports
+
+**Setup:** The main thread can finish a small edit in a few tool calls; separately, an `nhk-standard` worker returns a report that lists two open acceptance items without a blocker.
+
+**Expected:** The small edit stays on the main thread. The report is not completion: the main thread continues the same worker with the open items at most twice, without counting those continuations as repair rounds, then classifies any remaining failure under the recovery rules.
 
 ### D10. Ordinary debugging and recovery accounting
 
@@ -234,7 +252,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** The fifth round fails. The main thread has either sufficient new causal evidence, competing explanations, or no discrimination from old hypotheses.
 
-**Expected:** It reassesses original intent, spec/public contracts, verification signal, attempts, and cross-task consequences, then classifies the failure. Before recovery it records a changed causal explanation, discriminating command/input/observation, and expected before-and-after result. Competing explanations, review conflict, or an unverified premise permit at most one fresh-context Band 2 or Opus read-only diagnostic worker to challenge one hypothesis. Insufficient evidence goes to the human; it does not start a diagnostic chain. Retaining the correct diagnostic sentence and appending Band 3 or Astra xhigh/max alternatives must fail source and final validation. Diagnosis has one model-routing declaration; additional named model or band declarations are rejected. Inactive fenced/commented examples do not change final-file routing.
+**Expected:** Reassess original intent, contracts, verification, attempts, and cross-task consequences, then classify the failure. Architectural stagnation or an invalid shared premise permits earlier reassessment; five rounds are a ceiling. Before recovery, record a changed causal explanation, discriminating command/input/observation, and expected results. Competing explanations, review conflict, or an unverified premise permit at most one fresh read-only worker selected through the independent diagnosis role in worker-policy.md. Give it observations separately from old hypotheses; require evidence explaining failed attempts and alternatives, or a discriminating experiment with expected outcomes. Diagnosis cannot authorize a fix. Fixes and re-reviews select their own roles. Insufficient evidence goes to the human without a diagnostic chain. Replacing the role reference or appending model/band/effort routes fails source/final validation; inactive examples do not affect routing.
 
 ### D13. One recovery wave and final-review boundary
 
@@ -264,9 +282,15 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 ### E4. Installed NHK update with structurally healthy documents
 
-**Setup:** The installed bundle has the two-band rules, while a complete workspace retains the former three-band worker policy and Band 3 diagnosis. Project paths and document structure are still correct. One project fact and one explicitly authorized exception must remain.
+**Setup:** The installed bundle has the GPT-6 three-band rules, while a complete workspace retains the former two-band policy, GPT-5.6 Luna, and Band 2 diagnosis. Project paths and document structure are still correct. One project fact and one explicitly authorized exception must remain.
 
 **Expected:** An update check or explicit upkeep request routes to upkeep; missing foundation files still route to bootstrap first. Every upkeep compares the canonical instruction, all five companions, and archive index against current installed references, not only visible structural drift. It repairs NHK-owned rules, preserves project facts and approved exceptions, and reports unresolved conflicts. Previously read references can be reused only when unchanged. It does not fetch updates, rewrite whole documents, or introduce version tracking. Completion accounts for every compared surface as aligned, explicitly excepted, or unresolved.
+
+### E4a. Agent definitions follow the installed template
+
+**Setup:** A complete Claude Code workspace has NHK agent definitions whose effort and shared body predate the installed `claude-agents-template.md`; a second workspace has none.
+
+**Expected:** Upkeep reads the agent-definition template only for the first workspace, reconciles each definition's frontmatter and shared body, and preserves unrelated agent files. The second workspace stays without definitions; upkeep neither offers nor creates them.
 
 ### E5. Module policy migration preserves active work
 
@@ -346,8 +370,10 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 ### H3. Branch-specific reference loading
 
-**Expected:** A dependency decision reads only `dependency-setup.md`. Creating or structurally repairing a surface reads only its matching template, including `worker-policy-template.md` and `execution-recovery-template.md` only for their matching companions. Archive reads `archive-readme-template.md` only for index or naming work. Ordinary workspace routing does not load `validation-scenarios.md`; that reference is reserved for maintaining or evaluating NHK itself.
+**Expected:** A dependency decision reads only `dependency-setup.md`. Creating or structurally repairing a surface reads only its matching template, including `worker-policy-template.md` and `execution-recovery-template.md` only for their matching companions. Archive reads `archive-readme-template.md` only for index or naming work. `claude-agents-template.md` is read only to create NHK agent definitions after human agreement or to reconcile existing ones. Ordinary workspace routing does not load `validation-scenarios.md`; that reference is reserved for maintaining or evaluating NHK itself.
 
 ## I. Human Documentation Alignment
 
-**Expected:** English and Chinese READMEs both describe five recurring jobs, four skills plus ten controlled references, seven mandatory foundation surfaces, the sibling install layout, optional validator and its two new final-document kinds, session refresh/discovery check, the Superpowers overlay, role-authorized worker routing, dual review verdicts, bounded recovery, routing-table-as-shallow-map policy, and Claude's on-demand companion loading. They link the companion templates for the exact worker catalog and recovery procedure instead of carrying duplicate copies. Neither README presents scripts or tests as runtime dependencies.
+**Expected:** English and Chinese READMEs both describe five recurring jobs, four skills plus eleven controlled references, seven mandatory foundation surfaces, the sibling install layout, optional validator and its two new final-document kinds, session refresh/discovery check, the Superpowers overlay, role-authorized worker routing, dual review verdicts, bounded recovery, routing-table-as-shallow-map policy, and Claude's on-demand companion loading. They describe three bands, sizing before capability, medium as the default implementation role, bounded xhigh selection, and max only for independent diagnosis or complex final review. GPT-6 Sol main-thread guidance is a human suggestion in the READMEs only; users choose model and effort. The READMEs likewise suggest Opus at its default effort for a Claude Code main thread, describe every Claude helper running Opus in four role bands, and present the agent definitions as optional, recommended, and effective only after a fresh session for a new `.claude/agents/` directory. They link the companion templates for the exact worker catalog and recovery procedure instead of carrying duplicate copies. Neither README presents scripts or tests as runtime dependencies.
+
+**Negative check:** Source validation fails if either or both READMEs lose the Sol main-thread recommendation, its suggestion-only status, the user's choice of model and effort, or worker permissions remaining independent of that choice. The diagnostic names each affected README.

@@ -14,7 +14,7 @@ Ordinary bugs still use the installed or adopted Superpowers systematic-debuggin
 - Name this file from canonical instructions with a backticked literal path. Never use a Claude `@` import.
 - Stay within original scope and authority. Human approval is required to change acceptance, public contracts, or permissions.
 
-- Declare diagnostic model routing only in the Band 2/Opus dispatch sentence; keep other diagnosis prose about evidence and authority, not alternate model routes.
+- Refer diagnostic configuration to `worker-policy.md`; keep this document about triggers, evidence, authority, and stopping.
 
 ## Required Final Shape
 
@@ -23,6 +23,7 @@ Start with `# Execution Recovery`, then use exactly these second-level headings 
 ### Triggers and Accounting
 
 - Keep ordinary bugs in systematic-debugging. Its architecture check after three failed fixes still applies and is not delayed by this policy.
+- Enter reassessment earlier when evidence shows architectural stagnation or an invalid shared premise; five rounds are a ceiling, not a waiting requirement.
 - The ordinary limits are five fix-review rounds per task and five rounds for the same stable acceptance gap across tasks.
 - A round is one fix dispatch plus its verification and review. Repeated failure of the same promise counts even when local tests pass.
 - Reaching either the task-round bound or stable-gap bound stops ordinary fixing.
@@ -44,9 +45,10 @@ Start with `# Execution Recovery`, then use exactly these second-level headings 
 ### Independent Diagnosis
 
 - Use diagnosis only for competing explanations, review-versus-implementation conflict, or an unverified old premise.
-- Dispatch at most one fresh-context Band 2 or Opus read-only diagnostic worker to challenge one concrete hypothesis.
+- Dispatch at most one fresh-context read-only diagnostic worker using the independent diagnosis role in `worker-policy.md` to challenge one concrete hypothesis.
 - Give it the original contract, authoritative execution record, relevant diff and evidence, and an explicit no-write boundary.
-- A diagnostic worker reports evidence and alternatives; it does not authorize a fix or replace the main thread's judgment.
+- Separate observations from prior hypotheses. Diagnosis explains previous failures, tests alternative explanations, and returns supporting evidence or a discriminating experiment with expected outcomes.
+- A diagnostic worker does not authorize a fix or replace the main thread's judgment; select any recovery fix and re-review for their own roles in `worker-policy.md`.
 - If evidence remains insufficient, present blockers and options to the human. Do not start a diagnostic chain.
 
 ### Recovery and Stop
@@ -62,4 +64,4 @@ Start with `# Execution Recovery`, then use exactly these second-level headings 
 - The generated file is at most 80 lines and uses the four required headings in order.
 - Counts, gap identity, evidence, diagnostic use, recovery use, and stop status are traceable in the authoritative execution record.
 - Three-fix architecture review, five-round bounds, one diagnosis, one recovery wave, and one re-review retain distinct meanings.
-- No template prompt, placeholder, model catalog beyond diagnostic routing, parallel state system, or automatic-loop reset remains.
+- No template prompt, placeholder, model catalog, parallel state system, or automatic-loop reset remains.
