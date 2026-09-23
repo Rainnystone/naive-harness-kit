@@ -854,6 +854,45 @@ class SourceValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("five-round", result.stdout.lower())
 
+    def test_readme_main_thread_guidance_removal_fails(self) -> None:
+        cases = (("README.md",), ("README_CN.md",), ("README.md", "README_CN.md"))
+        for names in cases:
+            with self.subTest(names=names):
+                root = self.make_source_fixture()
+                for name in names:
+                    path = root / name
+                    paragraphs = path.read_text(encoding="utf-8").split("\n\n")
+                    guidance = [p for p in paragraphs if "GPT-6 Sol" in p]
+                    self.assertEqual(len(guidance), 1)
+                    paragraphs.remove(guidance[0])
+                    path.write_text("\n\n".join(paragraphs), encoding="utf-8")
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                for name in names:
+                    self.assertIn(f"{name}: missing required fact", result.stdout)
+
+    def test_readme_main_thread_guidance_drift_fails(self) -> None:
+        cases = (
+            ("README.md", "we suggest GPT-6 Sol", "we suggest another available model"),
+            ("README.md", "human-facing suggestion only", "mandatory main-thread policy"),
+            ("README.md", "you choose the main-thread model and effort", "NHK chooses the main-thread model and effort"),
+            ("README.md", "NHK worker permissions do not depend on that choice", "NHK worker permissions depend on that choice"),
+            ("README_CN.md", "建议考虑 GPT-6 Sol", "建议考虑其他可用型号"),
+            ("README_CN.md", "这只是给使用者的建议", "这是强制的主线程规则"),
+            ("README_CN.md", "主线程型号和 effort 由你选择", "主线程型号和 effort 由 NHK 选择"),
+            ("README_CN.md", "NHK 的 worker 权限不依赖该选择", "NHK 的 worker 权限依赖该选择"),
+        )
+        for name, required, replacement in cases:
+            with self.subTest(name=name, required=required):
+                root = self.make_source_fixture()
+                path = root / name
+                content = path.read_text(encoding="utf-8")
+                self.assertIn(required, content)
+                path.write_text(content.replace(required, replacement, 1), encoding="utf-8")
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn(f"{name}: missing required fact", result.stdout)
+
     def test_readme_routing_and_claude_loading_drift_fails(self) -> None:
         root = self.make_source_fixture()
         replacements = (

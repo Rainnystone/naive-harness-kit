@@ -1457,6 +1457,10 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         "three practical Codex bands",
         "both must pass",
         "one recovery fix and one independent re-review",
+        "Codex main thread, we suggest GPT-6 Sol",
+        "human-facing suggestion only",
+        "you choose the main-thread model and effort",
+        "NHK worker permissions do not depend on that choice",
     ):
         require_text(english, token, "README.md", issues, case_sensitive=False)
     for token in (
@@ -1467,6 +1471,10 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         "三个 Codex 档位",
         "需求符合度与实现质量结论，两项都要通过",
         "一轮恢复修正和一次复审",
+        "Codex 主线程，建议考虑 GPT-6 Sol",
+        "这只是给使用者的建议",
+        "主线程型号和 effort 由你选择",
+        "NHK 的 worker 权限不依赖该选择",
     ):
         require_text(chinese, token, "README_CN.md", issues, case_sensitive=False)
     for token in ("five-round limit", "same unresolved problem across tasks"):
