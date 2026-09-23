@@ -298,6 +298,8 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Expected:** Bootstrap/upkeep replace NHK-owned whole-module rules with the atomic contract and reconcile planning detail, worker roles, and the canonical 30-minute waiting rule. Preserve project facts, confirmed approvals, execution records, completed/in-flight identities and progress; never redispatch completed work. Reassess unstarted work against atomic boundaries without resetting task or acceptance-gap counts. Migrate `module-implementation` / `initial-module-review` to `task-implementation` / `initial-task-review` only for the same single task, scope, and confirmed approval, retaining target, preset, and evidence. The split or ambiguous record becomes an unresolved conflict for a human decision; authorization never spreads to its new tasks. Generated contract clauses remain active in required sections. Source/final validators recognize declared clauses and bounded conflicts, not arbitrary prose equivalence or actual agent behavior.
 
+## F. Archive Transition
+
 ### F1. User says no
 
 **Prompt:** “No, keep it active.”
