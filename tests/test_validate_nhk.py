@@ -996,6 +996,36 @@ class SourceValidationTests(ValidatorTestCase):
 
 
 class AtomicRoutingRegressionTests(ValidatorTestCase):
+    def test_planning_preserves_workspace_module_facts(self) -> None:
+        for fact in (
+            "Each task records the module it changes.",
+            "One task may change more than one module.",
+            "Every task checks the affected module boundary.",
+        ):
+            with self.subTest(fact=fact):
+                content = planning_guide_text() + "\n" + fact + "\n"
+                result = run_cli("--final", self.write_final(content), "--kind", "planning-guide")
+                self.assertEqual(result.returncode, 0, result.stdout)
+                root = self.make_source_fixture()
+                path = root / "references" / "implementation-planning-template.md"
+                path.write_text(path.read_text().replace("### Plan Layers", "### Plan Layers\n\n- " + fact, 1))
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_source_rejects_unconditional_task_routes(self) -> None:
+        for route in (
+            "Standard tasks use nhk-light.",
+            "Use nhk-deep for every task implementation.",
+            "Judgment tasks use nhk-light.",
+        ):
+            with self.subTest(route=route):
+                root = self.make_source_fixture()
+                path = root / "references" / "worker-policy-template.md"
+                path.write_text(path.read_text().replace("### Claude Routing", "### Claude Routing\n\n- " + route, 1))
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("additional routing", result.stdout)
+
     def test_worker_template_requires_bounded_legacy_migration(self) -> None:
         for phrase in (
             "same single task, scope, and confirmed approval",
@@ -1048,6 +1078,9 @@ class AtomicRoutingRegressionTests(ValidatorTestCase):
     def test_planning_rejects_whole_module_and_step_dispatch_defaults(self) -> None:
         for clause in (
             "Default one Superpowers Task is one Module.",
+            "Each task is a complete module.",
+            "Every task must own a whole module.",
+            "A complete module per task is required.",
             "Every Task must deliver a whole Module.",
             "Each internal TDD step becomes a task.",
         ):
@@ -2208,7 +2241,9 @@ Read @worker-policy.md before dispatching.
     def test_claude_routing_rejects_additional_routes(self) -> None:
         for extra in (
             "Use Sonnet for ordinary implementation and review.",
-            "Use `nhk-deep` for every module implementation.",
+            "Use `nhk-deep` for every task implementation.",
+            "Standard tasks use nhk-light.",
+            "Judgment tasks use nhk-light.",
             "Dispatch `nhk-diagnosis` for ordinary fixes.",
         ):
             with self.subTest(extra=extra):

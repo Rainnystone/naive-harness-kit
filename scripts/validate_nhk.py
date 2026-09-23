@@ -818,9 +818,14 @@ def validate_planning_tasks(sections: dict[str, str], label: str, issues: list[s
             [normalized_contract(clause) for clause in clauses], label, issues,
         )
     for clause in undeclared_clauses(sections, PLANNING_ATOMIC_DECLARATIONS):
+        # Recognize explicit task/module equations and whole-module delivery
+        # requirements while allowing workspace facts about affected modules.
         if re.search(
-            r"\b(?:default|one|every|each)\b.{0,100}\btask\b.{0,80}\bmodule\b|"
-            r"\b(?:whole|complete) module\b.{0,60}\b(?:per|each|every) task\b|"
+            r"\btask\s+(?:is|equals?|must\s+be)\s+(?:(?:a|one|the)\s+)?"
+            r"(?:(?:whole|complete)\s+)?module\b|"
+            r"\btasks?\s+(?:(?:must|should)\s+)?(?:deliver|own|cover|implement)s?\s+"
+            r"(?:(?:a|one|the)\s+)?(?:whole|complete)\s+modules?\b|"
+            r"\b(?:whole|complete)\s+module\s+(?:per|for\s+(?:each|every))\s+task\b|"
             r"\b(?:every|each) internal(?: TDD)? step (?:is|becomes) (?:a |one )?task\b|"
             r"\bsplit (?:by|based on) (?:file|commit|elapsed)\b|"
             r"\b(?:every|each) task plan must (?:contain|supply) complete implementation code\b",
@@ -990,7 +995,8 @@ def validate_worker_policy_contract(
         declared_sections[heading] = body
     validate_declared_clauses(
         declared_sections, WORKER_DECLARATIONS, label, issues,
-        r"\b(?:Band\s*\d|GPT[- ]|gpt-|Astra|Luna|module|mechanical|review|consolidat\w*|repair|fix(?:es)?|Sonnet|Opus|Fable|Ultra)\b",
+        r"\b(?:Band\s*\d|GPT[- ]|gpt-|Astra|Luna|modules?|tasks?|mechanical|standard|judgment|"
+        r"nhk-(?:light|standard|deep|diagnosis)|review|consolidat\w*|repair|fix(?:es)?|Sonnet|Opus|Fable|Ultra)\b",
     )
     validate_ui_alias_routes(declared_sections, label, issues)
     validate_exclusive_routes(policy_sections, label, issues, recovery=False)

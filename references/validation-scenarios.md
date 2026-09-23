@@ -136,6 +136,8 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Expected:** The ordinary project phrase remains valid. Planning validation requires actual `Delivers`, `Blocked by`, and `Worker class` field syntax inside Task Contract and the preserved Superpowers details inside Workflow Compatibility. Companion validation rejects a malformed worker or recovery document without broad scans that mistake ordinary project facts for policy. It reads H1, second-level headings, and section bodies from active Markdown: fence delimiters count only when indented by at most three spaces, so a four-space-indented fence does not hide a following heading. Fenced or commented examples cannot satisfy those contracts, and it rejects versioned Codex presets declared outside the approved Band 1-3 sets and role-restricted GPT-6 Astra max, including unrecognized effort suffixes on an allowed family.
 
+**Atomic contract boundaries:** Source/final planning checks accept workspace facts such as “Each task records the module it changes.” They reject explicit task/module equations and whole-module delivery requirements. Source/final worker checks reject unconditional task routes such as “Standard tasks use nhk-light” or “Use nhk-deep for every task implementation”; task terminology and Claude definition names cannot bypass the declared low-risk or difficulty conditions.
+
 ### C12. Companion budgets and measured instruction reduction
 
 **Setup:** Generate `worker-policy.md`, `execution-recovery.md`, standalone `AGENTS.md`, and standalone `CLAUDE.md` using the same project facts as the approved base examples.
