@@ -31,6 +31,7 @@ Start with `# Implementation Planning`, then use exactly the following second-le
 - A Module is related work with a defined responsibility, prerequisites, interfaces, and complete acceptance; it need not match a file or directory. Default one Superpowers Task is one Module; independently dispatched mechanical work is the explicit exception.
 - Keep concrete incremental internal steps and timely verification. A module may contain multiple necessary TDD cycles.
 - Group implementation, tests, configuration, migration, and documentation for the same capability and working context.
+- Size modules for the default implementation role: reduce independent decisions without fragmenting delivery or requiring the main thread to pre-solve local design.
 
 ### Task Contract
 
@@ -45,7 +46,7 @@ Then retain the workflow's `Files`, `Interfaces`, exact TDD steps, commands, exp
 - One module must fit one implementer context, one complete acceptance result, one independent reviewer, and one return.
 - Split at unrelated outcomes, distinct authority, unresolved cross-module dependencies, or scope one implementer and reviewer cannot reliably assess. File count, commit count, elapsed time, and independently testable internal results alone do not justify splitting. Keep one transaction, permission decision, or recovery path together.
 - Internal mechanical steps stay with the module implementer; they never automatically become new dispatches. Batch independent same-shape mechanical work when it shares acceptance and verification.
-- `mechanical` is for standalone deterministic low-risk work. Whole modules use `standard` for clear implementation or `judgment` for integration/design uncertainty; both route to medium under the Codex worker policy.
+- `mechanical` is for standalone deterministic low-risk work. Whole modules use `standard` for clear implementation or `judgment` for integration/design uncertainty; worker class describes the work, not a model tier. Both start from the default implementation role in `worker-policy.md`.
 
 ### Dependencies and Execution
 
@@ -54,6 +55,8 @@ Then retain the workflow's `Files`, `Interfaces`, exact TDD steps, commands, exp
 - A dispatch brief carries the complete task body, selected configuration, and binding `Files`, `Interfaces`, acceptance, authority, verification, forbidden actions, expected return, and global constraints.
 - If a brief helper extracts only the task section, copy plan-level constraints into that section or attach one self-contained file handoff.
 - Before dispatch, apply the module boundaries above; internal steps remain with their module owner.
+- Before increasing capability, separate unrelated decisions and resolve missing interfaces or context; preserve tightly coupled logic and its verification.
+- When investigation is necessary, give it an observable result and the default implementation role unless its own difficulty justifies more capability.
 - Apply `worker-policy.md` for dispatch and review choices. Apply `execution-recovery.md` only when its triggers fire.
 
 ### Wide Changes
@@ -69,6 +72,7 @@ Before approval or dispatch, verify:
 
 - every task has `Delivers`, `Blocked by`, and `Worker class`
 - every module has complete acceptance, one implementer context, internal verification, and one independent reviewer; mechanical exceptions are explicit
+- When many tasks need higher capability, recheck boundaries and shared constraints; use no fixed quota and keep irreducible difficult modules intact.
 - dependencies form a valid execution order and do not imply unsafe parallel writes
 - wide changes use expand, migrate batches, and contract rather than one giant task
 - the plan preserves the active Superpowers details and introduces no competing workflow

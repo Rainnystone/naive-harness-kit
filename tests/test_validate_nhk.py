@@ -83,8 +83,9 @@ LEGACY_CODEX_PRESET_LADDER = (
 )
 
 CODEX_PRESET_BAND_LINES = (
-    "Band 1: GPT-5.6 Luna max; GPT-6 Astra low.",
+    "Band 1: GPT-6 Luna max.",
     "Band 2: GPT-6 Astra medium.",
+    "Band 3: GPT-6 Astra xhigh.",
 )
 
 COMPANION_ROUTES = (
@@ -185,7 +186,7 @@ def human_routing_exception(**overrides: str) -> str:
         "target": "billing-module",
         "scope": "src/billing/",
         "role": "module-implementation",
-        "preset": "GPT-6 Astra low",
+        "preset": "GPT-6 Astra xhigh",
         "approval": "decisions/billing.md#low-route",
     }
     record.update(overrides)
@@ -205,9 +206,9 @@ def literal_routing_record_cases():
     record = records[0]
     yield record, "Whole modules may use GPT-6 Astra low.", None, 1
     yield record, "Use GPT-6 Astra xhigh for ordinary implementation.", None, 1
-    yield record, "", ("GPT-5.6 Luna max", "GPT-5.6 Luna high"), 1
+    yield record, "", ("GPT-6 Luna max", "GPT-6 Luna high"), 1
     yield human_routing_exception(approval="decisions/gpt-6-astra-low.md"), "", None, 1
-    yield human_routing_exception(preset="GPT-6 Astra xhigh"), "", None, 1
+    yield human_routing_exception(preset="GPT-6 Astra max"), "", None, 1
 
 
 def worker_policy_text() -> str:
@@ -685,7 +686,7 @@ class SourceValidationTests(ValidatorTestCase):
                 result = run_cli("--root", root)
                 self.assertEqual(result.returncode, 1, result.stdout)
         for filename, clause in (
-            ("worker-policy-template.md", "Whole module implementation, internal debugging, tests, integration, and initial independent module review use GPT-6 Astra medium (Band 2)."),
+            ("worker-policy-template.md", "Default module implementation, internal debugging, tests, and integration to Band 2."),
             ("implementation-planning-template.md", "Group implementation, tests, configuration, migration, and documentation for the same capability and working context."),
         ):
             for inactive in ("<!-- " + clause + " -->", "```md\n" + clause + "\n```"):
@@ -876,7 +877,7 @@ class SourceValidationTests(ValidatorTestCase):
             ("README.md", "Superpowers overlay", "planning helper"),
             (
                 "README.md",
-                "two practical Codex bands",
+                "three practical Codex bands",
                 "several worker options",
             ),
             ("README_CN.md", "十个受控 reference", "几份 reference"),
@@ -1118,6 +1119,8 @@ class FinalValidationTests(ValidatorTestCase):
 
     def test_review_final_alias_and_class_conflicts(self) -> None:
         cases = (
+            ("worker-policy", worker_policy_text(), "Use max for ordinary implementation."),
+            ("worker-policy", worker_policy_text(), "Use xhigh for ordinary implementation."),
             ("worker-policy", worker_policy_text(), "Use Extra High for ordinary implementation."),
             ("worker-policy", worker_policy_text(), "Use Light for module implementation."),
             ("worker-policy", worker_policy_text(), "Use Light."),
@@ -1200,10 +1203,10 @@ class FinalValidationTests(ValidatorTestCase):
             human_routing_exception(scope="src/*"),
             human_routing_exception(approval="approved"),
             human_routing_exception(role="all"),
-            human_routing_exception(preset="GPT-6 Astra xhigh"),
+            human_routing_exception(preset="GPT-6 Astra max"),
             human_routing_exception(preset="Ultra"),
             human_routing_exception(role="recursive-delegation"),
-            human_routing_exception(role="initial-module-review", preset="GPT-5.6 Luna max"),
+            human_routing_exception(role="initial-module-review", preset="GPT-6 Luna max"),
             human_routing_exception() + " Whole modules may use GPT-6 Astra low.",
         )
         for record in records:
@@ -1223,7 +1226,7 @@ class FinalValidationTests(ValidatorTestCase):
             human_routing_exception(target="计费模块", scope="src/计费/", approval="decisions/计费.md#批准"),
             human_routing_exception(target="billing-project"),
             human_routing_exception(role="initial-module-review"),
-            human_routing_exception(role="scoped-re-review", preset="GPT-5.6 Luna max"),
+            human_routing_exception(role="scoped-re-review", preset="GPT-6 Luna max"),
         ):
             text = worker_policy_text().replace("## Codex Routing", "## Codex Routing\n" + record, 1)
             result = run_cli("--final", self.write_final(text), "--kind", "worker-policy")
@@ -1281,7 +1284,7 @@ class FinalValidationTests(ValidatorTestCase):
     def test_module_contract_requires_active_correct_sections(self) -> None:
         cases = (
             ("worker-policy", worker_policy_text(), "Codex Routing", "Claude Routing",
-             "Whole module implementation, internal debugging, tests, integration, and initial independent module review use GPT-6 Astra medium (Band 2)."),
+             "Default module implementation, internal debugging, tests, and integration to Band 2."),
             ("planning-guide", planning_guide_text(), "Plan Layers", "Plan Review",
              "A Module is related work with a defined responsibility, prerequisites, interfaces, and complete acceptance; it need not match a file or directory. Default one Superpowers Task is one Module; independently dispatched mechanical work is the explicit exception."),
         )
@@ -1329,7 +1332,7 @@ class FinalValidationTests(ValidatorTestCase):
     def test_module_routing_rejects_additive_authorizations(self) -> None:
         for clause in (
             "Whole modules may use GPT-6 Astra low.",
-            "Module implementation may use GPT-5.6 Luna max.",
+            "Module implementation may use GPT-6 Luna max.",
             "Mechanical fixes may include design judgment and use Band 1.",
             "Initial module reviews may use Band 1.",
         ):
@@ -1364,14 +1367,38 @@ class FinalValidationTests(ValidatorTestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertIn("headings", result.stdout.lower())
 
-    def test_worker_policy_accepts_reordered_exact_band_membership(self) -> None:
-        content = worker_policy_text().replace(
-            "Band 1: GPT-5.6 Luna max; GPT-6 Astra low.",
-            "Band 1: GPT-6 Astra low; GPT-5.6 Luna max.",
-            1,
-        )
-        path = self.write_final(content)
-        result = run_cli("--final", path, "--kind", "worker-policy")
+    def test_gpt6_routing_defaults_to_medium_with_bounded_xhigh(self) -> None:
+        content = worker_policy_text()
+        for clause in (
+            "Band 1: GPT-6 Luna max.",
+            "Band 2: GPT-6 Astra medium.",
+            "Band 3: GPT-6 Astra xhigh.",
+            "Default module implementation, internal debugging, tests, and integration to Band 2.",
+            "Select Band 3 only for a concrete reasoning difficulty remaining after sizing and context checks, or demonstrated Band 2 capability limits.",
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(clause, content)
+                mutated = content.replace(clause, "", 1)
+                result = run_cli("--final", self.write_final(mutated), "--kind", "worker-policy")
+                self.assertEqual(result.returncode, 1, result.stdout)
+
+    def test_planning_requires_sizing_before_capability_and_no_fragmentation(self) -> None:
+        content = planning_guide_text()
+        for clause in (
+            "Before increasing capability, separate unrelated decisions and resolve missing interfaces or context; preserve tightly coupled logic and its verification.",
+            "When many tasks need higher capability, recheck boundaries and shared constraints; use no fixed quota and keep irreducible difficult modules intact.",
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(clause, content)
+                result = run_cli("--final", self.write_final(content.replace(clause, "", 1)), "--kind", "planning-guide")
+                self.assertEqual(result.returncode, 1, result.stdout)
+
+    def test_worker_policy_accepts_reordered_exact_band_rows(self) -> None:
+        content = worker_policy_text()
+        original = "\n- ".join(CODEX_PRESET_BAND_LINES)
+        self.assertIn(original, content)
+        content = content.replace(original, "\n- ".join(reversed(CODEX_PRESET_BAND_LINES)), 1)
+        result = run_cli("--final", self.write_final(content), "--kind", "worker-policy")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_worker_policy_rejects_wrong_missing_extra_or_duplicate_presets(self) -> None:
@@ -1384,7 +1411,7 @@ class FinalValidationTests(ValidatorTestCase):
             valid.replace("GPT-6 Astra medium", "GPT-5.5 xhigh"),
             valid.replace("GPT-6 Astra medium", ""),
             valid.replace("GPT-6 Astra medium", "GPT-5.6 Sol medium"),
-            valid.replace("GPT-6 Astra medium", "GPT-6 Astra medium; GPT-5.6 Luna max"),
+            valid.replace("GPT-6 Astra medium", "GPT-6 Astra medium; GPT-6 Luna max"),
             valid.replace("GPT-6 Astra medium", "GPT-6 Astra medium; GPT-6 Astra medium"),
             valid + "\n- Band 3: GPT-6 Astra xhigh.",
         )
@@ -1404,12 +1431,12 @@ class FinalValidationTests(ValidatorTestCase):
                 "Review Gates",
             ),
             (
-                "GPT-5.6 Luna may perform low-risk scoped re-review, never an initial task review.",
-                "GPT-5.6 Luna may perform any initial task review.",
+                "GPT-6 Luna may perform low-risk scoped re-review, never an initial task review.",
+                "GPT-6 Luna may perform any initial task review.",
                 "Codex Routing",
             ),
             (
-                "GPT-6 Astra xhigh and GPT-6 Astra max are reserved for whole-change final review of a complex Superpowers plan, not ordinary implementation, debugging, or recovery.",
+                "Independent diagnosis and complex whole-change final review use Band 3, or GPT-6 Astra max when deeper reasoning is needed. Max is limited to these read-only roles; after a failed Band 3 implementation it may be selected directly for the one independent diagnosis.",
                 "GPT-6 Astra max may perform ordinary implementation and recovery.",
                 "Codex Routing",
             ),
@@ -1433,36 +1460,35 @@ class FinalValidationTests(ValidatorTestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(section, result.stdout)
 
-    def test_two_band_routing_rejects_old_ceiling_and_special_fallback(self) -> None:
+    def test_three_band_routing_rejects_default_ceiling_and_fallback_drift(self) -> None:
         mutations = (
-            ("ordinary Band 2 ceiling", "ordinary Band 3 ceiling"),
-            ("Other initial reviews use Band 2.", "Other initial reviews use Band 3."),
-            (
-                "never downgrade a module or use special final-review presets as fallback",
-                "it authorizes Astra xhigh or max when Band 2 is unavailable",
-            ),
+            ("ordinary Band 3 ceiling", "ordinary Band 2 ceiling"),
+            ("Initial independent reviews default to Band 2", "Initial independent reviews default to Band 3"),
+            ("it does not authorize a different band, an older model, or a special-role preset as fallback",
+             "it authorizes Astra max when Band 2 is unavailable"),
+            ("Default module implementation, internal debugging, tests, and integration to Band 2.",
+             "Default module implementation, internal debugging, tests, and integration to Band 3."),
         )
         for required, replacement in mutations:
             with self.subTest(required=required):
                 content = worker_policy_text()
                 self.assertIn(required, content)
-                path = self.write_final(content.replace(required, replacement, 1))
-                result = run_cli("--final", path, "--kind", "worker-policy")
+                result = run_cli("--final", self.write_final(content.replace(required, replacement, 1)), "--kind", "worker-policy")
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                 self.assertIn("Codex Routing", result.stdout)
 
-    def test_recovery_diagnosis_uses_ordinary_band(self) -> None:
-        for replacement in ("Band 3", "GPT-6 Astra xhigh", "GPT-6 Astra max"):
+    def test_recovery_diagnosis_uses_worker_policy_role(self) -> None:
+        route = "using the independent diagnosis role in `worker-policy.md`"
+        for replacement in ("using Band 2", "using Band 3", "using GPT-6 Astra max"):
             with self.subTest(replacement=replacement):
                 content = execution_recovery_text()
-                self.assertIn("Band 2 or Opus", content)
-                path = self.write_final(content.replace("Band 2 or Opus", f"{replacement} or Opus", 1))
-                result = run_cli("--final", path, "--kind", "execution-recovery")
+                self.assertIn(route, content)
+                result = run_cli("--final", self.write_final(content.replace(route, replacement, 1)), "--kind", "execution-recovery")
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                 self.assertIn("Independent Diagnosis", result.stdout)
 
     def test_additive_reserved_routes_fail(self) -> None:
-        for preset in ("GPT-6 Astra xhigh", "GPT-6 Astra max", "gpt-6-astra xhigh"):
+        for preset in ("GPT-6 Astra max", "gpt-6-astra max"):
             for role in ("ordinary implementation", "debugging", "scoped re-review"):
                 with self.subTest(preset=preset, role=role):
                     content = worker_policy_text().replace(
@@ -1474,7 +1500,7 @@ class FinalValidationTests(ValidatorTestCase):
                     self.assertIn("reserved routing", result.stdout)
 
     def test_additive_diagnostic_routes_fail(self) -> None:
-        for route in ("Band 3", "GPT-6 Astra xhigh", "GPT-6 Astra max", "gpt-6-astra max", "Sonnet"):
+        for route in ("Band 3", "GPT-6 Astra xhigh", "GPT-6 Astra max", "gpt-6-astra max", "Sonnet", "max", "xhigh", "Extra High"):
             with self.subTest(route=route):
                 content = execution_recovery_text().replace(
                     "## Recovery and Stop",
@@ -1510,7 +1536,7 @@ class FinalValidationTests(ValidatorTestCase):
             """## Codex Routing
 
 - Do not use GPT-6 Astra max for ordinary implementation.
-- GPT-5.6 Luna max must not perform initial task reviews.
+- GPT-6 Luna max must not perform initial task reviews.
 - Ultra approval never authorizes recursive delegation.""",
             1,
         ).replace(
@@ -1527,6 +1553,9 @@ class FinalValidationTests(ValidatorTestCase):
     def test_worker_policy_rejects_presets_declared_outside_band_lines(self) -> None:
         extras = (
             "GPT-9 Nova max is also approved for ordinary implementation.",
+            "GPT-5.6 Luna max is also approved for ordinary implementation.",
+            "GPT-6 Astra low is also approved for ordinary implementation.",
+            "GPT-6 Sol xhigh is also approved for ordinary implementation.",
             "GPT-5.6 Sol high is also approved for ordinary implementation.",
             "gpt-5.6-sol is also approved for ordinary implementation.",
             "GPT-6 Nova max is also approved for ordinary implementation.",
