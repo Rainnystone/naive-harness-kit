@@ -530,7 +530,11 @@ def validate_exclusive_routes(sections: dict[str, str], label: str, issues: list
 
 # Declared routing/review clauses are a bounded format, not a prose interpreter.
 # Preserve these clauses in generated companions; extra role authorizations fail.
-WORKER_DECLARATIONS = {'Dispatch Contract': ['Authorization comes from the allowed role or preset for the packet, '
+WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer context for each atomic task or qualifying mechanical batch; preserve the chosen native workflow when SDD is not selected.',
+                       'Low-risk implementation requires clear behavior and interfaces, an established approach, reliable verification, and bounded local impact. Security, data integrity, or hidden cross-task risks require a judgment role even when the code is short.',
+                       'Optimize total delivery cost across planning, context handoff, implementation, review, and rework; do not impose model-use quotas.',
+                       'Choose capability from the remaining difficulty and impact; architecture labels and fix rounds 4-5 do not automatically select a stronger model.',
+                       'Authorization comes from the allowed role or preset for the packet, '
                        "not the main thread's current model or effort. Explicit user budgets "
                        'still bind.',
                        'Select an explicitly runtime-supported model and effort; never '
@@ -554,10 +558,12 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['Authorization comes from the allow
                        'blocker and does not require a nonexistent close tool.',
                        'The main thread owns integration, cross-task verification, recovery '
                        'decisions, and the final result.'],
- 'Review Gates': ['Every module or standalone mechanical task gets one independent read-only '
-                  'reviewer with separate spec-compliance and task-quality verdicts. Both '
+ 'Review Gates': ['In SDD, every atomic task or qualifying mechanical batch gets one independent '
+                  'read-only reviewer with separate spec-compliance and task-quality verdicts. Both '
                   'must pass; self-review is not a substitute.',
-                  'Internal module steps do not dispatch separate reviewers.',
+                  'Internal task steps do not dispatch separate reviewers. Native execution retains '
+                  'its own task verification and one independent whole-change final review, without '
+                  'per-task subagent reviews.',
                   'Use the upstream task-reviewer, re-review, and final-review prompts. Do '
                   'not maintain copied NHK review prompts.',
                   'Give reviewers fixed BASE and HEAD revisions, binding constraints, the '
@@ -565,25 +571,27 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['Authorization comes from the allow
                   'output.',
                   'A scoped re-review checks prior findings and regressions from the fix. The '
                   'main thread resolves every cannot-verify item before completion.',
-                  'A passed module review may satisfy final review only for a single-module '
-                  'non-complex plan covering all requirements, changes, and verification '
-                  'evidence at identical final scope and fixed version.',
+                  'A passed SDD task review may satisfy final review only for a single-task '
+                  'non-complex plan covering all requirements, changes, and verification evidence at '
+                  'identical final scope and fixed version.',
                   'Re-evaluate consolidation when scope, version, or evidence changes; never '
                   'reuse stale approval.',
-                  'All other plans, including multi-module and complex plans, retain one whole-change final review. Final '
-                  'review allows at most one concentrated fix wave and one scoped re-review.',
-                  'Consolidation never resets or extends module or acceptance-gap repair '
-                  'counts, execution recovery, or final fix-wave bounds.'],
+                  'All other plans, including multi-task and complex plans, retain one whole-change '
+                  'final review. Final review allows at most one concentrated fix wave and one scoped '
+                  're-review.',
+                  'Consolidation never resets or extends task or acceptance-gap repair counts, '
+                  'execution recovery, or final fix-wave bounds.'],
  'Codex Routing': ['Every fresh Codex worker uses `fork_turns: none` and receives a '
                    'self-contained brief, required files, and binding global constraints.',
                    'Runtime model IDs are `gpt-6-luna` and `gpt-6-astra`; UI Extra High maps to '
                    '`xhigh`.',
                    'Presets within a band are unordered task-fit choices; roles determine '
                    'permission, and there is no mandatory Band 1 trial.',
-                   'Default module implementation, internal debugging, tests, and integration to '
-                   'Band 2.',
-                   'Standalone mechanical work must be independent, deterministic, clearly '
-                   'specified, and low-risk; it may use Band 1.',
+                   'Default ordinary implementation, local design, integration, debugging, and '
+                   'independent investigation to Band 2.',
+                   'Band 1 may implement and test small mechanical or standard tasks that meet the '
+                   'low-risk implementation condition; the plan need not supply complete '
+                   'implementation code.',
                    'Before selecting Band 3, check packet size, interfaces, and context; repair '
                    'these first. Load `implementation-planning.md` if the plan needs material '
                    'revision.',
@@ -599,10 +607,10 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['Authorization comes from the allow
                    'from implementation.',
                    'Local fixes and scoped re-reviews may use Band 1 only when cause, '
                    'intended behavior, approach, impact, and verification are clear and no '
-                   'design or cross-module judgment is needed.',
-                   'Small line count or a review finding alone does not qualify a fix. Keep '
-                   'judgment and integration with the original module owner or select Band 2/3 '
-                   'under the difficulty rules.',
+                   'design or cross-task judgment is needed.',
+                   'Small line count or a review finding alone does not qualify a fix. Keep judgment '
+                   'and integration with the original task owner or select Band 2/3 under the '
+                   'difficulty rules.',
                    'GPT-6 Luna may perform low-risk scoped re-review, never an initial task '
                    'review.',
                    'Report preset unavailability as availability; it does not authorize a '
@@ -623,7 +631,9 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['Authorization comes from the allow
                    'becomes a reusable project or session default.',
                    'Ultra authorization and recursion authorization never imply each other.',
                    'Preserve an existing human routing exception only as an active `Human routing exception:` JSON bullet in Codex Routing with exactly `target`, `scope`, `role`, `preset`, and `approval` string fields.',
-                   'The target names one packet or module; scope is a non-root repository-relative path without wildcards or traversal. Role is `module-implementation`, `initial-module-review`, `local-fix`, or `scoped-re-review`.',
+                   'The target names one task or qualifying mechanical batch; scope is a non-root '
+                   'repository-relative path without wildcards or traversal. Role is '
+                   '`task-implementation`, `initial-task-review`, `local-fix`, or `scoped-re-review`.',
                    'Apply the ordinary catalog preset only when target, scope, and role match the confirmed decision; all other work keeps the normal rules. Never turn a record into a project or session default.',
                    'Confirm the existing human decision from its Markdown-file-and-anchor or HTTPS-and-fragment approval reference; never invent consent. Static validation checks structure, not approval authenticity.',
                    'Records change only ordinary preset choice, not worker class, review gates, '
@@ -636,12 +646,13 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['Authorization comes from the allow
                     'then runs at session effort, as the human chose when declining them.',
                     'The definitions alone carry model and effort. Route by band name: '
                     '`nhk-light`, `nhk-standard`, `nhk-deep`, or `nhk-diagnosis`.',
-                    '`nhk-light`: standalone mechanical work, and local fixes or scoped '
-                    're-reviews whose cause, intended behavior, approach, impact, and '
-                    'verification are clear without design or cross-module judgment. Initial '
-                    'reviews start at `nhk-standard`.',
-                    '`nhk-standard`: the default for module implementation, internal debugging, '
-                    'tests, integration, initial reviews, and other whole-change final reviews.',
+                    '`nhk-light`: small mechanical or standard tasks meeting the low-risk '
+                    'implementation condition, plus local fixes or scoped re-reviews with clear '
+                    'cause, behavior, approach, impact, and verification without design or cross-task '
+                    'judgment. Initial reviews start at `nhk-standard`.',
+                    '`nhk-standard`: the default for ordinary implementation, local design, '
+                    'integration, debugging, independent investigation, initial reviews, and other '
+                    'whole-change final reviews.',
                     '`nhk-deep`: a concrete reasoning difficulty that remains after sizing and '
                     'context checks, stated in one sentence in the brief, or demonstrated '
                     '`nhk-standard` limits. Reviews meeting that difficulty condition also use it.',
@@ -659,41 +670,42 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['Authorization comes from the allow
                     'main thread.',
                     'Built-in agents also receive `model: opus` explicitly, so Fable is never '
                     'inherited.']}
-PLANNING_MODULE_DECLARATIONS = {'Workflow Compatibility': ['The installed or explicitly adopted Superpowers workflow '
-                            'supplies plan shape, test workflow, and review prompts; NHK '
-                            'module sizing, role routing, reuse, and waiting rules override '
-                            'conflicting generic defaults.',
-                            'Preserve its `Files`, `Interfaces`, exact TDD steps, commands, '
-                            'expected results, and necessary code.',
-                            'This document is a module-sizing overlay, not a '
-                            'replacement spec, ticket system, or runtime dependency.'],
+PLANNING_ATOMIC_DECLARATIONS = {'Workflow Compatibility': ['The installed or explicitly adopted '
+                                                           'Superpowers workflow supplies plan shape, '
+                                                           'test workflow, and review prompts; NHK atomic '
+                                                           'task sizing, planning detail, role routing, '
+                                                           'reuse, and waiting rules override conflicting '
+                                                           'generic defaults.',
+                            'Preserve its `Files`, `Interfaces`, concrete TDD steps, commands, '
+                            'expected results, and necessary code examples. Specify behavior, '
+                            'boundaries, and verification; workers own local implementation without a '
+                            'mandatory complete code listing in the plan.',
+                            'This document is an atomic task-sizing overlay for both Codex and Claude '
+                            "Code; preserve the user's chosen SDD or native execution method."],
  'Plan Layers': ['Keep outcome, constraints, architecture, interfaces, and cross-task '
                  'sequencing at plan level.',
-                 'A Module is related work with a defined responsibility, prerequisites, '
-                 'interfaces, and complete acceptance; it need not match a file or directory. '
-                 'Default one Superpowers Task is one Module; independently dispatched '
-                 'mechanical work is the explicit exception.',
-                 'Keep concrete incremental internal steps and timely verification. A module '
-                 'may contain multiple necessary TDD cycles.',
-                 'Group implementation, tests, configuration, migration, and documentation '
-                 'for the same capability and working context.',
-                 'Size modules for the default implementation role: reduce independent decisions '
-                 'without fragmenting delivery or requiring the main thread to pre-solve local '
-                 'design.'],
- 'Task Contract': ['One module must fit one implementer context, one complete acceptance '
-                   'result, one independent reviewer, and one return.',
-                   'Split at unrelated outcomes, distinct authority, unresolved cross-module '
-                   'dependencies, or scope one implementer and reviewer cannot reliably '
-                   'assess. File count, commit count, elapsed time, and independently '
-                   'testable internal results alone do not justify splitting. Keep one '
-                   'transaction, permission decision, or recovery path together.',
-                   'Internal mechanical steps stay with the module implementer; they never '
-                   'automatically become new dispatches. Batch independent same-shape '
-                   'mechanical work when it shares acceptance and verification.',
-                   '`mechanical` is for standalone deterministic low-risk work. Whole modules use '
-                   '`standard` for clear implementation or `judgment` for integration/design '
-                   'uncertainty; worker class describes the work, not a model tier. Both start '
-                   'from the default implementation role in `worker-policy.md`.'],
+                 'An atomic task is the smallest independently testable delivery with a complete '
+                 'verification loop worth its own review. Split where a reviewer could accept one '
+                 'result and reject its neighbor, including within the same feature.',
+                 "Keep Superpowers' small execution steps inside their task. A task may contain "
+                 'multiple necessary TDD cycles.',
+                 'Group implementation, tests, configuration, migration, and documentation required '
+                 "for that task's acceptance.",
+                 'Define the delivery before choosing a model; reduce independent decisions and '
+                 'context burden without moving all local implementation into the main thread.'],
+ 'Task Contract': ['File count, code size, and elapsed time are clues, not task-size thresholds. A task may span files; a feature may span tasks.',
+                   'One task fits one bounded working context, one observable acceptance result, and '
+                   'one independent return; SDD adds one independent reviewer.',
+                   'Separate independently acceptable outcomes and judgments; connect dependent tasks '
+                   'through explicit interfaces. Keep one transaction, permission decision, or '
+                   'recovery path together.',
+                   'Batch same-shape mechanical changes only with one transformation rule, an '
+                   'explicit file list, shared verification, and no separate judgment. Internal '
+                   'execution steps do not become separate dispatches.',
+                   '`mechanical` describes deterministic transformations, `standard` clear '
+                   'implementation, and `judgment` local design, integration, or debugging decisions. '
+                   'Worker class is not a model tier; a small standard task can meet the low-risk '
+                   'implementation condition in `worker-policy.md`.'],
  'Dependencies and Execution': ['`Blocked by` lists only real prerequisite tasks and uses '
                                 '`None` when there is no dependency.',
                                 'Under subagent-driven development, implementation tasks '
@@ -706,17 +718,21 @@ PLANNING_MODULE_DECLARATIONS = {'Workflow Compatibility': ['The installed or exp
                                 'If a brief helper extracts only the task section, copy '
                                 'plan-level constraints into that section or attach one '
                                 'self-contained file handoff.',
-                                'Before dispatch, apply the module boundaries above; internal '
-                                'steps remain with their module owner.',
-                                'Before increasing capability, separate unrelated decisions and '
-                                'resolve missing interfaces or context; preserve tightly coupled '
-                                'logic and its verification.',
-                                'When investigation is necessary, give it an observable result and '
-                                'the default implementation role unless its own difficulty '
+                                'Use upstream brief, report, diff-package, and ledger artifacts; pass '
+                                'relevant interfaces and evidence rather than accumulated session '
+                                'history.',
+                                'Before increasing capability, separate independent deliveries and '
+                                'decisions and resolve missing interfaces or context; preserve '
+                                'tightly coupled logic and its verification.',
+                                'Split investigation only when it delivers a verifiable conclusion, '
+                                'interface contract, or reusable decision; otherwise keep local '
+                                'understanding with implementation. Independent investigation starts '
+                                'at the default implementation role unless its own difficulty '
                                 'justifies more capability.',
                                 'Apply `worker-policy.md` for dispatch and review choices. '
                                 'Apply `execution-recovery.md` only when its triggers fire.'],
- 'Plan Review': ['When many tasks need higher capability, recheck boundaries and shared constraints; use no fixed quota and keep irreducible difficult modules intact.']}
+ 'Plan Review': ['When many tasks need higher capability, recheck boundaries and shared constraints; '
+                 'use no fixed quota and preserve irreducible difficult tasks.']}
 
 def normalized_contract(text: str) -> str:
     return " ".join(text.replace("`", "").split())
@@ -794,23 +810,34 @@ def validate_wait_contract(sections: dict[str, str], label: str, issues: list[st
                              r"\b(?:\d+\s*(?:seconds?|minutes?)|wait(?:s|ing)?|poll(?:s|ing)?|silence|timeout)\b")
 
 
-def validate_planning_modules(sections: dict[str, str], label: str, issues: list[str]) -> None:
+def validate_planning_tasks(sections: dict[str, str], label: str, issues: list[str]) -> None:
     normalized = {key: normalized_contract(value) for key, value in sections.items()}
-    for heading, clauses in PLANNING_MODULE_DECLARATIONS.items():
+    for heading, clauses in PLANNING_ATOMIC_DECLARATIONS.items():
         require_section_text(
             normalized, heading,
             [normalized_contract(clause) for clause in clauses], label, issues,
         )
-    body = normalized_contract("\n".join(sections.values()))
-    if re.search(r"smallest[- ]reviewable|every internal step (?:is|becomes) (?:a |one )?task|split (?:by|based on) (?:file|commit|elapsed)", body, re.I):
-        issues.append(f"{label} conflicts with module sizing")
-    for clause in undeclared_clauses(sections, PLANNING_MODULE_DECLARATIONS):
+    for clause in undeclared_clauses(sections, PLANNING_ATOMIC_DECLARATIONS):
+        # Recognize explicit task/module equations and whole-module delivery
+        # requirements while allowing workspace facts about affected modules.
+        if re.search(
+            r"\btask\s+(?:is|equals?|must\s+be)\s+(?:(?:a|one|the)\s+)?"
+            r"(?:(?:whole|complete)\s+)?module\b|"
+            r"\btasks?\s+(?:(?:must|should)\s+)?(?:deliver|own|cover|implement)s?\s+"
+            r"(?:(?:a|one|the)\s+)?(?:whole|complete)\s+modules?\b|"
+            r"\b(?:whole|complete)\s+module\s+(?:per|for\s+(?:each|every))\s+task\b|"
+            r"\b(?:every|each) internal(?: TDD)? step (?:is|becomes) (?:a |one )?task\b|"
+            r"\bsplit (?:by|based on) (?:file|commit|elapsed)\b|"
+            r"\b(?:every|each) task plan must (?:contain|supply) complete implementation code\b",
+            clause, re.I,
+        ):
+            issues.append(f"{label} conflicts with atomic task sizing or planning detail")
         if (re.search(r"\bmodules?\b", clause, re.I)
                 and re.search(r"\b(?:mechanical|standard|judgment)\b", clause, re.I)
                 and re.search(r"\b(?:workers?|class|whole modules?|complete modules?)\b", clause, re.I)
                 and (re.search(r"\b(?:may|must|uses?|assign\w*|rout\w*|classif\w*|permi\w*|allow\w*|select\w*)\b", clause, re.I)
                      or re.search(r"\bworker[ -]+class\s*(?::|\bis\b)", clause, re.I))):
-            issues.append(f"{label} contains an additional module worker-class declaration; preserve the declared standalone mechanical exception")
+            issues.append(f"{label} contains an additional module worker-class declaration; use the atomic task contract")
     validate_planning_fields(sections, label, issues)
 
 
@@ -843,7 +870,7 @@ ROUTING_EXCEPTION_PREFIX = "- Human routing exception:"
 ROUTING_EXCEPTION_MARKER_RE = re.compile(r"^\s*-\s+Human routing exception\b", re.IGNORECASE)
 ROUTING_EXCEPTION_FIELDS = {"target", "scope", "role", "preset", "approval"}
 ROUTING_EXCEPTION_ROLES = {
-    "module-implementation", "initial-module-review", "local-fix", "scoped-re-review",
+    "task-implementation", "initial-task-review", "local-fix", "scoped-re-review",
 }
 
 
@@ -918,7 +945,7 @@ def without_routing_exceptions(
                     reason = "must name one ordinary implementation or review role; it cannot authorize recursion"
                 elif record["preset"] not in ordinary_presets:
                     reason = "may choose only an ordinary catalog preset, never special-role or Ultra permissions"
-                elif record["role"] == "initial-module-review" and record["preset"] == "GPT-6 Luna max":
+                elif record["role"] == "initial-task-review" and record["preset"] == "GPT-6 Luna max":
                     reason = "does not authorize Luna initial reviews"
                 elif not approval_reference(record["approval"]):
                     reason = "requires a specific Markdown-file anchor or HTTPS fragment approval reference"
@@ -968,7 +995,8 @@ def validate_worker_policy_contract(
         declared_sections[heading] = body
     validate_declared_clauses(
         declared_sections, WORKER_DECLARATIONS, label, issues,
-        r"\b(?:Band\s*\d|GPT[- ]|gpt-|Astra|Luna|module|mechanical|review|consolidat\w*|repair|fix(?:es)?|Sonnet|Opus|Fable|Ultra)\b",
+        r"\b(?:Band\s*\d|GPT[- ]|gpt-|Astra|Luna|modules?|tasks?|mechanical|standard|judgment|"
+        r"nhk-(?:light|standard|deep|diagnosis)|review|consolidat\w*|repair|fix(?:es)?|Sonnet|Opus|Fable|Ultra)\b",
     )
     validate_ui_alias_routes(declared_sections, label, issues)
     validate_exclusive_routes(policy_sections, label, issues, recovery=False)
@@ -1397,6 +1425,16 @@ def validate_skill(root: Path, name: str, issues: list[str]) -> None:
         if token not in text:
             issues.append(f"{name}/SKILL.md: NHK update reconciliation is missing {token!r}")
 
+    if name in ("nhk-bootstrap", "nhk-upkeep"):
+        for token in (
+            "Reconcile atomic task sizing, planning detail",
+            "Preserve completed and in-flight task identities and progress",
+            "without resetting acceptance-gap counts",
+            "Follow the worker-policy template migration contract for legacy module-role records",
+        ):
+            if token not in text:
+                issues.append(f"{name}/SKILL.md: atomic migration is missing {token!r}")
+
     for companion in (
         "coding-agent-guide.md",
         "implementation-planning.md",
@@ -1500,6 +1538,8 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         "human-facing suggestion only",
         "you choose the main-thread model and effort",
         "NHK worker permissions do not depend on that choice",
+        "smallest independently testable deliveries",
+        "The plan need not contain complete implementation code",
     ):
         require_text(english, token, "README.md", issues, case_sensitive=False)
     for token in (
@@ -1516,6 +1556,8 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         "这只是给使用者的建议",
         "主线程型号和 effort 由你选择",
         "NHK 的 worker 权限不依赖该选择",
+        "能够独立测试、值得独立审查的最小交付",
+        "计划不必给出完整实现代码",
     ):
         require_text(chinese, token, "README_CN.md", issues, case_sensitive=False)
     for token in ("five-round limit", "same unresolved problem across tasks"):
@@ -1772,7 +1814,7 @@ def validate_source(root: Path) -> list[str]:
     )
     if planning_template is not None:
         _, sections = final_shape_sections(planning_template)
-        validate_planning_modules(sections, "implementation-planning-template.md", issues)
+        validate_planning_tasks(sections, "implementation-planning-template.md", issues)
         for token in (
             *PLANNING_GUIDE_HEADINGS,
             *PLANNING_WORKFLOW_TOKENS,
@@ -1807,6 +1849,8 @@ def validate_source(root: Path) -> list[str]:
             "Source-template hard limit: 140 lines",
             "Start with `# Worker Policy`",
             "Never use a Claude `@` import",
+            "same single task, scope, and confirmed approval",
+            "never copy its authorization across the new tasks",
         ):
             require_text(worker_template, token, "worker-policy-template.md", issues)
 
@@ -2045,7 +2089,7 @@ def validate_final(
                     + ", ".join(PLANNING_GUIDE_HEADINGS)
                 )
             sections = second_level_sections(text)
-            validate_planning_modules(sections, "planning-guide", issues)
+            validate_planning_tasks(sections, "planning-guide", issues)
             workflow = sections.get("Workflow Compatibility", "")
             for token in PLANNING_WORKFLOW_TOKENS:
                 if token.lower() not in workflow.lower():

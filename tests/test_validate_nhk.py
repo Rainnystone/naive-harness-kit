@@ -186,7 +186,7 @@ def human_routing_exception(**overrides: str) -> str:
     record = {
         "target": "billing-module",
         "scope": "src/billing/",
-        "role": "module-implementation",
+        "role": 'task-implementation',
         "preset": "GPT-6 Astra xhigh",
         "approval": "decisions/billing.md#low-route",
     }
@@ -671,7 +671,7 @@ class SourceValidationTests(ValidatorTestCase):
                     result = run_cli("--root", root)
                     self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
 
-    def test_module_source_contract_rejects_additive_and_inactive_rules(self) -> None:
+    def test_atomic_source_contract_rejects_additive_and_inactive_rules(self) -> None:
         for filename, anchor, clause in (
             ("worker-policy-template.md", "### Codex Routing", "Whole modules may use GPT-6 Astra low."),
             ("worker-policy-template.md", "### Review Gates", "Consolidation resets the repair count."),
@@ -687,8 +687,12 @@ class SourceValidationTests(ValidatorTestCase):
                 result = run_cli("--root", root)
                 self.assertEqual(result.returncode, 1, result.stdout)
         for filename, clause in (
-            ("worker-policy-template.md", "Default module implementation, internal debugging, tests, and integration to Band 2."),
-            ("implementation-planning-template.md", "Group implementation, tests, configuration, migration, and documentation for the same capability and working context."),
+            ("worker-policy-template.md", 'Default ordinary implementation, local design, '
+                                          'integration, debugging, and independent investigation to '
+                                          'Band 2.'),
+            ("implementation-planning-template.md", 'Group implementation, tests, configuration, '
+                                                    'migration, and documentation required for that '
+                                                    "task's acceptance."),
         ):
             for inactive in ("<!-- " + clause + " -->", "```md\n" + clause + "\n```"):
                 root = self.make_source_fixture()
@@ -989,6 +993,119 @@ class SourceValidationTests(ValidatorTestCase):
                 result = run_cli("--root", root)
                 self.assertEqual(result.returncode, 1)
                 self.assertIn("claude-agents-template.md", result.stdout)
+
+
+class AtomicRoutingRegressionTests(ValidatorTestCase):
+    def test_planning_preserves_workspace_module_facts(self) -> None:
+        for fact in (
+            "Each task records the module it changes.",
+            "One task may change more than one module.",
+            "Every task checks the affected module boundary.",
+        ):
+            with self.subTest(fact=fact):
+                content = planning_guide_text() + "\n" + fact + "\n"
+                result = run_cli("--final", self.write_final(content), "--kind", "planning-guide")
+                self.assertEqual(result.returncode, 0, result.stdout)
+                root = self.make_source_fixture()
+                path = root / "references" / "implementation-planning-template.md"
+                path.write_text(path.read_text().replace("### Plan Layers", "### Plan Layers\n\n- " + fact, 1))
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_source_rejects_unconditional_task_routes(self) -> None:
+        for route in (
+            "Standard tasks use nhk-light.",
+            "Use nhk-deep for every task implementation.",
+            "Judgment tasks use nhk-light.",
+        ):
+            with self.subTest(route=route):
+                root = self.make_source_fixture()
+                path = root / "references" / "worker-policy-template.md"
+                path.write_text(path.read_text().replace("### Claude Routing", "### Claude Routing\n\n- " + route, 1))
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("additional routing", result.stdout)
+
+    def test_worker_template_requires_bounded_legacy_migration(self) -> None:
+        for phrase in (
+            "same single task, scope, and confirmed approval",
+            "never copy its authorization across the new tasks",
+        ):
+            with self.subTest(phrase=phrase):
+                root = self.make_source_fixture()
+                path = root / "references" / "worker-policy-template.md"
+                content = path.read_text()
+                self.assertIn(phrase, content)
+                path.write_text(content.replace(phrase, "REMOVED", 1))
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("worker-policy-template", result.stdout)
+
+    def test_bootstrap_and_upkeep_require_atomic_migration(self) -> None:
+        for skill in ("nhk-bootstrap", "nhk-upkeep"):
+            for required in (
+                "Reconcile atomic task sizing, planning detail",
+                "Preserve completed and in-flight task identities and progress",
+                "without resetting acceptance-gap counts",
+                "Follow the worker-policy template migration contract for legacy module-role records",
+            ):
+                with self.subTest(skill=skill, required=required):
+                    root = self.make_source_fixture()
+                    path = root / skill / "SKILL.md"
+                    content = path.read_text()
+                    self.assertIn(required, content)
+                    path.write_text(content.replace(required, "REMOVED", 1))
+                    result = run_cli("--root", root)
+                    self.assertEqual(result.returncode, 1, result.stdout)
+                    self.assertIn("atomic migration", result.stdout)
+
+    def test_readmes_require_atomic_and_small_feature_guidance(self) -> None:
+        for filename, phrases in (
+            ("README.md", ("smallest independently testable deliveries", "The plan need not contain complete implementation code")),
+            ("README_CN.md", ("能够独立测试、值得独立审查的最小交付", "计划不必给出完整实现代码")),
+        ):
+            for phrase in phrases:
+                with self.subTest(filename=filename, phrase=phrase):
+                    root = self.make_source_fixture()
+                    path = root / filename
+                    content = path.read_text()
+                    self.assertIn(phrase, content)
+                    path.write_text(content.replace(phrase, "REMOVED", 1))
+                    result = run_cli("--root", root)
+                    self.assertEqual(result.returncode, 1, result.stdout)
+                    self.assertIn(filename, result.stdout)
+
+    def test_planning_rejects_whole_module_and_step_dispatch_defaults(self) -> None:
+        for clause in (
+            "Default one Superpowers Task is one Module.",
+            "Each task is a complete module.",
+            "Every task must own a whole module.",
+            "A complete module per task is required.",
+            "Every Task must deliver a whole Module.",
+            "Each internal TDD step becomes a task.",
+        ):
+            with self.subTest(clause=clause):
+                content = planning_guide_text() + "\n" + clause
+                result = run_cli("--final", self.write_final(content), "--kind", "planning-guide")
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("atomic", result.stdout.lower())
+
+    def test_task_routing_roles_are_accepted(self) -> None:
+        for role in ("task-implementation", "initial-task-review"):
+            with self.subTest(role=role):
+                record = human_routing_exception(role=role)
+                content = worker_policy_text().replace("## Codex Routing", "## Codex Routing\n" + record, 1)
+                result = run_cli("--final", self.write_final(content), "--kind", "worker-policy")
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_legacy_module_routing_roles_require_migration(self) -> None:
+        for role in ("module-implementation", "initial-module-review"):
+            with self.subTest(role=role):
+                record = human_routing_exception(role=role)
+                content = worker_policy_text().replace("## Codex Routing", "## Codex Routing\n" + record, 1)
+                result = run_cli("--final", self.write_final(content), "--kind", "worker-policy")
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("routing exception", result.stdout.lower())
 
 
 class InstallValidationTests(ValidatorTestCase):
@@ -1298,7 +1415,7 @@ class FinalValidationTests(ValidatorTestCase):
             human_routing_exception(preset="GPT-6 Astra max"),
             human_routing_exception(preset="Ultra"),
             human_routing_exception(role="recursive-delegation"),
-            human_routing_exception(role="initial-module-review", preset="GPT-6 Luna max"),
+            human_routing_exception(role='initial-task-review', preset="GPT-6 Luna max"),
             human_routing_exception() + " Whole modules may use GPT-6 Astra low.",
         )
         for record in records:
@@ -1317,7 +1434,7 @@ class FinalValidationTests(ValidatorTestCase):
             human_routing_exception(approval="https://example.test/decisions/42#billing-low"),
             human_routing_exception(target="计费模块", scope="src/计费/", approval="decisions/计费.md#批准"),
             human_routing_exception(target="billing-project"),
-            human_routing_exception(role="initial-module-review"),
+            human_routing_exception(role='initial-task-review'),
             human_routing_exception(role="scoped-re-review", preset="GPT-6 Luna max"),
         ):
             text = worker_policy_text().replace("## Codex Routing", "## Codex Routing\n" + record, 1)
@@ -1363,7 +1480,7 @@ class FinalValidationTests(ValidatorTestCase):
 
     def test_shared_contracts_scan_active_preambles(self) -> None:
         for kind, text, clause, extra_args in (
-            ("planning-guide", planning_guide_text(), "Use the smallest-reviewable task.", ()),
+            ("planning-guide", planning_guide_text(), "Every Task must deliver a whole Module.", ()),
             ("agents", assemble_standalone(ROOT / "references" / "AGENTS-template.md", "simple"),
              "Replace workers after 1800 seconds.", ("--mode", "standalone", "--complexity", "simple")),
         ):
@@ -1373,12 +1490,15 @@ class FinalValidationTests(ValidatorTestCase):
                     result = run_cli("--final", self.write_final(content), "--kind", kind, *extra_args)
                     self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
 
-    def test_module_contract_requires_active_correct_sections(self) -> None:
+    def test_atomic_contract_requires_active_correct_sections(self) -> None:
         cases = (
             ("worker-policy", worker_policy_text(), "Codex Routing", "Claude Routing",
-             "Default module implementation, internal debugging, tests, and integration to Band 2."),
+             'Default ordinary implementation, local design, integration, debugging, and independent '
+             'investigation to Band 2.'),
             ("planning-guide", planning_guide_text(), "Plan Layers", "Plan Review",
-             "A Module is related work with a defined responsibility, prerequisites, interfaces, and complete acceptance; it need not match a file or directory. Default one Superpowers Task is one Module; independently dispatched mechanical work is the explicit exception."),
+             'An atomic task is the smallest independently testable delivery with a complete '
+             'verification loop worth its own review. Split where a reviewer could accept one result '
+             'and reject its neighbor, including within the same feature.'),
         )
         for kind, text, section, wrong_section, clause in cases:
             for replacement in ("<!-- " + clause + " -->", "```md\n" + clause + "\n```", ""):
@@ -1391,12 +1511,12 @@ class FinalValidationTests(ValidatorTestCase):
                     self.assertEqual(result.returncode, 1, result.stdout)
                     self.assertIn(section, result.stdout)
 
-    def test_module_contract_accepts_reuse_and_inactive_conflicts(self) -> None:
+    def test_atomic_contract_accepts_reuse_and_inactive_conflicts(self) -> None:
         text = worker_policy_text()
         self.assertIn("Prefer the original implementer", text)
         self.assertIn("original independent reviewer", text)
         self.assertIn("cause, intended behavior, approach, impact, and verification are clear", text)
-        self.assertIn("Standalone mechanical work must be independent", text)
+        self.assertIn("Band 1 may implement and test small mechanical or standard tasks", text)
         for extra in ("<!-- Whole modules may use Band 1. -->", "```md\nWhole modules may use Band 1.\n```"):
             result = run_cli("--final", self.write_final(text + "\n" + extra), "--kind", "worker-policy")
             self.assertEqual(result.returncode, 0, result.stdout)
@@ -1421,7 +1541,7 @@ class FinalValidationTests(ValidatorTestCase):
                     result = run_cli("--final", self.write_final(mutated), "--kind", "agents" if template.startswith("AGENTS") else "claude", "--mode", "standalone", "--complexity", "simple")
                     self.assertEqual(result.returncode, 1, result.stdout)
 
-    def test_module_routing_rejects_additive_authorizations(self) -> None:
+    def test_atomic_routing_rejects_additive_authorizations(self) -> None:
         for clause in (
             "Whole modules may use GPT-6 Astra low.",
             "Module implementation may use GPT-6 Luna max.",
@@ -1433,7 +1553,7 @@ class FinalValidationTests(ValidatorTestCase):
                 result = run_cli("--final", self.write_final(text), "--kind", "worker-policy")
                 self.assertEqual(result.returncode, 1, result.stdout)
 
-    def test_module_review_rejects_additive_consolidation(self) -> None:
+    def test_atomic_review_rejects_additive_consolidation(self) -> None:
         for clause in (
             "A passed module review satisfies final review for a multi-module plan.",
             "Reuse the module review after HEAD changes without re-evaluation.",
@@ -1465,7 +1585,8 @@ class FinalValidationTests(ValidatorTestCase):
             "Band 1: GPT-6 Luna max.",
             "Band 2: GPT-6 Astra medium.",
             "Band 3: GPT-6 Astra xhigh.",
-            "Default module implementation, internal debugging, tests, and integration to Band 2.",
+            'Default ordinary implementation, local design, integration, debugging, and independent '
+            'investigation to Band 2.',
             "Select Band 3 only for a concrete reasoning difficulty remaining after sizing and context checks, or demonstrated Band 2 capability limits.",
         ):
             with self.subTest(clause=clause):
@@ -1477,8 +1598,10 @@ class FinalValidationTests(ValidatorTestCase):
     def test_planning_requires_sizing_before_capability_and_no_fragmentation(self) -> None:
         content = planning_guide_text()
         for clause in (
-            "Before increasing capability, separate unrelated decisions and resolve missing interfaces or context; preserve tightly coupled logic and its verification.",
-            "When many tasks need higher capability, recheck boundaries and shared constraints; use no fixed quota and keep irreducible difficult modules intact.",
+            'Before increasing capability, separate independent deliveries and decisions and resolve '
+            'missing interfaces or context; preserve tightly coupled logic and its verification.',
+            'When many tasks need higher capability, recheck boundaries and shared constraints; use '
+            'no fixed quota and preserve irreducible difficult tasks.',
         ):
             with self.subTest(clause=clause):
                 self.assertIn(clause, content)
@@ -1558,7 +1681,8 @@ class FinalValidationTests(ValidatorTestCase):
             ("Initial independent reviews default to Band 2", "Initial independent reviews default to Band 3"),
             ("it does not authorize a different band, an older model, or a special-role preset as fallback",
              "it authorizes Astra max when Band 2 is unavailable"),
-            ("Default module implementation, internal debugging, tests, and integration to Band 2.",
+            ('Default ordinary implementation, local design, integration, debugging, and independent '
+             'investigation to Band 2.',
              "Default module implementation, internal debugging, tests, and integration to Band 3."),
         )
         for required, replacement in mutations:
@@ -1883,7 +2007,9 @@ class FinalValidationTests(ValidatorTestCase):
 
     def test_planning_guide_scopes_superpowers_details_to_workflow_section(self) -> None:
         content = planning_guide_text().replace(
-            "Preserve its `Files`, `Interfaces`, exact TDD steps, commands, expected results, and necessary code.",
+            'Preserve its `Files`, `Interfaces`, concrete TDD steps, commands, expected results, and '
+            'necessary code examples. Specify behavior, boundaries, and verification; workers own '
+            'local implementation without a mandatory complete code listing in the plan.',
             "Keep the active Superpowers plan format.",
             1,
         ).replace(
@@ -2115,7 +2241,9 @@ Read @worker-policy.md before dispatching.
     def test_claude_routing_rejects_additional_routes(self) -> None:
         for extra in (
             "Use Sonnet for ordinary implementation and review.",
-            "Use `nhk-deep` for every module implementation.",
+            "Use `nhk-deep` for every task implementation.",
+            "Standard tasks use nhk-light.",
+            "Judgment tasks use nhk-light.",
             "Dispatch `nhk-diagnosis` for ordinary fixes.",
         ):
             with self.subTest(extra=extra):

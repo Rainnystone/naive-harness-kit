@@ -21,17 +21,17 @@ Start with `# Implementation Planning`, then use exactly the following second-le
 
 ### Workflow Compatibility
 
-- The installed or explicitly adopted Superpowers workflow supplies plan shape, test workflow, and review prompts; NHK module sizing, role routing, reuse, and waiting rules override conflicting generic defaults.
-- Preserve its `Files`, `Interfaces`, exact TDD steps, commands, expected results, and necessary code.
-- This document is a module-sizing overlay, not a replacement spec, ticket system, or runtime dependency.
+- The installed or explicitly adopted Superpowers workflow supplies plan shape, test workflow, and review prompts; NHK atomic task sizing, planning detail, role routing, reuse, and waiting rules override conflicting generic defaults.
+- Preserve its `Files`, `Interfaces`, concrete TDD steps, commands, expected results, and necessary code examples. Specify behavior, boundaries, and verification; workers own local implementation without a mandatory complete code listing in the plan.
+- This document is an atomic task-sizing overlay for both Codex and Claude Code; preserve the user's chosen SDD or native execution method.
 
 ### Plan Layers
 
 - Keep outcome, constraints, architecture, interfaces, and cross-task sequencing at plan level.
-- A Module is related work with a defined responsibility, prerequisites, interfaces, and complete acceptance; it need not match a file or directory. Default one Superpowers Task is one Module; independently dispatched mechanical work is the explicit exception.
-- Keep concrete incremental internal steps and timely verification. A module may contain multiple necessary TDD cycles.
-- Group implementation, tests, configuration, migration, and documentation for the same capability and working context.
-- Size modules for the default implementation role: reduce independent decisions without fragmenting delivery or requiring the main thread to pre-solve local design.
+- An atomic task is the smallest independently testable delivery with a complete verification loop worth its own review. Split where a reviewer could accept one result and reject its neighbor, including within the same feature.
+- Keep Superpowers' small execution steps inside their task. A task may contain multiple necessary TDD cycles.
+- Group implementation, tests, configuration, migration, and documentation required for that task's acceptance.
+- Define the delivery before choosing a model; reduce independent decisions and context burden without moving all local implementation into the main thread.
 
 ### Task Contract
 
@@ -41,12 +41,13 @@ Keep Superpowers `Task N` headings. Each task starts with these fields before th
 **Blocked by:** <task identifiers, or None>
 **Worker class:** <mechanical | standard | judgment>
 
-Then retain the workflow's `Files`, `Interfaces`, exact TDD steps, commands, expected results, and necessary code.
+Then retain the workflow's `Files`, `Interfaces`, concrete TDD steps, commands, expected results, and necessary code examples.
 
-- One module must fit one implementer context, one complete acceptance result, one independent reviewer, and one return.
-- Split at unrelated outcomes, distinct authority, unresolved cross-module dependencies, or scope one implementer and reviewer cannot reliably assess. File count, commit count, elapsed time, and independently testable internal results alone do not justify splitting. Keep one transaction, permission decision, or recovery path together.
-- Internal mechanical steps stay with the module implementer; they never automatically become new dispatches. Batch independent same-shape mechanical work when it shares acceptance and verification.
-- `mechanical` is for standalone deterministic low-risk work. Whole modules use `standard` for clear implementation or `judgment` for integration/design uncertainty; worker class describes the work, not a model tier. Both start from the default implementation role in `worker-policy.md`.
+- One task fits one bounded working context, one observable acceptance result, and one independent return; SDD adds one independent reviewer.
+- Separate independently acceptable outcomes and judgments; connect dependent tasks through explicit interfaces. Keep one transaction, permission decision, or recovery path together.
+- File count, code size, and elapsed time are clues, not task-size thresholds. A task may span files; a feature may span tasks.
+- Batch same-shape mechanical changes only with one transformation rule, an explicit file list, shared verification, and no separate judgment. Internal execution steps do not become separate dispatches.
+- `mechanical` describes deterministic transformations, `standard` clear implementation, and `judgment` local design, integration, or debugging decisions. Worker class is not a model tier; a small standard task can meet the low-risk implementation condition in `worker-policy.md`.
 
 ### Dependencies and Execution
 
@@ -54,14 +55,14 @@ Then retain the workflow's `Files`, `Interfaces`, exact TDD steps, commands, exp
 - Under subagent-driven development, implementation tasks remain sequential; dependency metadata does not grant parallel-write permission.
 - A dispatch brief carries the complete task body, selected configuration, and binding `Files`, `Interfaces`, acceptance, authority, verification, forbidden actions, expected return, and global constraints.
 - If a brief helper extracts only the task section, copy plan-level constraints into that section or attach one self-contained file handoff.
-- Before dispatch, apply the module boundaries above; internal steps remain with their module owner.
-- Before increasing capability, separate unrelated decisions and resolve missing interfaces or context; preserve tightly coupled logic and its verification.
-- When investigation is necessary, give it an observable result and the default implementation role unless its own difficulty justifies more capability.
+- Use upstream brief, report, diff-package, and ledger artifacts; pass relevant interfaces and evidence rather than accumulated session history.
+- Before increasing capability, separate independent deliveries and decisions and resolve missing interfaces or context; preserve tightly coupled logic and its verification.
+- Split investigation only when it delivers a verifiable conclusion, interface contract, or reusable decision; otherwise keep local understanding with implementation. Independent investigation starts at the default implementation role unless its own difficulty justifies more capability.
 - Apply `worker-policy.md` for dispatch and review choices. Apply `execution-recovery.md` only when its triggers fire.
 
 ### Wide Changes
 
-- For wide migrations, preserve compatibility and safe acceptance boundaries; size modules by responsibility, not line or call-site count.
+- For wide migrations, preserve compatibility and safe acceptance boundaries; each batch remains an independently verifiable delivery.
 - Structure it as expand → migrate batches → contract, with each batch independently reviewable and verified.
 - When a migration batch cannot keep the shared branch green alone, name an integration branch and finish with an explicit integrate-and-verify task.
 - Do not raise worker capability to compensate for an oversized migration packet.
@@ -71,8 +72,8 @@ Then retain the workflow's `Files`, `Interfaces`, exact TDD steps, commands, exp
 Before approval or dispatch, verify:
 
 - every task has `Delivers`, `Blocked by`, and `Worker class`
-- every module has complete acceptance, one implementer context, internal verification, and one independent reviewer; mechanical exceptions are explicit
-- When many tasks need higher capability, recheck boundaries and shared constraints; use no fixed quota and keep irreducible difficult modules intact.
+- every task has one independently acceptable delivery, a bounded context, and a complete verification loop; mechanical batches meet the shared-rule condition
+- When many tasks need higher capability, recheck boundaries and shared constraints; use no fixed quota and preserve irreducible difficult tasks.
 - dependencies form a valid execution order and do not imply unsafe parallel writes
 - wide changes use expand, migrate batches, and contract rather than one giant task
 - the plan preserves the active Superpowers details and introduces no competing workflow
