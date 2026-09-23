@@ -29,7 +29,7 @@ NHK 自带 4 个核心 skill：
 - `nhk-upkeep`：日常维护
 - `nhk-archive`：用户确认后的归档交接
 
-另外还带了十个受控 reference：
+另外还带了十一个受控 reference：
 
 - `AGENTS-template.md`
 - `CLAUDE-template.md`
@@ -39,6 +39,7 @@ NHK 自带 4 个核心 skill：
 - `execution-recovery-template.md`
 - `documentation-governance-template.md`
 - `archive-readme-template.md`
+- `claude-agents-template.md`
 - `dependency-setup.md`
 - `validation-scenarios.md`
 
@@ -64,7 +65,7 @@ NHK 是刻意把“写给人看”和“写给 agent 看”的文档拆开的：
 | 指令层 | canonical `AGENTS.md` 或 standalone `CLAUDE.md`，可再带一个 thin Claude adapter | 稳定执行规则、验证纪律、协作规则 |
 | 路由层 | `coding-agent-guide.md` | 从任务或症状找到首读文件、可能修改面和针对性验证 |
 | 规划层 | `implementation-planning.md` | 按需加载的 Superpowers-compatible task sizing、依赖边和 wide-change 结构 |
-| 派工与恢复层 | `worker-policy.md`、`execution-recovery.md` | 怎么选帮手、检查成果，以及反复修不好时该怎样停下来判断 |
+| 派工与恢复层 | `worker-policy.md`、`execution-recovery.md`，以及可选的 Claude `.claude/agents/nhk-*.md` | 怎么选帮手、检查成果，以及反复修不好时该怎样停下来判断 |
 | 治理层 | `documentation-governance.md` | 文档角色、active/archive surfaces、命名与加载、归档不变量 |
 | 活跃工作层 | active `specs/`、active `plans/`，以及按需启用的根目录 `task_plan.md` / `progress.md` / `findings.md` | 只放正在进行的工作 |
 | 归档层 | `archive/` 加根级 `archive/README.md` | 已完成的 spec、plan、tracking，以及历史参考材料 |
@@ -173,6 +174,8 @@ NHK 使用三个 Codex 档位，权限按工作角色确定。完整模块默认
 
 对于长期运行的 Codex 主线程，建议考虑 GPT-6 Sol，复杂协调可用 xhigh，需要更深推理时再用 max。这只是给使用者的建议：主线程型号和 effort 由你选择，NHK 的 worker 权限不依赖该选择。当前选项可参阅 [OpenAI 模型说明](https://learn.chatgpt.com/docs/models)。
 
+对于 Claude Code 主线程，建议使用 Opus 的默认 effort；长时间、要求高的协调工作可以升一档，最高档位只在你确认有收益时使用。它和上面一样只是建议，不是规则；无论你怎么选，帮手的档位都不变。当前选项可参阅 [Anthropic effort 说明](https://platform.claude.com/docs/en/build-with-claude/effort)。
+
 普通修复优先交回原实现者，限定复审优先交回原独立审查者。允许便宜配置不代表必须换人；只有独立完整的修复交接连同总开销都值得，才换新帮手，并把合适的意见合并为一个修复包。
 
 每个模块安排一位独立只读审查者，分别给出需求符合度与实现质量结论，两项都要通过。初审默认使用中间档位；审查本身符合困难条件时才用高档位。复杂计划整体终审使用高档位，需要更深推理时可用 max；除此之外，max 只用于独立诊断。内部步骤不单独派审查者。审查使用固定版本、约束、实际差异与测试证据。只有单模块且非复杂计划，已通过的模块审查覆盖全部需求、改动和证据，而且最终范围与版本完全相同时，才可兼作终审。范围、版本或证据变化后要重新判断；多模块和复杂计划仍做整体终审。合并审查不增加修复或恢复次数。
@@ -181,7 +184,7 @@ NHK 使用三个 Codex 档位，权限按工作角色确定。完整模块默认
 
 已有的人类决定可以在 `worker-policy.md` 中保留为范围明确的普通派工例外。[派工模板](references/worker-policy-template.md)规定一条 JSON 列表记录，写明目标、仓库相对路径范围、角色、普通预设和具体批准依据。Bootstrap/upkeep 必须核对既有决定及其边界，不能编造授权。正常规则和型号目录仍然保留，记录只改变完全匹配范围内的预设选择；不能豁免 worker class、审查要求、预算、特殊角色权限、Ultra 或递归授权。可选验证器只检查记录结构，不证明人类真的同意过；未记录的冲突，以及格式错误或范围笼统的记录仍会失败。规划文档的必需字段保持活跃文本，按模板生成时无需暗中删除代码围栏。
 
-Claude 的帮手明确选用 Sonnet 或 Opus。Fable 留在主线程，而且要由你选择或同意。使用 Ultra，以及让帮手继续找帮手，是两件分别需要授权的事：都要针对当前这次运行里的具体任务，由你明确批准。
+Claude 的帮手全部使用 Opus，并按角色分四档：light 做清晰的机械工作；standard 是模块实现和初审的默认档；deep 用于写明了具体推理难点的任务；只读的 diagnosis 用于独立诊断和复杂计划的整体终审。Claude Code 只能通过 agent 定义文件设置帮手的 effort，所以在 Claude Code workspace 里，`nhk-bootstrap` 会按 [agent 定义模板](references/claude-agents-template.md) 提议在 `.claude/agents/` 下添加四个可选文件。我们建议接受；如果拒绝，帮手仍然使用 Opus，effort 跟随你的会话设置。新建的 `.claude/agents/` 目录要开一个新会话，Claude Code 才能发现。Fable 留在主线程，而且要由你选择或同意。使用 Ultra，以及让帮手继续找帮手，是两件分别需要授权的事：都要针对当前这次运行里的具体任务，由你明确批准。
 
 普通 bug 继续用 Superpowers 的系统性调试流程。同一个问题熬过了第五轮，NHK 会让主线程先重看自己的判断，再伸手去拿第六个补丁。每项任务最多五轮普通修复与复审；跨任务遇到同一个未解决的问题，次数也接着算，换个任务名不会清零。记录仍写在当前工作流已有的地方。
 

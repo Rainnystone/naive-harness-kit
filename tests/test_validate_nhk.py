@@ -37,6 +37,7 @@ REFERENCES = (
     "execution-recovery-template.md",
     "documentation-governance-template.md",
     "archive-readme-template.md",
+    "claude-agents-template.md",
     "dependency-setup.md",
     "validation-scenarios.md",
 )
@@ -911,7 +912,9 @@ class SourceValidationTests(ValidatorTestCase):
 
     def test_readme_planning_and_worker_policy_drift_fails(self) -> None:
         cases = (
-            ("README.md", "ten controlled references", "several references"),
+            ("README.md", "eleven controlled references", "several references"),
+            ("README.md", "Every Claude helper runs Opus", "Claude helpers use a model"),
+            ("README.md", "Claude Code main thread, we suggest Opus", "Claude Code main thread, pick anything"),
             ("README.md", "seven required pieces", "the foundation"),
             ("README.md", "Superpowers overlay", "planning helper"),
             (
@@ -919,7 +922,9 @@ class SourceValidationTests(ValidatorTestCase):
                 "three practical Codex bands",
                 "several worker options",
             ),
-            ("README_CN.md", "十个受控 reference", "几份 reference"),
+            ("README_CN.md", "十一个受控 reference", "几份 reference"),
+            ("README_CN.md", "Claude 的帮手全部使用 Opus", "Claude 的帮手随便选"),
+            ("README_CN.md", "Claude Code 主线程，建议使用 Opus", "Claude Code 主线程随意"),
             ("README_CN.md", "七项基础内容", "基础文档"),
             ("README_CN.md", "Superpowers overlay", "规划辅助"),
         )
@@ -936,6 +941,54 @@ class SourceValidationTests(ValidatorTestCase):
                 result = run_cli("--root", root)
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(required, result.stdout)
+
+    def test_claude_agents_template_contract(self) -> None:
+        mutations = (
+            ("model: opus\neffort: medium", "model: inherit\neffort: medium", "model: opus"),
+            ("effort: low", "effort: max", "effort"),
+            ("effort: high", "effort: low", "effort"),
+            ("disallowedTools: Write, Edit, NotebookEdit\n", "", "disallowedTools"),
+            (
+                "description: NHK standard band worker.",
+                "description: NHK standard band worker. Use proactively.",
+                "proactive",
+            ),
+            ("name: nhk-deep", "name: nhk-heavy", "nhk-deep"),
+            ("## Shared Body", "## Shared Body\n\nPrefer Sonnet when it is cheaper.", "Sonnet"),
+        )
+        for required, replacement, message in mutations:
+            with self.subTest(required=required, replacement=replacement):
+                root = self.make_source_fixture()
+                path = root / "references" / "claude-agents-template.md"
+                text = path.read_text(encoding="utf-8")
+                self.assertIn(required, text)
+                path.write_text(text.replace(required, replacement, 1), encoding="utf-8")
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("claude-agents-template.md", result.stdout)
+                self.assertIn(message.lower(), result.stdout.lower())
+
+    def test_missing_claude_agents_template_fails(self) -> None:
+        root = self.make_source_fixture()
+        (root / "references" / "claude-agents-template.md").unlink()
+        result = run_cli("--root", root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("claude-agents-template.md", result.stdout)
+
+    def test_skills_route_claude_agent_definitions(self) -> None:
+        for skill in ("nhk-bootstrap", "nhk-upkeep"):
+            with self.subTest(skill=skill):
+                root = self.make_source_fixture()
+                path = root / skill / "SKILL.md"
+                text = path.read_text(encoding="utf-8")
+                self.assertIn("../references/claude-agents-template.md", text)
+                path.write_text(
+                    text.replace("../references/claude-agents-template.md", "the agent notes"),
+                    encoding="utf-8",
+                )
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("claude-agents-template.md", result.stdout)
 
 
 class InstallValidationTests(ValidatorTestCase):
@@ -2034,6 +2087,41 @@ Read @worker-policy.md before dispatching.
         self.assertEqual(result.returncode, 1)
         self.assertIn("worker-policy.md", result.stdout)
         self.assertNotIn("valid import line", result.stdout)
+
+    def test_claude_routing_is_opus_only_by_band(self) -> None:
+        mutations = (
+            ("Every Claude worker runs Opus.", "Every Claude worker runs Sonnet."),
+            ("Initial reviews start at `nhk-standard`.", "It may also perform initial reviews."),
+            (
+                "Built-in agents also receive `model: opus` explicitly, so Fable is never inherited.",
+                "Built-in agents inherit the main thread model.",
+            ),
+            (
+                "continue that worker with the open items, at most twice.",
+                "continue that worker until it finishes.",
+            ),
+        )
+        for required, replacement in mutations:
+            with self.subTest(required=required):
+                text = worker_policy_text()
+                self.assertIn(required, text)
+                result = run_cli(
+                    "--final", self.write_final(text.replace(required, replacement, 1)),
+                    "--kind", "worker-policy",
+                )
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("Claude Routing", result.stdout)
+
+    def test_claude_routing_rejects_additional_routes(self) -> None:
+        for extra in (
+            "Use Sonnet for ordinary implementation and review.",
+            "Use `nhk-deep` for every module implementation.",
+            "Dispatch `nhk-diagnosis` for ordinary fixes.",
+        ):
+            with self.subTest(extra=extra):
+                content = worker_policy_text().rstrip() + f"\n- {extra}\n"
+                result = run_cli("--final", self.write_final(content), "--kind", "worker-policy")
+                self.assertEqual(result.returncode, 1, result.stdout)
 
 
 class CliContractTests(ValidatorTestCase):

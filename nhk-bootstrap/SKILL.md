@@ -42,6 +42,7 @@ Once the canonical source is known:
 - add or repair `documentation-governance.md` from `../references/documentation-governance-template.md`
 - create `archive/` when missing and add or repair `archive/README.md` from `../references/archive-readme-template.md`
 - connect the canonical instruction source, companion docs, and archive index with concise, accurate references
+- in a Claude Code workspace (canonical or thin `CLAUDE.md`) without `.claude/agents/nhk-*.md`, offer the optional NHK agent definitions from `../references/claude-agents-template.md`, recommend them, and create them only after the human agrees; they stay outside the required foundation
 
 Use backticked literal paths for all five companion docs. In Claude Code, only a thin adapter may import canonical AGENTS; neither thin nor standalone CLAUDE may `@` import a companion doc.
 
@@ -87,5 +88,6 @@ Before finishing:
 - confirm generated instruction content meets its selected structure and line limit
 - confirm any semantic migration replaced only superseded NHK-owned policy or recovery text and preserved project facts and authorized exceptions
 - confirm no existing healthy surface was unnecessarily replaced
+- if NHK agent definitions were created, confirm they match their template and tell the human that a new `.claude/agents/` directory needs a fresh session
 - if root tracking exists, record the audit there; otherwise report it in the delivery note
 - if a dependency was adopted, state: it is not installed; its conventions were followed manually for this NHK run

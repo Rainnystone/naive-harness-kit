@@ -29,7 +29,7 @@ NHK ships with four focused skills:
 - `nhk-upkeep`: day-to-day harness maintenance
 - `nhk-archive`: human-confirmed archive transition
 
-It also ships with ten controlled references:
+It also ships with eleven controlled references:
 
 - `AGENTS-template.md`
 - `CLAUDE-template.md`
@@ -39,6 +39,7 @@ It also ships with ten controlled references:
 - `execution-recovery-template.md`
 - `documentation-governance-template.md`
 - `archive-readme-template.md`
+- `claude-agents-template.md`
 - `dependency-setup.md`
 - `validation-scenarios.md`
 
@@ -64,7 +65,7 @@ For an NHK-managed workspace, the expected document system is layered:
 | Instruction layer | canonical `AGENTS.md` or standalone `CLAUDE.md`, plus an optional thin Claude adapter | stable execution rules, verification discipline, collaboration rules |
 | Routing layer | `coding-agent-guide.md` | task or symptom to first reads, likely change surfaces, and targeted verification |
 | Planning layer | `implementation-planning.md` | on-demand Superpowers-compatible task sizing, dependency edges, and wide-change structure |
-| Worker and recovery layer | `worker-policy.md`, `execution-recovery.md` | choosing helpers, reviewing their work, and knowing when to pause repeated fixes |
+| Worker and recovery layer | `worker-policy.md`, `execution-recovery.md`, optional Claude `.claude/agents/nhk-*.md` | choosing helpers, reviewing their work, and knowing when to pause repeated fixes |
 | Governance layer | `documentation-governance.md` | document roles, active/archive surfaces, naming/loading, and archive invariants |
 | Active work layer | active `specs/`, active `plans/`, optional root `task_plan.md` / `progress.md` / `findings.md` | work in progress only |
 | Archive layer | `archive/` plus root `archive/README.md` | completed specs, completed plans, completed tracking files, historical reference only |
@@ -173,6 +174,8 @@ The exact model list and role permissions live in the [worker policy template](r
 
 For a long-running Codex main thread, we suggest GPT-6 Sol, with xhigh for demanding coordination and max when deeper reasoning is worthwhile. This is a human-facing suggestion only: you choose the main-thread model and effort, and NHK worker permissions do not depend on that choice. See [OpenAI model guidance](https://learn.chatgpt.com/docs/models) for current options.
 
+For a Claude Code main thread, we suggest Opus at its default effort, one level higher for long, demanding coordination, and the top levels only where you have seen them pay off. Treat it the same way: a suggestion for you, not a rule, and helper bands stay the same whatever you pick. See [Anthropic effort guidance](https://platform.claude.com/docs/en/build-with-claude/effort) for current options.
+
 Ordinary fixes go back to the original implementer; scoped re-review prefers the original independent reviewer. Permission to use a cheaper configuration does not require changing workers. A fresh cheaper worker needs a self-contained handoff worth its total overhead; suitable findings travel together in one repair packet.
 
 Each module has one independent, read-only reviewer with separate specification and quality verdicts; both must pass. Initial reviews default to the middle band; the harder band requires difficulty in the review itself. Complex whole-change final review uses the harder band, with max available for deeper reasoning; max is otherwise limited to independent diagnosis. Internal steps stay within their module. Review uses fixed revisions, binding constraints, the actual diff, and test evidence. A passed module review can also serve as final review only for a single-module non-complex plan covering all requirements, changes, and evidence at the identical final scope and version. Changed scope, version, or evidence requires re-evaluation. Multi-module and complex plans retain whole-change final review. Consolidation never extends repair or recovery allowances.
@@ -181,7 +184,7 @@ After dispatch or resumption, and between unsolicited progress checks, the main 
 
 Existing human decisions can be preserved as narrow ordinary-routing exceptions in `worker-policy.md`. The [worker policy template](references/worker-policy-template.md) defines a single JSON bullet naming the target, repository-relative scope, role, ordinary preset, and a specific approval reference. Bootstrap/upkeep must confirm that decision and preserve its scope; they must never invent approval. Normal rules and the catalog stay in place, and the record changes only the matched preset choice. It cannot waive worker classes, review gates, budgets, special-role permissions, Ultra or recursion. The optional validator checks record structure, not whether the human actually consented; unrecorded conflicts and malformed or blanket records still fail. Planning companions keep their required fields active, so documented template assembly needs no hidden fence removal.
 
-Claude helpers use Sonnet or Opus. Fable stays on the main thread, and only when you choose or approve it. Ultra and letting a helper delegate further are two separate permissions: each needs your approval for the specific task and current run.
+Every Claude helper runs Opus, sorted into four bands by role: light for clear mechanical work, standard as the default for modules and initial reviews, deep for a named reasoning difficulty, and read-only diagnosis for independent diagnosis and complex final review. Claude Code sets a helper's effort only through an agent definition, so in a Claude Code workspace `nhk-bootstrap` offers four optional files under `.claude/agents/`, built from the [agent definitions template](references/claude-agents-template.md). We recommend accepting; if you decline, helpers still run Opus at your session's effort. A new `.claude/agents/` directory needs a fresh session before Claude Code discovers it. Fable stays on the main thread, and only when you choose or approve it. Ultra and letting a helper delegate further are two separate permissions: each needs your approval for the specific task and current run.
 
 For ordinary bugs, keep using Superpowers systematic debugging. When the same problem survives round five, NHK asks the main agent to revisit its explanation before reaching for patch six. The five-round limit applies to each task and to the same unresolved problem across tasks; renaming the task does not give it a clean slate. Counts stay in the workflow's existing record.
 

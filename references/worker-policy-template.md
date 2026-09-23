@@ -85,14 +85,22 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 
 ### Claude Routing
 
-- Use Sonnet for ordinary implementation and review. Use Opus for difficult work, debugging, architecture, independent diagnosis, final review, and a recommended complex main thread.
+- Every Claude worker runs Opus. When `.claude/agents/nhk-*.md` definitions exist, dispatch through them and omit the per-invocation model so each definition stays authoritative.
+- Without those definitions, pass `model: opus` on every dispatch; the worker then runs at session effort, as the human chose when declining them.
+- The definitions alone carry model and effort. Route by band name: `nhk-light`, `nhk-standard`, `nhk-deep`, or `nhk-diagnosis`.
+- `nhk-light`: standalone mechanical work, and local fixes or scoped re-reviews whose cause, intended behavior, approach, impact, and verification are clear without design or cross-module judgment. Initial reviews start at `nhk-standard`.
+- `nhk-standard`: the default for module implementation, internal debugging, tests, integration, initial reviews, and other whole-change final reviews.
+- `nhk-deep`: a concrete reasoning difficulty that remains after sizing and context checks, stated in one sentence in the brief, or demonstrated `nhk-standard` limits. Reviews meeting that difficulty condition also use it.
+- `nhk-diagnosis`: read-only independent diagnosis and complex whole-change final review. The highest effort levels stay with the human-chosen main thread.
+- Delegate a packet only when it is independent and larger than the main thread finishes in a handful of tool calls; use one worker when one suffices.
+- A worker report with open acceptance items and no named blocker is a report, not completion: continue that worker with the open items, at most twice. Continuations are not repair rounds; afterwards classify the failure.
 - Use Fable only when the human explicitly chooses or approves it for the main thread.
-- Specify Sonnet or Opus for every worker so Fable is never inherited.
-- Use available versions and configurations. Do not add a Haiku band or maintain a version-pinned catalog.
+- Built-in agents also receive `model: opus` explicitly, so Fable is never inherited.
 
 ## Final Check
 
 - The generated file is at most 100 lines and uses the four required headings in order.
 - Common sections and the current platform route are sufficient for every dispatch and review decision.
 - Exact presets, review gates, special-role permissions, Ultra approval, and recursion approval retain their separate meanings.
+- Claude Routing names bands only; effort values live in the agent definitions built from `claude-agents-template.md`.
 - No template prompt, placeholder, project map, active status, or copied upstream review prompt remains.

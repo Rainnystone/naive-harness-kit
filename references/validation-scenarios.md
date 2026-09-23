@@ -154,7 +154,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Prompt:** “Use a worker for this clear, low-risk mechanical change.”
 
-**Expected:** The main thread chooses an explicitly runtime-supported configuration allowed for that worker role and packet. It does not inherit its own model or effort, even when that configuration is more capable. Explicit user budgets remain binding. A configuration outside the allowed role/preset is refused rather than silently substituted with an unapproved top preset.
+**Expected:** The main thread chooses an explicitly runtime-supported configuration allowed for that worker role and packet. It does not inherit its own model or effort, even when that configuration is more capable. The only inherited effort is a Claude worker's session effort after the human declined NHK agent definitions (D9a). Explicit user budgets remain binding. A configuration outside the allowed role/preset is refused rather than silently substituted with an unapproved top preset.
 
 ### D3. Task-fit bands and availability
 
@@ -220,9 +220,21 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 ### D9. Claude worker permissions
 
-**Setup:** Dispatch an ordinary implementation, a difficult debugging task, and a worker after the main thread selected Fable.
+**Setup:** In a Claude Code workspace with NHK agent definitions, dispatch a clear mechanical change, a module implementation, a task with a stated reasoning difficulty, an independent diagnosis, and a built-in agent after the main thread selected Fable.
 
-**Expected:** The policy routes ordinary implementation/review to Sonnet and difficult work, debugging, architecture, or final review to Opus. Fable is permitted only when the human explicitly chooses or approves it for the main thread. Every worker explicitly receives Sonnet or Opus, so it never inherits Fable. The policy has no Haiku band or version-pinned catalog.
+**Expected:** Every Claude worker runs Opus. The mechanical change uses `nhk-light`, the module and its initial review use `nhk-standard`, the stated difficulty uses `nhk-deep`, and the diagnosis uses read-only `nhk-diagnosis`; an initial review never starts at `nhk-light`. Dispatch through a definition omits the per-invocation model. `worker-policy.md` names bands only, while the definitions carry model and effort; the top effort level stays with the human-chosen main thread. Fable is permitted only when the human explicitly chooses or approves it for the main thread, and the built-in agent receives `model: opus`, so no worker inherits Fable.
+
+### D9a. Optional Claude agent definitions
+
+**Setup:** Bootstrap runs in a Claude Code workspace without `.claude/agents/nhk-*.md`; in one run the human agrees, in another the human declines. Separately, a Codex-only workspace is bootstrapped.
+
+**Expected:** Bootstrap offers the definitions from `claude-agents-template.md`, recommends them, and creates the four files only after agreement, telling the human that a new `.claude/agents/` directory needs a fresh session. A decline leaves the seven-surface foundation complete; workers then receive `model: opus` and run at session effort. The Codex-only workspace is never offered Claude definitions. Source validation checks the four bands in order, `model: opus`, rising worker effort below the top level, policy-pointing descriptions without proactive delegation, and write denial for `nhk-diagnosis`; it does not verify the runtime effort a live worker receives.
+
+### D9b. Claude delegation threshold and unfinished reports
+
+**Setup:** The main thread can finish a small edit in a few tool calls; separately, an `nhk-standard` worker returns a report that lists two open acceptance items without a blocker.
+
+**Expected:** The small edit stays on the main thread. The report is not completion: the main thread continues the same worker with the open items at most twice, without counting those continuations as repair rounds, then classifies any remaining failure under the recovery rules.
 
 ### D10. Ordinary debugging and recovery accounting
 
@@ -273,6 +285,12 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 **Setup:** The installed bundle has the GPT-6 three-band rules, while a complete workspace retains the former two-band policy, GPT-5.6 Luna, and Band 2 diagnosis. Project paths and document structure are still correct. One project fact and one explicitly authorized exception must remain.
 
 **Expected:** An update check or explicit upkeep request routes to upkeep; missing foundation files still route to bootstrap first. Every upkeep compares the canonical instruction, all five companions, and archive index against current installed references, not only visible structural drift. It repairs NHK-owned rules, preserves project facts and approved exceptions, and reports unresolved conflicts. Previously read references can be reused only when unchanged. It does not fetch updates, rewrite whole documents, or introduce version tracking. Completion accounts for every compared surface as aligned, explicitly excepted, or unresolved.
+
+### E4a. Agent definitions follow the installed template
+
+**Setup:** A complete Claude Code workspace has NHK agent definitions whose effort and shared body predate the installed `claude-agents-template.md`; a second workspace has none.
+
+**Expected:** Upkeep reads the agent-definition template only for the first workspace, reconciles each definition's frontmatter and shared body, and preserves unrelated agent files. The second workspace stays without definitions; upkeep neither offers nor creates them.
 
 ### E5. Module policy migration preserves active work
 
@@ -352,10 +370,10 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 ### H3. Branch-specific reference loading
 
-**Expected:** A dependency decision reads only `dependency-setup.md`. Creating or structurally repairing a surface reads only its matching template, including `worker-policy-template.md` and `execution-recovery-template.md` only for their matching companions. Archive reads `archive-readme-template.md` only for index or naming work. Ordinary workspace routing does not load `validation-scenarios.md`; that reference is reserved for maintaining or evaluating NHK itself.
+**Expected:** A dependency decision reads only `dependency-setup.md`. Creating or structurally repairing a surface reads only its matching template, including `worker-policy-template.md` and `execution-recovery-template.md` only for their matching companions. Archive reads `archive-readme-template.md` only for index or naming work. `claude-agents-template.md` is read only to create NHK agent definitions after human agreement or to reconcile existing ones. Ordinary workspace routing does not load `validation-scenarios.md`; that reference is reserved for maintaining or evaluating NHK itself.
 
 ## I. Human Documentation Alignment
 
-**Expected:** English and Chinese READMEs both describe five recurring jobs, four skills plus ten controlled references, seven mandatory foundation surfaces, the sibling install layout, optional validator and its two new final-document kinds, session refresh/discovery check, the Superpowers overlay, role-authorized worker routing, dual review verdicts, bounded recovery, routing-table-as-shallow-map policy, and Claude's on-demand companion loading. They describe three bands, sizing before capability, medium as the default implementation role, bounded xhigh selection, and max only for independent diagnosis or complex final review. GPT-6 Sol main-thread guidance is a human suggestion in the READMEs only; users choose model and effort. They link the companion templates for the exact worker catalog and recovery procedure instead of carrying duplicate copies. Neither README presents scripts or tests as runtime dependencies.
+**Expected:** English and Chinese READMEs both describe five recurring jobs, four skills plus eleven controlled references, seven mandatory foundation surfaces, the sibling install layout, optional validator and its two new final-document kinds, session refresh/discovery check, the Superpowers overlay, role-authorized worker routing, dual review verdicts, bounded recovery, routing-table-as-shallow-map policy, and Claude's on-demand companion loading. They describe three bands, sizing before capability, medium as the default implementation role, bounded xhigh selection, and max only for independent diagnosis or complex final review. GPT-6 Sol main-thread guidance is a human suggestion in the READMEs only; users choose model and effort. The READMEs likewise suggest Opus at its default effort for a Claude Code main thread, describe every Claude helper running Opus in four role bands, and present the agent definitions as optional, recommended, and effective only after a fresh session for a new `.claude/agents/` directory. They link the companion templates for the exact worker catalog and recovery procedure instead of carrying duplicate copies. Neither README presents scripts or tests as runtime dependencies.
 
 **Negative check:** Source validation fails if either or both READMEs lose the Sol main-thread recommendation, its suggestion-only status, the user's choice of model and effort, or worker permissions remaining independent of that choice. The diagnostic names each affected README.

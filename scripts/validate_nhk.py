@@ -70,6 +70,7 @@ REFERENCES = (
     "execution-recovery-template.md",
     "documentation-governance-template.md",
     "archive-readme-template.md",
+    "claude-agents-template.md",
     "dependency-setup.md",
     "validation-scenarios.md",
 )
@@ -119,6 +120,7 @@ PLAIN_REFERENCE_SOURCE_LIMITS = {
     "execution-recovery-template.md": 140,
     "documentation-governance-template.md": 160,
     "archive-readme-template.md": 40,
+    "claude-agents-template.md": 80,
 }
 
 FINAL_LIMITS = {"simple": 100, "medium": 125, "complex": 150}
@@ -322,6 +324,13 @@ VALIDATOR_COMPANION_COMMANDS = (
     "python3 -B scripts/validate_nhk.py --final <execution-recovery.md> --kind execution-recovery",
     "python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance",
 )
+
+# Band order is the contract; the effort values themselves are calibrated only in
+# claude-agents-template.md so a new Opus generation is a one-file edit.
+CLAUDE_AGENT_BANDS = ("nhk-light", "nhk-standard", "nhk-deep", "nhk-diagnosis")
+CLAUDE_WORKER_EFFORTS = ("low", "medium", "high", "xhigh")
+CLAUDE_READ_ONLY_BAND = "nhk-diagnosis"
+CLAUDE_AGENT_SKILLS = ("nhk-bootstrap", "nhk-upkeep")
 
 
 @dataclass(frozen=True)
@@ -620,14 +629,36 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['Authorization comes from the allow
                    'Records change only ordinary preset choice, not worker class, review gates, '
                    'budgets, special-role permissions, Ultra, or recursion. Initial reviews still '
                    'exclude Luna.'],
- 'Claude Routing': ['Use Sonnet for ordinary implementation and review. Use Opus for difficult '
-                    'work, debugging, architecture, independent diagnosis, final review, and a '
-                    'recommended complex main thread.',
+ 'Claude Routing': ['Every Claude worker runs Opus. When `.claude/agents/nhk-*.md` definitions '
+                    'exist, dispatch through them and omit the per-invocation model so each '
+                    'definition stays authoritative.',
+                    'Without those definitions, pass `model: opus` on every dispatch; the worker '
+                    'then runs at session effort, as the human chose when declining them.',
+                    'The definitions alone carry model and effort. Route by band name: '
+                    '`nhk-light`, `nhk-standard`, `nhk-deep`, or `nhk-diagnosis`.',
+                    '`nhk-light`: standalone mechanical work, and local fixes or scoped '
+                    're-reviews whose cause, intended behavior, approach, impact, and '
+                    'verification are clear without design or cross-module judgment. Initial '
+                    'reviews start at `nhk-standard`.',
+                    '`nhk-standard`: the default for module implementation, internal debugging, '
+                    'tests, integration, initial reviews, and other whole-change final reviews.',
+                    '`nhk-deep`: a concrete reasoning difficulty that remains after sizing and '
+                    'context checks, stated in one sentence in the brief, or demonstrated '
+                    '`nhk-standard` limits. Reviews meeting that difficulty condition also use it.',
+                    '`nhk-diagnosis`: read-only independent diagnosis and complex whole-change '
+                    'final review. The highest effort levels stay with the human-chosen main '
+                    'thread.',
+                    'Delegate a packet only when it is independent and larger than the main '
+                    'thread finishes in a handful of tool calls; use one worker when one '
+                    'suffices.',
+                    'A worker report with open acceptance items and no named blocker is a '
+                    'report, not completion: continue that worker with the open items, at most '
+                    'twice. Continuations are not repair rounds; afterwards classify the '
+                    'failure.',
                     'Use Fable only when the human explicitly chooses or approves it for the '
                     'main thread.',
-                    'Specify Sonnet or Opus for every worker so Fable is never inherited.',
-                    'Use available versions and configurations. Do not add a Haiku band or '
-                    'maintain a version-pinned catalog.']}
+                    'Built-in agents also receive `model: opus` explicitly, so Fable is never '
+                    'inherited.']}
 PLANNING_MODULE_DECLARATIONS = {'Workflow Compatibility': ['The installed or explicitly adopted Superpowers workflow '
                             'supplies plan shape, test workflow, and review prompts; NHK '
                             'module sizing, role routing, reuse, and waiting rules override '
@@ -1379,6 +1410,12 @@ def validate_skill(root: Path, name: str, issues: list[str]) -> None:
                 f"`{companion}`"
             )
 
+    if name in CLAUDE_AGENT_SKILLS and "../references/claude-agents-template.md" not in text:
+        issues.append(
+            f"{name}/SKILL.md: Claude agent definitions must route through "
+            "`../references/claude-agents-template.md`"
+        )
+
     reference_root = (root / "references").resolve()
     for match in REFERENCE_RE.finditer(text):
         relative = match.group(0)
@@ -1450,7 +1487,9 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
     for token in ("scripts/", "tests/", "不属于运行时", "可选", "刷新", "可发现"):
         require_text(chinese, token, "README_CN.md", issues, case_sensitive=False)
     for token in (
-        "ten controlled references",
+        "eleven controlled references",
+        "Every Claude helper runs Opus",
+        "Claude Code main thread, we suggest Opus",
         "seven required pieces",
         "Superpowers overlay",
         "permissions tied to the role",
@@ -1464,7 +1503,9 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
     ):
         require_text(english, token, "README.md", issues, case_sensitive=False)
     for token in (
-        "十个受控 reference",
+        "十一个受控 reference",
+        "Claude 的帮手全部使用 Opus",
+        "Claude Code 主线程，建议使用 Opus",
         "七项基础内容",
         "Superpowers overlay",
         "权限按工作角色确定",
@@ -1616,6 +1657,60 @@ def validate_forbidden_legacy(root: Path, issues: list[str]) -> None:
                 issues.append(f"{relative}: forbidden {label}: {match.group(0)}")
 
 
+def validate_claude_agents_template(text: str, issues: list[str]) -> None:
+    label = "claude-agents-template.md"
+    blocks = re.findall(r"```yaml\n---\n(.*?)\n---\n```", text, re.DOTALL)
+    bands: list[tuple[str, dict[str, str]]] = []
+    for block in blocks:
+        fields: dict[str, str] = {}
+        for line in block.splitlines():
+            key, separator, value = line.partition(":")
+            if separator:
+                fields[key.strip()] = value.strip()
+        bands.append((fields.get("name", ""), fields))
+
+    names = tuple(name for name, _ in bands)
+    if names != CLAUDE_AGENT_BANDS:
+        issues.append(
+            f"{label}: bands must be exactly {', '.join(CLAUDE_AGENT_BANDS)} in order; "
+            f"found {', '.join(names) or 'none'}"
+        )
+
+    ranks: list[int] = []
+    for name, fields in bands:
+        if fields.get("model") != "opus":
+            issues.append(f"{label}: {name} must declare model: opus")
+        effort = fields.get("effort", "")
+        if effort not in CLAUDE_WORKER_EFFORTS:
+            issues.append(
+                f"{label}: {name} effort must be one of {', '.join(CLAUDE_WORKER_EFFORTS)}; "
+                "the top effort level stays with the main thread"
+            )
+        else:
+            ranks.append(CLAUDE_WORKER_EFFORTS.index(effort))
+        description = fields.get("description", "")
+        if "worker-policy.md" not in description or re.search(r"proactiv", description, re.IGNORECASE):
+            issues.append(
+                f"{label}: {name} description must point back to worker-policy.md and "
+                "never invite proactive delegation"
+            )
+        denied = {tool.strip() for tool in fields.get("disallowedTools", "").split(",")}
+        if name == CLAUDE_READ_ONLY_BAND and not {"Write", "Edit"} <= denied:
+            issues.append(f"{label}: {name} must deny Write and Edit through disallowedTools")
+    if len(ranks) == len(CLAUDE_AGENT_BANDS) and not (ranks[0] < ranks[1] < ranks[2] <= ranks[3]):
+        issues.append(f"{label}: effort must rise with band order")
+
+    forbidden = re.search(r"\b(?:Sonnet|Haiku|Fable|inherit)\b", text, re.IGNORECASE)
+    if forbidden:
+        issues.append(
+            f"{label}: Opus-only bands must not name {forbidden.group(0)!r}"
+        )
+    if "## Shared Body" not in text or "Your final message ends your run" not in text:
+        issues.append(f"{label}: Shared Body must define the worker's final report")
+    for token in ("Source-template hard limit: 80 lines", "Never use a Claude `@` import"):
+        require_text(text, token, label, issues)
+
+
 def validate_source(root: Path) -> list[str]:
     issues: list[str] = []
     if not root.is_dir():
@@ -1714,6 +1809,14 @@ def validate_source(root: Path) -> list[str]:
             "Never use a Claude `@` import",
         ):
             require_text(worker_template, token, "worker-policy-template.md", issues)
+
+    claude_agents_template = read_text(
+        root / "references" / "claude-agents-template.md",
+        issues,
+        "references/claude-agents-template.md",
+    )
+    if claude_agents_template is not None:
+        validate_claude_agents_template(claude_agents_template, issues)
 
     recovery_template = read_text(
         root / "references" / "execution-recovery-template.md",
