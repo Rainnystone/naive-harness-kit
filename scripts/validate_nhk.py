@@ -250,7 +250,21 @@ CODEX_TIER_PRESETS = {
 }
 # Human routing exceptions may choose only ordinary tiers, never the read-only audit tier.
 CODEX_EXCEPTION_TIERS = ("light", "standard", "deep")
-CODEX_TIER_LINE_RE = re.compile(r"^\s*-\s*`?(light|standard|deep|audit)`?:\s*(.*?)\s*$")
+# Any backticked row label in Codex Routing is a catalog row, so an extra tier
+# cannot hide beside the exact four.
+CODEX_TIER_LINE_RE = re.compile(r"^\s*-\s*(?:`([\w-]+)`|(light|standard|deep|audit)):\s*(.*?)\s*$")
+TIER_WORDS = "light|standard|deep|audit"
+# Tier names are ordinary English words, so only routing syntax counts: a tier
+# row, "<tier> tier/preset/...", "tier <name>", or a routing verb before a tier.
+# Applied to normalized text, where code spans have lost their backticks.
+TIER_ROUTE_PATTERN = (
+    rf"\b(?:{TIER_WORDS})\s+(?:tiers?|presets?|configurations?|workers?|definitions?)\b|"
+    rf"\btiers?\s+(?:{TIER_WORDS})\b|"
+    rf"\b(?:use[sd]?|using|select\w*|choos\w*|rout\w*|dispatch\w*|escalat\w*|map\w*|assign\w*)"
+    rf"\s+(?:the\s+|a\s+|an\s+)?(?:{TIER_WORDS})\b|"
+    rf"(?:^|\s-\s)(?:{TIER_WORDS})\s*:|"
+    r"\bnhk-[\w-]+"
+)
 CODEX_ALLOWED_FAMILY_NAMES = ("GPT-6 Luna", "GPT-6 Sol", "GPT-6 Astra")
 CODEX_ALLOWED_RUNTIME_IDS = ("gpt-6-luna", "gpt-6-sol", "gpt-6-astra")
 CODEX_QUALIFIER_STOPWORDS = (
@@ -445,8 +459,8 @@ def codex_tier_members(line: str) -> tuple[str, list[str]] | None:
     match = CODEX_TIER_LINE_RE.match(line)
     if not match:
         return None
-    raw = match.group(2).removesuffix(".")
-    return match.group(1), [item.strip().removesuffix(".") for item in raw.split(";") if item.strip()]
+    raw = match.group(3).removesuffix(".")
+    return match.group(1) or match.group(2), [item.strip().removesuffix(".") for item in raw.split(";") if item.strip()]
 
 
 def validate_exact_codex_tiers(
@@ -458,6 +472,11 @@ def validate_exact_codex_tiers(
         if parsed:
             found.setdefault(parsed[0], []).extend(parsed[1])
 
+    for tier in sorted(set(found) - set(CODEX_TIER_PRESETS)):
+        issues.append(
+            f"{label} Codex Routing has unexpected tier `{tier}`; the catalog maps "
+            f"exactly {', '.join(CODEX_TIER_PRESETS)}"
+        )
     for tier, expected in CODEX_TIER_PRESETS.items():
         if found.get(tier, []) != [expected]:
             issues.append(
@@ -506,7 +525,7 @@ DIAGNOSTIC_ROUTE = (
 )
 DIAGNOSTIC_MENTION_RE = re.compile(
     r"\b(?:Band\s+\d+|GPT-\d[\w.-]*(?:\s+\w+)?|Sonnet|Opus|Fable|Haiku|Astra|Luna|Sol|"
-    r"Extra\s+High|Light|deep|audit|tiers?|nhk-[\w-]+|xhigh|max)\b",
+    r"Extra\s+High|xhigh|max)\b|" + TIER_ROUTE_PATTERN,
     re.IGNORECASE,
 )
 
@@ -840,7 +859,7 @@ def without_valid_codex_catalogs(codex: str) -> str:
     lines: list[str] = []
     for line in codex.splitlines():
         parsed = codex_tier_members(line)
-        if parsed and parsed[1] == [CODEX_TIER_PRESETS[parsed[0]]]:
+        if parsed and parsed[1] == [CODEX_TIER_PRESETS.get(parsed[0])]:
             continue
         lines.append(line)
     return "\n".join(lines)
@@ -975,7 +994,7 @@ def validate_worker_policy_contract(
     validate_declared_clauses(
         declared_sections, WORKER_DECLARATIONS, label, issues,
         r"\b(?:Band\s*\d|GPT[- ]|gpt-|Astra|Luna|Sol|modules?|tasks?|mechanical|standard|judgment|"
-        r"light|deep|audit|tiers?|nhk-[\w-]+|review|consolidat\w*|repair|fix(?:es)?|Sonnet|Opus|Fable|Ultra)\b",
+        r"review|consolidat\w*|repair|fix(?:es)?|Sonnet|Opus|Fable|Ultra)\b|" + TIER_ROUTE_PATTERN,
     )
     validate_ui_alias_routes(declared_sections, label, issues)
     validate_exact_codex_tiers(policy_sections.get("Codex Routing", ""), label, issues)

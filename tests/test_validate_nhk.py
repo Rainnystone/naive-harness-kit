@@ -1112,6 +1112,28 @@ class AtomicRoutingRegressionTests(ValidatorTestCase):
                 result = run_cli("--final", self.write_final(content), "--kind", "worker-policy")
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_unrecognized_codex_tier_rows_fail(self) -> None:
+        for row in ("- `fast`: local.", "- `fast`: GPT-6 Luna max.", "- `audit-plus`: GPT-6 Astra xhigh."):
+            with self.subTest(row=row):
+                content = worker_policy_text().replace("## Claude Routing", row + "\n\n## Claude Routing", 1)
+                result = run_cli("--final", self.write_final(content), "--kind", "worker-policy")
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("unexpected tier", result.stdout)
+
+    def test_tier_words_in_project_facts_are_not_routes(self) -> None:
+        for fact in (
+            "The security audit log is stored in logs/audit.json.",
+            "Deep links open in the light theme.",
+            "The free tier limits API calls.",
+        ):
+            with self.subTest(fact=fact):
+                content = worker_policy_text().rstrip() + "\n\n" + fact + "\n"
+                result = run_cli("--final", self.write_final(content), "--kind", "worker-policy")
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                content = execution_recovery_text().rstrip() + "\n\n" + fact.replace("The", "Inspect the", 1) + "\n"
+                result = run_cli("--final", self.write_final(content), "--kind", "execution-recovery")
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_legacy_band_routes_require_tier_migration(self) -> None:
         for extra in (
             "- Band 2: GPT-6 Astra medium.",
