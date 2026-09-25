@@ -74,7 +74,7 @@ If bootstrap is creating, structurally repairing, or making the specific semanti
 - Do not expand project detail past the line budget; route it to the companion docs.
 - Keep `coding-agent-guide.md` at or below 80 lines with one Task Routing table using `Task or Symptom`, `Read First`, `Likely Change Surface`, and `Targeted Verification`.
 - Keep `implementation-planning.md` at or below 80 lines with `Workflow Compatibility`, `Plan Layers`, `Task Contract`, `Dependencies and Execution`, `Wide Changes`, and `Plan Review` in order.
-- Keep `worker-policy.md` at or below 100 lines with its dispatch, review, Codex, and Claude sections in order.
+- Keep `worker-policy.md` at or below 100 lines with its dispatch, review, capability-tier, Codex, and Claude sections in order.
 - Keep `execution-recovery.md` at or below 80 lines with its accounting, reassessment, diagnosis, and recovery sections in order.
 - Keep `documentation-governance.md` at or below 100 lines and limited to document roles, active surfaces, the workspace/document map, lifecycle, naming/loading, and archive invariants.
 
