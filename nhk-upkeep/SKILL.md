@@ -20,11 +20,11 @@ On every upkeep run, compare NHK-owned rules against the currently installed ref
 1. Compare the canonical instruction and thin adapter, if present, against the live workspace and the matching `../references/AGENTS-template.md` or `../references/CLAUDE-template.md`; keep the canonical topology and applicable line budget.
 2. Compare the single Task Routing table in `coding-agent-guide.md` against current routes and `../references/coding-agent-guide-template.md`; keep it at or below 80 lines.
 3. Compare `implementation-planning.md` against `../references/implementation-planning-template.md`; keep its Superpowers-compatible task contract and 80-line limit.
-4. Compare `worker-policy.md` against `../references/worker-policy-template.md`; reconcile dispatch and review permissions within 100 lines.
+4. Compare `worker-policy.md` against `../references/worker-policy-template.md`; reconcile dispatch, review, and tier permissions within 100 lines, following its legacy tier migration.
 5. Compare `execution-recovery.md` against `../references/execution-recovery-template.md`; reconcile diagnosis, recovery, and stop rules within 80 lines.
 6. Compare `documentation-governance.md` against actual document roles and `../references/documentation-governance-template.md`; keep it at or below 100 lines.
 7. Compare `archive/README.md` against existing archived workstreams and `../references/archive-readme-template.md`; keep every index entry resolvable.
-8. When `.claude/agents/nhk-*.md` definitions exist, compare them against `../references/claude-agents-template.md` and reconcile their frontmatter and shared body. An absent set stays absent; the human declined or was never offered it.
+8. When `.claude/agents/nhk-*.md` definitions exist, compare them against `../references/claude-agents-template.md` and reconcile their frontmatter and shared body. Create any missing current definition in that set and report each retired definition the template names for the human to delete. An absent set stays absent; the human declined or was never offered it.
 9. Inspect existing implementation plans, task lists, `task_plan.md`, `progress.md`, and `findings.md` as active surfaces, not permanent assumptions.
 10. Repair inaccurate active references and status descriptions, replace any Claude companion `@` import with a literal on-demand path, then verify cross-links and instruction structure.
 

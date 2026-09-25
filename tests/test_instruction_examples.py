@@ -40,7 +40,7 @@ COMPANION_FINAL_CONTRACTS = {
     "worker-policy-template.md": (
         100,
         "Worker Policy",
-        ("Dispatch Contract", "Review Gates", "Codex Routing", "Claude Routing"),
+        ("Dispatch Contract", "Review Gates", "Capability Tiers", "Codex Routing", "Claude Routing"),
     ),
     "execution-recovery-template.md": (
         80,
@@ -311,22 +311,29 @@ class InstructionExampleTests(unittest.TestCase):
         )
         common = "\n".join(
             section_text(example, heading)
-            for heading in ("Dispatch Contract", "Review Gates")
+            for heading in ("Dispatch Contract", "Review Gates", "Capability Tiers")
         )
         self.assertNotRegex(
             common,
-            r"\b(?:Codex|GPT-\d|Luna|Terra|Sol|Astra|Ultra|fork_turns)\b",
+            r"\b(?:Codex|GPT-\d|Luna|Terra|Sol|Astra|Ultra|fork_turns|Opus|Fable|nhk-\w+)\b",
         )
         codex = section_text(example, "Codex Routing")
         for token in (
             "fork_turns: none",
-            "Band 1: GPT-6 Luna max",
-            "Band 2: GPT-6 Astra medium",
-            "Band 3: GPT-6 Astra xhigh",
-            "Max is limited to these read-only roles",
+            "`light`: GPT-6 Luna max.",
+            "`standard`: GPT-6 Sol xhigh.",
+            "`deep`: GPT-6 Astra medium.",
+            "`audit`: GPT-6 Astra xhigh.",
             "Ultra authorization and recursion authorization never imply each other",
         ):
             self.assertIn(token, codex)
+        self.assertNotRegex(codex, r"\bBand\s+\d|\bmax\b(?<!Luna max)")
+        claude = section_text(example, "Claude Routing")
+        self.assertIn(
+            "`light` and `standard` use `nhk-standard`, `deep` uses `nhk-deep`, "
+            "and `audit` uses the read-only `nhk-audit`",
+            claude,
+        )
 
     def test_generated_recovery_preserves_runtime_boundaries(self) -> None:
         example = assemble_companion(
