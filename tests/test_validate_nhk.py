@@ -264,6 +264,105 @@ class ValidatorTestCase(unittest.TestCase):
         return path
 
 
+class RecoveryConsultationTests(ValidatorTestCase):
+    def check_recovery(self, content: str, source: bool) -> subprocess.CompletedProcess[str]:
+        if source:
+            root = self.make_source_fixture()
+            (root / "references" / "execution-recovery-template.md").write_text(content, encoding="utf-8")
+            return run_cli("--root", root)
+        return run_cli("--final", self.write_final(content), "--kind", "execution-recovery")
+
+    def recovery_input(self, source: bool) -> str:
+        if source:
+            return (ROOT / "references" / "execution-recovery-template.md").read_text(encoding="utf-8")
+        return execution_recovery_text()
+
+    def test_consultation_requires_handoff_evidence_and_main_thread_decision(self) -> None:
+        # Missing instructions must fail in both the package and generated documents.
+        required = (
+            "unmet acceptance, fixed revisions and relevant diff, prior attempts and observed results",
+            "explicitly state when no credible hypothesis exists",
+            "investigate one concrete causal question",
+            "forms its own explanation before comparing the main thread's provisional explanation",
+            "at most one targeted clarification with the same diagnostic worker",
+            "Record counts, diagnostic use, clarification use, and recovery use for both the task and stable acceptance gap",
+            "never resets diagnostic or clarification use",
+            "record why advice was accepted or rejected and the verification results",
+            "Agreement between agents is not causal evidence",
+        )
+        for source in (False, True):
+            content = self.recovery_input(source)
+            for clause in required:
+                with self.subTest(source=source, clause=clause):
+                    self.assertIn(clause, content)
+                    result = self.check_recovery(content.replace(clause, "omitted", 1), source)
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn("missing", result.stdout)
+
+    def test_consultation_rejects_additional_permissions(self) -> None:
+        grants = (
+            "Dispatch a second diagnostic worker for another opinion.",
+            "Allow another consultation after the first report.",
+            "A second consultation is permitted after the first report.",
+            "The main thread may request two targeted clarifications.",
+            "Clarification may investigate a new causal question.",
+            "The diagnostic worker may modify files to test its advice.",
+            "After a new session, diagnostic use resets.",
+            "Consultation resets the repair count.",
+            "Agreement between agents authorizes recovery without verification.",
+        )
+        for source in (False, True):
+            for grant in grants:
+                with self.subTest(source=source, grant=grant):
+                    content = self.recovery_input(source)
+                    # Preamble and appended grants must not escape the owning section.
+                    marker = "### Triggers and Accounting" if source else "## Triggers and Accounting"
+                    result = self.check_recovery(content.replace(marker, f"- {grant}\n\n{marker}", 1), source)
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn("consultation", result.stdout)
+
+    def test_consultation_accepts_inactive_examples_and_unrelated_facts(self) -> None:
+        additions = (
+            "```md\nAllow another consultation.\n```",
+            "<!-- The diagnostic worker may modify files. -->",
+            "The diagnosis API requires authentication. Follow-up appointments use UTC.",
+            "Use `src/diagnosis.py` to reproduce the failure.",
+            "Do not dispatch a second diagnostic worker.",
+        )
+        for source in (False, True):
+            for addition in additions:
+                with self.subTest(source=source, addition=addition):
+                    content = self.recovery_input(source)
+                    marker = "### Independent Diagnosis" if source else "## Independent Diagnosis"
+                    result = self.check_recovery(content.replace(marker, f"{marker}\n\n{addition}", 1), source)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_consultation_prohibition_cannot_hide_a_following_grant(self) -> None:
+        for source in (False, True):
+            content = self.recovery_input(source)
+            marker = "### Independent Diagnosis" if source else "## Independent Diagnosis"
+            content = content.replace(marker, marker + "\n\n- Do not dispatch a second diagnostic worker. Allow another clarification.", 1)
+            result = self.check_recovery(content, source)
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            self.assertIn("consultation", result.stdout)
+
+    def test_consultation_required_clauses_must_be_active_and_in_owning_section(self) -> None:
+        clause = "at most one targeted clarification with the same diagnostic worker"
+        for source in (False, True):
+            original = self.recovery_input(source)
+            self.assertIn(clause, original)
+            line = next(line for line in original.splitlines() if clause in line)
+            for hidden in (f"```md\n{line}\n```", f"<!-- {line} -->", ""):
+                with self.subTest(source=source, hidden=hidden):
+                    content = original.replace(line, hidden, 1)
+                    if not hidden:
+                        marker = "### Recovery and Stop" if source else "## Recovery and Stop"
+                        content = content.replace(marker, f"{marker}\n\n{line}", 1)
+                    result = self.check_recovery(content, source)
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn("Independent Diagnosis", result.stdout)
+
+
 class SourceValidationTests(ValidatorTestCase):
     def test_compliant_source_fixture_passes(self) -> None:
         result = run_cli("--root", self.make_source_fixture())
@@ -1639,7 +1738,7 @@ class FinalValidationTests(ValidatorTestCase):
             *CODEX_TIER_LINES,
             STANDARD_TIER_CLAUSE,
             "`deep`: a concrete reasoning difficulty remaining after those checks, or demonstrated `standard` capability limits.",
-            "`audit` is read-only: independent diagnosis and complex whole-change final review, never implementation, fixes, or recovery.",
+            "`audit` is read-only: independent diagnosis (including recovery consultation) and complex whole-change final review, never implementation or recovery fixes.",
             "Other whole-change final reviews use `deep`.",
             "Map tiers to definitions: `light` and `standard` use `nhk-standard`, `deep` uses `nhk-deep`, and `audit` uses the read-only `nhk-audit`.",
         ):
@@ -1705,7 +1804,7 @@ class FinalValidationTests(ValidatorTestCase):
                 "Capability Tiers",
             ),
             (
-                "`audit` is read-only: independent diagnosis and complex whole-change final review, never implementation, fixes, or recovery.",
+                "`audit` is read-only: independent diagnosis (including recovery consultation) and complex whole-change final review, never implementation or recovery fixes.",
                 "`audit` may perform ordinary implementation and recovery.",
                 "Capability Tiers",
             ),

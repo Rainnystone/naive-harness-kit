@@ -68,7 +68,7 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 - Before selecting `deep`, check packet size, interfaces, and context; repair these first. Load `implementation-planning.md` if the plan needs material revision.
 - `deep`: a concrete reasoning difficulty remaining after those checks, or demonstrated `standard` capability limits. State that difficulty in one sentence in the existing brief; a known hard task may start here without a failed lower-tier trial.
 - A review uses `deep` when the review itself meets that difficulty condition; assess review difficulty separately from implementation.
-- `audit` is read-only: independent diagnosis and complex whole-change final review, never implementation, fixes, or recovery. After a failed `deep` implementation it may be selected directly for the one independent diagnosis.
+- `audit` is read-only: independent diagnosis (including recovery consultation) and complex whole-change final review, never implementation or recovery fixes. After a failed `deep` implementation it may be selected directly for the one independent diagnosis.
 - Other whole-change final reviews use `deep`.
 - First classify failures as scope, context, environment, verification, or capability. Escalate one tier only for demonstrated capability limits of a correctly sized packet; failure count alone is not a reason to escalate.
 - `deep` is the ordinary ceiling: non-convergence there enters execution recovery; earlier stagnation or the five-round bound also triggers reassessment. Model changes never reset counts.
