@@ -1053,7 +1053,7 @@ def validate_execution_recovery_contract(
 
     # Recognize explicit consultation actors and dispatch/permission/reset syntax,
     # not bare topic words in project facts. Known prohibitions exempt only themselves.
-    action = r"\b(?:allow|permit|authorize|dispatch|request|repeat|continue|start|use|reset|renew)\w*\s+"
+    action = r"\b(?:allow|permit|authorize|dispatch|request|repeat|continue|start|reset|renew)\w*\s+"
     modifiers = (
         r"(?:(?:a|an|the|one|two|three|\d+|second|another|extra|additional|unlimited|more|multiple|"
         r"further|new|fresh(?:-context)?|read-only|targeted|independent|recovery)\s+)*"
@@ -1076,7 +1076,12 @@ def validate_execution_recovery_contract(
         + process_object + object_end + r")|"
         + action + r"(?:(?:a|an|the)\s+)?"
         r"(?:second|another|extra|additional|unlimited|multiple|further|two|three|[2-9]\d*)\s+"
-        + modifiers + process_object + r"(?!/|\.\w)",
+        + modifiers + process_object + r"(?!/|\.\w)|"
+        # Generic use can refer to logs/codes even with a role name or quantity.
+        # Recognize it only with a complete policy object in the bounded syntax.
+        r"\buses?\s+" + modifiers
+        + r"(?:diagnostic workers?|consultants?|diagnostic use|clarification use|"
+        + process_object + r")" + object_end,
         re.IGNORECASE,
     )
     prohibition = re.compile(
