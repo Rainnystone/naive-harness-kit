@@ -521,8 +521,47 @@ def validate_codex_declared_presets(
 # These checks recognize a bounded declaration format, not arbitrary prose intent.
 DIAGNOSTIC_ROUTE = (
     "Dispatch at most one fresh-context read-only diagnostic worker using the independent "
-    "diagnosis role in `worker-policy.md` to challenge one concrete hypothesis."
+    "diagnosis role in `worker-policy.md` to investigate one concrete causal question."
 )
+# These clauses are preserved during generation, like the worker declarations.
+# They validate the consultation contract, not the quality of a live diagnosis.
+CONSULTATION_DECLARATIONS = {
+    "Triggers and Accounting": [
+        "Record counts, diagnostic use, clarification use, and recovery use for both the task "
+        "and stable acceptance gap in that record. Other trackers only reference it.",
+        "Worker, session, model, commit, task rename, or replanning never resets diagnostic or clarification use.",
+        "Read-only diagnosis spends no fix round and grants no additional modification authority.",
+    ],
+    "Main-thread Reassessment": [
+        "Before consultation, prepare the original contract, unmet acceptance, fixed revisions and relevant diff, "
+        "prior attempts and observed results, counterevidence, open questions, and authoritative execution record.",
+        "Include a provisional explanation and recovery direction if available; explicitly state when no credible "
+        "hypothesis exists. A complete solution is not a prerequisite for consultation.",
+        "The main thread decides directly when evidence is sufficient and remains responsible for the final judgment.",
+        "After consultation, verify key evidence and record why advice was accepted or rejected and the verification "
+        "results. Agreement between agents is not causal evidence.",
+    ],
+    "Independent Diagnosis": [
+        "Use diagnosis only for competing explanations, review-versus-implementation conflict, an unverified old "
+        "premise, or no credible explanation for repeated failure.",
+        DIAGNOSTIC_ROUTE,
+        "Recovery consultation uses the existing diagnosis allowance; if either the task or stable acceptance gap "
+        "has used diagnosis, do not dispatch another diagnostic worker.",
+        "Give the diagnostic worker the reassessment handoff and an explicit no-write boundary. "
+        "Separate observations from prior hypotheses.",
+        "Diagnosis checks source evidence and forms its own explanation before comparing the main thread's "
+        "provisional explanation; it may support or overturn that explanation. Return evidence explaining previous "
+        "failures or a discriminating experiment with expected outcomes; suggest a minimal recovery direction "
+        "only when causal evidence supports it.",
+        "After the report, allow at most one targeted clarification with the same diagnostic worker, limited to "
+        "evidence, omissions, or disagreements about the original causal question. It uses the same diagnosis "
+        "allowance and grants no new investigation scope.",
+        "A diagnostic worker does not authorize a fix or replace the main thread's judgment; select any recovery "
+        "fix and re-review for their own roles in `worker-policy.md`.",
+        "If evidence remains insufficient after diagnosis and any clarification, present blockers and options "
+        "to the human. Do not start a diagnostic chain.",
+    ],
+}
 DIAGNOSTIC_MENTION_RE = re.compile(
     r"\b(?:Band\s+\d+|GPT-\d[\w.-]*(?:\s+\w+)?|Sonnet|Opus|Fable|Haiku|Astra|Luna|Sol|"
     r"Extra\s+High|xhigh|max)\b|" + TIER_ROUTE_PATTERN,
@@ -616,8 +655,8 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                       'failed lower-tier trial.',
                       'A review uses `deep` when the review itself meets that difficulty '
                       'condition; assess review difficulty separately from implementation.',
-                      '`audit` is read-only: independent diagnosis and complex whole-change final '
-                      'review, never implementation, fixes, or recovery. After a failed `deep` '
+                      '`audit` is read-only: independent diagnosis (including recovery consultation) '
+                      'and complex whole-change final review, never implementation or recovery fixes. After a failed `deep` '
                       'implementation it may be selected directly for the one independent '
                       'diagnosis.',
                       'Other whole-change final reviews use `deep`.',
@@ -1008,6 +1047,57 @@ def validate_execution_recovery_contract(
     issues: list[str],
 ) -> None:
     validate_diagnostic_route(sections, label, issues)
+    normalized = {heading: normalized_contract(body) for heading, body in sections.items()}
+    for heading, clauses in CONSULTATION_DECLARATIONS.items():
+        require_section_text(normalized, heading, map(normalized_contract, clauses), label, issues)
+
+    # Recognize explicit consultation actors and dispatch/permission/reset syntax,
+    # not bare topic words in project facts. Known prohibitions exempt only themselves.
+    action = r"\b(?:allow|permit|authorize|dispatch|request|repeat|continue|start|reset|renew)\w*\s+"
+    modifiers = (
+        r"(?:(?:a|an|the|one|two|three|\d+|second|another|extra|additional|unlimited|more|multiple|"
+        r"further|new|fresh(?:-context)?|read-only|targeted|independent|recovery)\s+)*"
+    )
+    process_object = r"(?:diagnosis|consultations?|clarifications?|follow-ups?)\b"
+    object_end = (
+        r"(?=\s*(?:[;,!?]|\.(?!\w)|$)|\s+(?:for|to|after|before|when|if|until|again|"
+        r"as|with|about|without|within|instead|beyond|now)\b)"
+    )
+    consultation_grant = re.compile(
+        r"\b(?:diagnostic workers?|diagnostic use|consultants?|consultations?|diagnosis|"
+        r"clarifications?|clarification use|follow-ups?|agreement between agents)\s+"
+        r"(?:may|can|must|shall|authorizes?|resets?|renews?|grants?|"
+        r"(?:is|are)\s+(?:allowed|permitted|authorized|reset|renewed))\b|"
+        # Explicit worker/allowance objects and additional counted permissions do
+        # not depend on trailing timing prose. Only ambiguous bare topic objects
+        # need an end boundary to avoid treating diagnosis logs/codes as a role.
+        + action + modifiers
+        + r"(?:(?:diagnostic workers?|consultants?|diagnostic use|clarification use)\b(?!/|\.\w)|"
+        + process_object + object_end + r")|"
+        + action + r"(?:(?:a|an|the)\s+)?"
+        r"(?:second|another|extra|additional|unlimited|multiple|further|two|three|[2-9]\d*)\s+"
+        + modifiers + process_object + r"(?!/|\.\w)|"
+        # Generic use can refer to logs/codes even with a role name or quantity.
+        # Recognize it only with a complete policy object in the bounded syntax.
+        r"\buses?\s+" + modifiers
+        + r"(?:diagnostic workers?|consultants?|diagnostic use|clarification use|"
+        + process_object + r")" + object_end,
+        re.IGNORECASE,
+    )
+    prohibition = re.compile(
+        r"\b(?:do not|never)\s+(?:dispatch|request)\s+(?:a second|another)\s+diagnostic worker[.;]|"
+        r"\bdo not allow a second clarification[.;]|"
+        r"\bdiagnostic workers must not modify files[.;]|"
+        r"\bconsultation never resets repair counts[.;]",
+        re.IGNORECASE,
+    )
+    for clause in undeclared_clauses(sections, CONSULTATION_DECLARATIONS):
+        # Normalize ordinary emphasis only for the extra-declaration scan.
+        clause = re.sub(r"(?<!\w)(\*{1,2}|_{1,2})(?=\S)(.+?)(?<=\S)\1(?!\w)", r"\2", clause)
+        clause = prohibition.sub("", clause)
+        if consultation_grant.search(clause):
+            issues.append(f"{label} contains additional consultation permissions; use the declared contract only")
+
     if headings != EXECUTION_RECOVERY_HEADINGS:
         issues.append(
             f"{label} headings must be exactly: "
@@ -1043,20 +1133,6 @@ def validate_execution_recovery_contract(
             "concrete command or input, observed result, and expected before-and-after result",
             "original scope and authority",
             "require a human decision",
-        ),
-        label,
-        issues,
-    )
-    require_section_text(
-        sections,
-        "Independent Diagnosis",
-        (
-            "competing explanations, review-versus-implementation conflict, or an unverified old premise",
-            DIAGNOSTIC_ROUTE,
-            "Separate observations from prior hypotheses",
-            "supporting evidence or a discriminating experiment with expected outcomes",
-            "does not authorize a fix",
-            "Do not start a diagnostic chain",
         ),
         label,
         issues,

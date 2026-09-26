@@ -248,13 +248,26 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** After a fourth recorded round for one stable gap, change the worker, session, model, commit, task name, or plan.
 
-**Expected:** The same task and acceptance-gap counts remain four. A read-only diagnostic does not spend a fix round and does not authorize another modification. The fifth unresolved round stops ordinary fixing regardless of personnel or planning changes.
+**Expected:** The same task and acceptance-gap counts remain four. Diagnostic and clarification use are recorded against both the task and stable acceptance gap and also survive these changes. A read-only diagnostic does not spend a fix round and does not authorize another modification. The fifth unresolved round stops ordinary fixing regardless of personnel or planning changes.
 
 ### D12. Evidence before bounded recovery
 
 **Setup:** The fifth round fails. The main thread has either sufficient new causal evidence, competing explanations, or no discrimination from old hypotheses.
 
-**Expected:** Reassess original intent, contracts, verification, attempts, and cross-task consequences, then classify the failure. Architectural stagnation or an invalid shared premise permits earlier reassessment; five rounds are a ceiling. Before recovery, record a changed causal explanation, discriminating command/input/observation, and expected results. Competing explanations, review conflict, or an unverified premise permit at most one fresh read-only worker selected through the independent diagnosis role in worker-policy.md. Give it observations separately from old hypotheses; require evidence explaining failed attempts and alternatives, or a discriminating experiment with expected outcomes. Diagnosis cannot authorize a fix. Fixes and re-reviews select their own roles. Insufficient evidence goes to the human without a diagnostic chain. Replacing the role reference or appending model/tier/effort routes fails source/final validation; inactive examples do not affect routing.
+**Expected:** Reassess original intent, contracts, verification, attempts, and cross-task consequences, then classify the failure. Architectural stagnation or an invalid shared premise permits earlier reassessment; five rounds are a ceiling. Before recovery, record a changed causal explanation, discriminating command/input/observation, and expected results. Competing explanations, review conflict, an unverified premise, or no credible explanation for repeated failure permit at most one fresh read-only worker selected through the independent diagnosis role in worker-policy.md. The main thread provides the original contract, unmet acceptance, fixed revisions and diff, prior attempts and observations, counterevidence, open questions, and execution record; separate facts from provisional explanation and direction. No credible hypothesis is a valid starting point; a complete solution is not required. The diagnosis investigates one concrete causal question, checks source evidence and forms its own explanation before comparing the main thread's view. It may support or overturn that view, returning evidence explaining prior failures or a discriminating experiment with expected outcomes. Diagnosis cannot authorize a fix. Fixes and re-reviews select their own roles.
+
+### D12a. Bounded consultation and main-thread decision
+
+**Cases and expected decisions:**
+
+- Sufficient new causal evidence already exists: the main thread may decide directly without consultation, recording the changed explanation and verification before recovery.
+- There is no credible hypothesis: the main thread states that explicitly and sends the original evidence with a concrete causal question; the consultant need not approve a prewritten solution.
+- The consultant overturns the provisional direction: the main thread checks the evidence and records why it accepts or rejects the advice and the verification results. Agent agreement alone cannot justify recovery.
+- A report leaves a specific evidential omission or disagreement: at most one targeted clarification goes to the same diagnostic worker about the original question. It uses the same diagnosis allowance and grants no new investigation scope.
+- Evidence remains insufficient after diagnosis and any clarification: report blockers and options to the human; do not start another diagnostic chain or an unsupported repair.
+- Either the task or the same stable acceptance gap has used diagnosis: no new diagnostic worker is available. An unused clarification may still go to the original worker; a used clarification cannot be repeated after resumption or replanning.
+
+**Validation:** Source and generated documents require the consultation clauses in their owning active sections. Missing, changed, moved, fenced, or commented clauses fail. Additional dispatch, permission, or reset declarations for consultation actors fail even beside a correct clause or a prohibition. Replacing the role reference or appending model/tier/effort routes fails; inactive examples and unrelated project facts remain valid. These bounded checks validate declared contracts, not arbitrary prose equivalence or live diagnostic quality. Bootstrap/upkeep keep their existing template references and section/line budgets; no new companion or agent definition is required.
 
 ### D13. One recovery wave and final-review boundary
 
