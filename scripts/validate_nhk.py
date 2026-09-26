@@ -1057,22 +1057,29 @@ def validate_execution_recovery_contract(
         r"\b(?:diagnostic workers?|diagnostic use|consultants?|consultations?|diagnosis|"
         r"clarifications?|clarification use|follow-ups?|agreement between agents)\s+"
         r"(?:may|can|must|shall|authorizes?|resets?|renews?|grants?|"
-        r"(?:is|are)\s+(?:allowed|permitted|authorized))\b|"
+        r"(?:is|are)\s+(?:allowed|permitted|authorized|reset|renewed))\b|"
         r"\b(?:allow|permit|authorize|dispatch|request|repeat|continue|start|use|reset|renew)\w*\s+"
         r"(?:(?:a|an|the|one|two|three|\d+|second|another|extra|additional|unlimited|more|multiple|"
-        r"further|new|fresh(?:-context)?|read-only|targeted|independent)\s+)*"
+        r"further|new|fresh(?:-context)?|read-only|targeted|independent|recovery)\s+)*"
         r"(?:diagnostic workers?|diagnostic use|diagnosis|consultants?|consultations?|"
-        r"clarifications?|clarification use|follow-ups?)\b",
+        r"clarifications?|clarification use|follow-ups?)\b"
+        # Complete policy objects end here or introduce a purpose/condition.
+        # A topic used as a noun modifier (diagnosis logs) or filename is not one.
+        r"(?=\s*(?:[;,!?]|\.(?!\w)|$)|\s+(?:for|to|after|before|when|if|until|again|"
+        r"as|with|about|without|within|instead|beyond|now)\b)",
+        re.IGNORECASE,
+    )
+    prohibition = re.compile(
+        r"\b(?:do not|never)\s+(?:dispatch|request)\s+(?:a second|another)\s+diagnostic worker[.;]|"
+        r"\bdo not allow a second clarification[.;]|"
+        r"\bdiagnostic workers must not modify files[.;]|"
+        r"\bconsultation never resets repair counts[.;]",
         re.IGNORECASE,
     )
     for clause in undeclared_clauses(sections, CONSULTATION_DECLARATIONS):
-        for prohibition in (
-            "Do not dispatch a second diagnostic worker.",
-            "Do not allow a second clarification.",
-            "Diagnostic workers must not modify files.",
-            "Consultation never resets repair counts.",
-        ):
-            clause = clause.replace(prohibition, "")
+        # Normalize ordinary emphasis only for the extra-declaration scan.
+        clause = re.sub(r"(?<!\w)(\*{1,2}|_{1,2})(?=\S)(.+?)(?<=\S)\1(?!\w)", r"\2", clause)
+        clause = prohibition.sub("", clause)
         if consultation_grant.search(clause):
             issues.append(f"{label} contains additional consultation permissions; use the declared contract only")
 

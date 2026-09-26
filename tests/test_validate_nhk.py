@@ -308,6 +308,11 @@ class RecoveryConsultationTests(ValidatorTestCase):
             "Clarification may investigate a new causal question.",
             "The diagnostic worker may modify files to test its advice.",
             "After a new session, diagnostic use resets.",
+            "Diagnostic use is reset after a new session.",
+            "Clarification use is renewed after a new session.",
+            "Dispatch another recovery consultation after the first report.",
+            "Dispatch another **diagnostic worker** after the first report.",
+            "Dispatch another _diagnostic worker_ after the first report.",
             "Consultation resets the repair count.",
             "Agreement between agents authorizes recovery without verification.",
         )
@@ -327,7 +332,13 @@ class RecoveryConsultationTests(ValidatorTestCase):
             "<!-- The diagnostic worker may modify files. -->",
             "The diagnosis API requires authentication. Follow-up appointments use UTC.",
             "Use `src/diagnosis.py` to reproduce the failure.",
+            "Use `diagnosis.md` to reproduce the failure.",
+            "Use diagnosis logs from `artifacts/diagnosis/` to reproduce the failure.",
+            "The product uses diagnosis codes to group incidents.",
+            "Use clarification API responses to reproduce the failure.",
             "Do not dispatch a second diagnostic worker.",
+            "do not dispatch a second diagnostic worker.",
+            "Do not request another diagnostic worker.",
         )
         for source in (False, True):
             for addition in additions:
@@ -339,12 +350,17 @@ class RecoveryConsultationTests(ValidatorTestCase):
 
     def test_consultation_prohibition_cannot_hide_a_following_grant(self) -> None:
         for source in (False, True):
-            content = self.recovery_input(source)
-            marker = "### Independent Diagnosis" if source else "## Independent Diagnosis"
-            content = content.replace(marker, marker + "\n\n- Do not dispatch a second diagnostic worker. Allow another clarification.", 1)
-            result = self.check_recovery(content, source)
-            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
-            self.assertIn("consultation", result.stdout)
+            for addition in (
+                "Do not dispatch a second diagnostic worker. Allow another clarification.",
+                "do not request another **diagnostic worker**; allow another recovery consultation.",
+            ):
+                with self.subTest(source=source, addition=addition):
+                    content = self.recovery_input(source)
+                    marker = "### Independent Diagnosis" if source else "## Independent Diagnosis"
+                    content = content.replace(marker, f"{marker}\n\n- {addition}", 1)
+                    result = self.check_recovery(content, source)
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn("consultation", result.stdout)
 
     def test_consultation_required_clauses_must_be_active_and_in_owning_section(self) -> None:
         clause = "at most one targeted clarification with the same diagnostic worker"
