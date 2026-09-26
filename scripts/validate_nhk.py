@@ -1053,20 +1053,30 @@ def validate_execution_recovery_contract(
 
     # Recognize explicit consultation actors and dispatch/permission/reset syntax,
     # not bare topic words in project facts. Known prohibitions exempt only themselves.
+    action = r"\b(?:allow|permit|authorize|dispatch|request|repeat|continue|start|use|reset|renew)\w*\s+"
+    modifiers = (
+        r"(?:(?:a|an|the|one|two|three|\d+|second|another|extra|additional|unlimited|more|multiple|"
+        r"further|new|fresh(?:-context)?|read-only|targeted|independent|recovery)\s+)*"
+    )
+    process_object = r"(?:diagnosis|consultations?|clarifications?|follow-ups?)\b"
+    object_end = (
+        r"(?=\s*(?:[;,!?]|\.(?!\w)|$)|\s+(?:for|to|after|before|when|if|until|again|"
+        r"as|with|about|without|within|instead|beyond|now)\b)"
+    )
     consultation_grant = re.compile(
         r"\b(?:diagnostic workers?|diagnostic use|consultants?|consultations?|diagnosis|"
         r"clarifications?|clarification use|follow-ups?|agreement between agents)\s+"
         r"(?:may|can|must|shall|authorizes?|resets?|renews?|grants?|"
         r"(?:is|are)\s+(?:allowed|permitted|authorized|reset|renewed))\b|"
-        r"\b(?:allow|permit|authorize|dispatch|request|repeat|continue|start|use|reset|renew)\w*\s+"
-        r"(?:(?:a|an|the|one|two|three|\d+|second|another|extra|additional|unlimited|more|multiple|"
-        r"further|new|fresh(?:-context)?|read-only|targeted|independent|recovery)\s+)*"
-        r"(?:diagnostic workers?|diagnostic use|diagnosis|consultants?|consultations?|"
-        r"clarifications?|clarification use|follow-ups?)\b"
-        # Complete policy objects end here or introduce a purpose/condition.
-        # A topic used as a noun modifier (diagnosis logs) or filename is not one.
-        r"(?=\s*(?:[;,!?]|\.(?!\w)|$)|\s+(?:for|to|after|before|when|if|until|again|"
-        r"as|with|about|without|within|instead|beyond|now)\b)",
+        # Explicit worker/allowance objects and additional counted permissions do
+        # not depend on trailing timing prose. Only ambiguous bare topic objects
+        # need an end boundary to avoid treating diagnosis logs/codes as a role.
+        + action + modifiers
+        + r"(?:(?:diagnostic workers?|consultants?|diagnostic use|clarification use)\b(?!/|\.\w)|"
+        + process_object + object_end + r")|"
+        + action + r"(?:(?:a|an|the)\s+)?"
+        r"(?:second|another|extra|additional|unlimited|multiple|further|two|three|[2-9]\d*)\s+"
+        + modifiers + process_object + r"(?!/|\.\w)",
         re.IGNORECASE,
     )
     prohibition = re.compile(
