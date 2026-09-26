@@ -322,6 +322,11 @@ class RecoveryConsultationTests(ValidatorTestCase):
             "Dispatch another _diagnostic worker_ after the first report.",
             "Consultation resets the repair count.",
             "Agreement between agents authorizes recovery without verification.",
+            "Reset the diagnosis allowance after a new session.",
+            "Renew the clarification allowance on resumption.",
+            "The diagnosis allowance resets after a new session.",
+            "Diagnostic workers may dispatch another helper.",
+            "Clarifications can be repeated after resumption.",
         )
         for source in (False, True):
             for grant in grants:
@@ -348,6 +353,9 @@ class RecoveryConsultationTests(ValidatorTestCase):
             "Do not dispatch a second diagnostic worker.",
             "do not dispatch a second diagnostic worker.",
             "Do not request another diagnostic worker.",
+            "Diagnostic workers must authenticate to read production logs.",
+            "Consultants must sign the data-access agreement before reading dashboards.",
+            "Diagnostic workers can read production logs through the read-only replica.",
         )
         for source in (False, True):
             for addition in additions:
@@ -841,8 +849,8 @@ class SourceValidationTests(ValidatorTestCase):
             ("there is no mandatory `light` trial", "always start in `light`"),
             ("Tiers determine permission", "Escalate whenever useful"),
             (
-                "Ultra authorization and recursion authorization never imply each other",
-                "Ultra also authorizes recursion",
+                "No worker configuration exceeds the `audit` preset",
+                "Ultra exceeds the `audit` preset with approval",
             ),
         )
         for required, replacement in mutations:
@@ -1844,9 +1852,24 @@ class FinalValidationTests(ValidatorTestCase):
                 "Claude Routing",
             ),
             (
-                "Ultra authorization and recursion authorization never imply each other.",
-                "Ultra authorization also authorizes recursion.",
+                "No worker configuration exceeds the `audit` preset;",
+                "Ultra may exceed the `audit` preset with approval;",
                 "Codex Routing",
+            ),
+            (
+                "Never continue a diagnostic worker for open items.",
+                "Continue a diagnostic worker for open items as needed.",
+                "Claude Routing",
+            ),
+            (
+                "never the one-shot Explore or Plan agents",
+                "or the Explore agent",
+                "Claude Routing",
+            ),
+            (
+                "the clarification lapses and no fresh worker replaces it",
+                "dispatch a fresh worker for the clarification",
+                "Claude Routing",
             ),
         )
         for required, replacement, section in mutations:
@@ -1934,8 +1957,7 @@ class FinalValidationTests(ValidatorTestCase):
             """## Codex Routing
 
 - Do not use GPT-6 Astra xhigh for ordinary implementation.
-- GPT-6 Luna max must not perform initial task reviews.
-- Ultra approval never authorizes recursive delegation.""",
+- GPT-6 Luna max must not perform initial task reviews.""",
             1,
         ).replace(
             "## Claude Routing",
@@ -1947,6 +1969,19 @@ class FinalValidationTests(ValidatorTestCase):
         path = self.write_final(content)
         result = run_cli("--final", path, "--kind", "worker-policy")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_worker_policy_rejects_legacy_ultra_permissions(self) -> None:
+        # Ultra is no longer a worker route; stale approvals must be migrated, not kept.
+        for legacy in (
+            "Ultra requires human approval naming the packet and current run. It never becomes a reusable project or session default.",
+            "Ultra authorization and recursion authorization never imply each other.",
+            "Ultra approval never authorizes recursive delegation.",
+        ):
+            with self.subTest(legacy=legacy):
+                content = worker_policy_text().replace("## Codex Routing", f"## Codex Routing\n\n- {legacy}", 1)
+                result = run_cli("--final", self.write_final(content), "--kind", "worker-policy")
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("additional routing", result.stdout)
 
     def test_worker_policy_rejects_presets_declared_outside_tier_lines(self) -> None:
         extras = (

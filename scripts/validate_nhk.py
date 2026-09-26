@@ -677,9 +677,8 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                    'brief, required files, and binding global constraints.',
                    'Runtime model IDs are `gpt-6-luna`, `gpt-6-sol`, and `gpt-6-astra`; UI Extra '
                    'High maps to `xhigh`.',
-                   'Ultra requires human approval naming the packet and current run. It never '
-                   'becomes a reusable project or session default.',
-                   'Ultra authorization and recursion authorization never imply each other.',
+                   'No worker configuration exceeds the `audit` preset; the top effort stays with '
+                   'the human-chosen main thread.',
                    'Preserve an existing human routing exception only as an active `Human routing '
                    'exception:` JSON bullet in Codex Routing with exactly `target`, `scope`, '
                    '`role`, `preset`, and `approval` string fields.',
@@ -694,7 +693,7 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                    'HTTPS-and-fragment approval reference; never invent consent. Static validation '
                    'checks structure, not approval authenticity.',
                    'Records change only that preset choice, not worker class, review gates, '
-                   'budgets, the `audit` tier, Ultra, or recursion. Initial reviews still exclude '
+                   'budgets, the `audit` tier, or recursion. Initial reviews still exclude '
                    'the `light` preset.'],
  'Claude Routing': ['Every Claude worker runs Opus. When `.claude/agents/nhk-*.md` definitions '
                     'exist, dispatch through them and omit the per-invocation model so each '
@@ -709,6 +708,13 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                     'A worker report with open acceptance items and no named blocker is a report, '
                     'not completion: continue that worker with the open items, at most twice. '
                     'Continuations are not repair rounds; afterwards classify the failure.',
+                    'Dispatch independent diagnosis to a resumable worker: `nhk-audit`, or without '
+                    'definitions a general-purpose agent with `model: opus`; never the one-shot '
+                    'Explore or Plan agents. Record its agent ID with the diagnostic use.',
+                    'Never continue a diagnostic worker for open items. Its only continuation is the '
+                    'one recovery clarification, sent with SendMessage to the recorded worker; if '
+                    'that worker cannot be resumed, the clarification lapses and no fresh worker '
+                    'replaces it.',
                     'Use Fable only when the human explicitly chooses or approves it for the main '
                     'thread.',
                     'Built-in agents also receive `model: opus` explicitly, so Fable is never '
@@ -1026,7 +1032,6 @@ def validate_worker_policy_contract(
             f"Do not use {CODEX_TIER_PRESETS['audit']} for ordinary implementation.",
             "Workers may not inherit Fable for ordinary coding.",
             "GPT-6 Luna max must not perform initial task reviews.",
-            "Ultra approval never authorizes recursive delegation.",
         ):
             body = body.replace(prohibition, "")
         declared_sections[heading] = body
@@ -1059,20 +1064,35 @@ def validate_execution_recovery_contract(
         r"further|new|fresh(?:-context)?|read-only|targeted|independent|recovery)\s+)*"
     )
     process_object = r"(?:diagnosis|consultations?|clarifications?|follow-ups?)\b"
+    allowance_object = (
+        r"(?:diagnosis|diagnostic|consultation|clarification|follow-up)\s+"
+        r"(?:allowances?|budgets?|limits?|counts?)"
+    )
     object_end = (
         r"(?=\s*(?:[;,!?]|\.(?!\w)|$)|\s+(?:for|to|after|before|when|if|until|again|"
         r"as|with|about|without|within|instead|beyond|now)\b)"
     )
+    consultation_predicate = (
+        r"(?:allow|permit|authoriz|grant|dispatch|request|repeat|continu|start|restart|reset|renew|"
+        r"reus|extend|exceed|modif|writ|edit|fix|implement|patch|commit|spawn|delegat|"
+        r"recurs|investigat|escalat|approv|decid|overrid|replac)\w*"
+    )
     consultation_grant = re.compile(
         r"\b(?:diagnostic workers?|diagnostic use|consultants?|consultations?|diagnosis|"
-        r"clarifications?|clarification use|follow-ups?|agreement between agents)\s+"
-        r"(?:may|can|must|shall|authorizes?|resets?|renews?|grants?|"
+        r"clarifications?|clarification use|follow-ups?|agreement between agents)"
+        r"(?:\s+(?:allowances?|budgets?|limits?|counts?))?\s+"
+        # A modal alone is not a grant: "must authenticate" is a project fact.
+        # Only permission, scope, or accounting predicates change the contract.
+        r"(?:(?:may|can|must|shall)\s+(?:(?:also|then|still|now|always|again|freely)\s+)*"
+        r"(?:be\s+)?" + consultation_predicate + r"|"
+        r"authorizes?|resets?|renews?|grants?|"
         r"(?:is|are)\s+(?:allowed|permitted|authorized|reset|renewed))\b|"
         # Explicit worker/allowance objects and additional counted permissions do
         # not depend on trailing timing prose. Only ambiguous bare topic objects
         # need an end boundary to avoid treating diagnosis logs/codes as a role.
         + action + modifiers
-        + r"(?:(?:diagnostic workers?|consultants?|diagnostic use|clarification use)\b(?!/|\.\w)|"
+        + r"(?:(?:diagnostic workers?|consultants?|diagnostic use|clarification use|"
+        + allowance_object + r")\b(?!/|\.\w)|"
         + process_object + object_end + r")|"
         + action + r"(?:(?:a|an|the)\s+)?"
         r"(?:second|another|extra|additional|unlimited|multiple|further|two|three|[2-9]\d*)\s+"
