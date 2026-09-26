@@ -168,7 +168,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** One task finishes, then a complex Superpowers plan reaches whole-change final review.
 
-**Expected:** In SDD, each atomic task or qualifying mechanical batch receives one independent read-only reviewer with separate spec-compliance and task-quality verdicts; both must pass. Complex whole-change final review and independent diagnosis use the read-only `audit` tier, which may be selected directly for the one diagnosis after a failed `deep` implementation. Other whole-change final reviews use `deep`. `audit` never implements, fixes, or recovers. Fixes and re-reviews use their own tiers. Retaining the correct declaration and appending blanket `audit`, xhigh, or max implementation permissions fails source/final validation. Active preambles and misplaced catalogs are checked; fenced/commented examples stay inactive. The validator recognizes bounded declarations, not arbitrary prose semantics.
+**Expected:** In SDD, each atomic task or qualifying mechanical batch receives one independent read-only reviewer with separate spec-compliance and task-quality verdicts; both must pass. Complex whole-change final review and independent diagnosis use the read-only `audit` tier, which may be selected directly for the one diagnosis after a failed `deep` implementation. Other whole-change final reviews use `deep`. `audit` covers the bounded recovery consultation as that one diagnosis, but never implements, applies fixes, or performs the recovery fix wave. Fixes and re-reviews use their own tiers. Retaining the correct declaration and appending blanket `audit`, xhigh, or max implementation permissions fails source/final validation. Active preambles and misplaced catalogs are checked; fenced/commented examples stay inactive. The validator recognizes bounded declarations, not arbitrary prose semantics.
 
 ### D5. Initial-review route and upstream evidence
 
@@ -214,11 +214,11 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Exception record:** Preserve the confirmed billing decision as one active `Human routing exception:` JSON bullet in Codex Routing, with exactly target, scope, role, preset, and approval strings. It names one task or qualifying mechanical batch, a non-root relative path, one supported ordinary role, a `light`, `standard`, or `deep` preset, and a specific file-anchor or HTTPS-fragment decision reference. The static check verifies this structure, not the authenticity of consent; bootstrap/upkeep must confirm the existing human decision. The normal clauses/catalogs remain required. Missing/duplicate/extra fields, broad or wildcard scopes/targets, wrong headings/files, duplicate target/scope/role records, trailing authorizations, the `audit` preset, GPT-6 Astra max, Ultra, recursion and `light` initial reviews are rejected. A valid record exempts only itself from ordinary conflict scanning; neighboring unrecorded authorizations still fail. Inactive record examples do not grant permission. Worker classes, review gates, budgets, the `audit` tier and separate special approval boundaries remain unchanged.
 
-### D8. Ultra and recursion are separate approvals
+### D8. Worker ceiling and recursion approval
 
-**Setup:** A worker request uses Ultra without current-run named-packet approval; a separate request has recursion approval but no Ultra approval; a third has Ultra approval but no recursion approval.
+**Setup:** A worker request asks for Ultra or GPT-6 Astra max, with or without human approval; a separate request recurses without approval; a third has recursion approval for one named packet in the current run. Separately, upkeep finds an older `worker-policy.md` that still declares Ultra approval.
 
-**Expected:** The first request is refused. The second cannot use Ultra. The third cannot recurse. Each authorization is specific to one named packet in the current run and neither becomes a reusable project or session default.
+**Expected:** No worker configuration exceeds the `audit` preset, so the first request is refused whatever approval it cites; the top effort stays with the human-chosen main thread. The second cannot recurse. The third may recurse for that packet only, and the approval never becomes a reusable project or session default. Upkeep replaces the legacy Ultra declarations with the current tier rules; left in place, they fail final validation.
 
 ### D9. Claude worker permissions
 
@@ -238,6 +238,8 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Expected:** The small edit stays on the main thread. The report is not completion: the main thread continues the same worker with the open items at most twice, without counting those continuations as repair rounds, then classifies any remaining failure under the recovery rules.
 
+**Diagnostic worker:** Independent diagnosis goes to a resumable worker, `nhk-audit` or, without definitions, a general-purpose agent with `model: opus`, never the one-shot Explore or Plan agents; its agent ID is recorded with the diagnostic use. A diagnostic report with open items is never continued under the twice rule. Its only continuation is the one recovery clarification, sent with SendMessage to the recorded worker. After a session change leaves that worker unresumable, the clarification lapses and no fresh worker replaces it.
+
 ### D10. Ordinary debugging and recovery accounting
 
 **Setup:** A constructed SDD ledger records three failed fixes, then five fix-review rounds for a task or the same stable acceptance gap across tasks.
@@ -248,13 +250,26 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** After a fourth recorded round for one stable gap, change the worker, session, model, commit, task name, or plan.
 
-**Expected:** The same task and acceptance-gap counts remain four. A read-only diagnostic does not spend a fix round and does not authorize another modification. The fifth unresolved round stops ordinary fixing regardless of personnel or planning changes.
+**Expected:** The same task and acceptance-gap counts remain four. Diagnostic and clarification use are recorded against both the task and stable acceptance gap and also survive these changes. A read-only diagnostic does not spend a fix round and does not authorize another modification. The fifth unresolved round stops ordinary fixing regardless of personnel or planning changes.
 
 ### D12. Evidence before bounded recovery
 
 **Setup:** The fifth round fails. The main thread has either sufficient new causal evidence, competing explanations, or no discrimination from old hypotheses.
 
-**Expected:** Reassess original intent, contracts, verification, attempts, and cross-task consequences, then classify the failure. Architectural stagnation or an invalid shared premise permits earlier reassessment; five rounds are a ceiling. Before recovery, record a changed causal explanation, discriminating command/input/observation, and expected results. Competing explanations, review conflict, or an unverified premise permit at most one fresh read-only worker selected through the independent diagnosis role in worker-policy.md. Give it observations separately from old hypotheses; require evidence explaining failed attempts and alternatives, or a discriminating experiment with expected outcomes. Diagnosis cannot authorize a fix. Fixes and re-reviews select their own roles. Insufficient evidence goes to the human without a diagnostic chain. Replacing the role reference or appending model/tier/effort routes fails source/final validation; inactive examples do not affect routing.
+**Expected:** Reassess original intent, contracts, verification, attempts, and cross-task consequences, then classify the failure. Architectural stagnation or an invalid shared premise permits earlier reassessment; five rounds are a ceiling. Before recovery, record a changed causal explanation, discriminating command/input/observation, and expected results. Competing explanations, review conflict, an unverified premise, or no credible explanation for repeated failure permit at most one fresh read-only worker selected through the independent diagnosis role in worker-policy.md. The main thread provides the original contract, unmet acceptance, fixed revisions and diff, prior attempts and observations, counterevidence, open questions, and execution record; separate facts from provisional explanation and direction. No credible hypothesis is a valid starting point; a complete solution is not required. The diagnosis investigates one concrete causal question, checks source evidence and forms its own explanation before comparing the main thread's view. It may support or overturn that view, returning evidence explaining prior failures or a discriminating experiment with expected outcomes. Diagnosis cannot authorize a fix. Fixes and re-reviews select their own roles.
+
+### D12a. Bounded consultation and main-thread decision
+
+**Cases and expected decisions:**
+
+- Sufficient new causal evidence already exists: the main thread may decide directly without consultation, recording the changed explanation and verification before recovery.
+- There is no credible hypothesis: the main thread states that explicitly and sends the original evidence with a concrete causal question; the consultant need not approve a prewritten solution.
+- The consultant overturns the provisional direction: the main thread checks the evidence and records why it accepts or rejects the advice and the verification results. Agent agreement alone cannot justify recovery.
+- A report leaves a specific evidential omission or disagreement: at most one targeted clarification goes to the same diagnostic worker about the original question. It uses the same diagnosis allowance and grants no new investigation scope.
+- Evidence remains insufficient after diagnosis and any clarification: report blockers and options to the human; do not start another diagnostic chain or an unsupported repair.
+- Either the task or the same stable acceptance gap has used diagnosis: no new diagnostic worker is available. An unused clarification may still go to the original worker; a used clarification cannot be repeated after resumption or replanning.
+
+**Validation:** Source and generated documents require the consultation clauses in their owning active sections. Missing, changed, moved, fenced, or commented clauses fail. Additional dispatch, permission, or reset declarations for consultation actors, including resets or renewals of the diagnosis or clarification allowance, fail even beside a correct clause or a prohibition. Project requirements on consultation actors without a permission, scope, or accounting predicate, such as authentication before reading logs, remain valid. Replacing the role reference or appending model/tier/effort routes fails; inactive examples and unrelated project facts remain valid. These bounded checks validate declared contracts, not arbitrary prose equivalence or live diagnostic quality. Bootstrap/upkeep keep their existing template references and section/line budgets; no new companion or agent definition is required.
 
 ### D13. One recovery wave and final-review boundary
 

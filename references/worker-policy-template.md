@@ -16,7 +16,7 @@ This companion owns worker configuration and orchestration detail. Canonical sta
 
 - Capability Tiers defines every tier's permissions once. Platform sections only map tiers to configurations: Codex presets live only in its tier catalog, Claude definition names only in its tier mapping.
 
-Legacy tier migration: replace Codex Band 1-3 routes, former Claude band routes, and any GPT-6 Astra max permission with the current tier rules. Keep an exception record only when its preset is the current `light`, `standard`, or `deep` preset and its role remains permitted for that tier; otherwise record an unresolved conflict and request a human decision.
+Legacy tier migration: replace Codex Band 1-3 routes, former Claude band routes, and any GPT-6 Astra max or Ultra permission with the current tier rules. Keep an exception record only when its preset is the current `light`, `standard`, or `deep` preset and its role remains permitted for that tier; otherwise record an unresolved conflict and request a human decision.
 
 Legacy routing migration: map `module-implementation` to `task-implementation` and `initial-module-review` to `initial-task-review` only when the record still identifies the same single task, scope, and confirmed approval. Preserve its target, scope, preset, and approval evidence. If a former module splits into several tasks or the mapping is ambiguous, record an unresolved conflict and request a human decision; never copy its authorization across the new tasks. These migrations are generation guidance, not extra runtime routes.
 
@@ -68,7 +68,7 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 - Before selecting `deep`, check packet size, interfaces, and context; repair these first. Load `implementation-planning.md` if the plan needs material revision.
 - `deep`: a concrete reasoning difficulty remaining after those checks, or demonstrated `standard` capability limits. State that difficulty in one sentence in the existing brief; a known hard task may start here without a failed lower-tier trial.
 - A review uses `deep` when the review itself meets that difficulty condition; assess review difficulty separately from implementation.
-- `audit` is read-only: independent diagnosis and complex whole-change final review, never implementation, fixes, or recovery. After a failed `deep` implementation it may be selected directly for the one independent diagnosis.
+- `audit` is read-only: independent diagnosis (including recovery consultation) and complex whole-change final review, never implementation or recovery fixes. After a failed `deep` implementation it may be selected directly for the one independent diagnosis.
 - Other whole-change final reviews use `deep`.
 - First classify failures as scope, context, environment, verification, or capability. Escalate one tier only for demonstrated capability limits of a correctly sized packet; failure count alone is not a reason to escalate.
 - `deep` is the ordinary ceiling: non-convergence there enters execution recovery; earlier stagnation or the five-round bound also triggers reassessment. Model changes never reset counts.
@@ -84,14 +84,13 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 - `standard`: GPT-6 Sol xhigh.
 - `deep`: GPT-6 Astra medium.
 - `audit`: GPT-6 Astra xhigh.
-- Ultra requires human approval naming the packet and current run. It never becomes a reusable project or session default.
-- Ultra authorization and recursion authorization never imply each other.
+- No worker configuration exceeds the `audit` preset; the top effort stays with the human-chosen main thread.
 
 - Preserve an existing human routing exception only as an active `Human routing exception:` JSON bullet in Codex Routing with exactly `target`, `scope`, `role`, `preset`, and `approval` string fields.
 - The target names one task or qualifying mechanical batch; scope is a non-root repository-relative path without wildcards or traversal. Role is `task-implementation`, `initial-task-review`, `local-fix`, or `scoped-re-review`.
 - Apply the recorded `light`, `standard`, or `deep` preset only when target, scope, and role match the confirmed decision; all other work keeps the normal rules. Never turn a record into a project or session default.
 - Confirm the existing human decision from its Markdown-file-and-anchor or HTTPS-and-fragment approval reference; never invent consent. Static validation checks structure, not approval authenticity.
-- Records change only that preset choice, not worker class, review gates, budgets, the `audit` tier, Ultra, or recursion. Initial reviews still exclude the `light` preset.
+- Records change only that preset choice, not worker class, review gates, budgets, the `audit` tier, or recursion. Initial reviews still exclude the `light` preset.
 
 ### Claude Routing
 
@@ -100,6 +99,8 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 - The definitions alone carry model and effort. Map tiers to definitions: `light` and `standard` use `nhk-standard`, `deep` uses `nhk-deep`, and `audit` uses the read-only `nhk-audit`.
 - Delegate a packet only when it is independent and larger than the main thread finishes in a handful of tool calls; use one worker when one suffices.
 - A worker report with open acceptance items and no named blocker is a report, not completion: continue that worker with the open items, at most twice. Continuations are not repair rounds; afterwards classify the failure.
+- Dispatch independent diagnosis to a resumable worker: `nhk-audit`, or without definitions a general-purpose agent with `model: opus`; never the one-shot Explore or Plan agents. Record its agent ID with the diagnostic use.
+- Never continue a diagnostic worker for open items. Its only continuation is the one recovery clarification, sent with SendMessage to the recorded worker; if that worker cannot be resumed, the clarification lapses and no fresh worker replaces it.
 - Use Fable only when the human explicitly chooses or approves it for the main thread.
 - Built-in agents also receive `model: opus` explicitly, so Fable is never inherited.
 
@@ -107,6 +108,6 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 
 - The generated file is at most 100 lines and uses the five required headings in order.
 - Common sections and the current platform route are sufficient for every dispatch and review decision.
-- Tier permissions, exact presets, review gates, the read-only `audit` tier, Ultra approval, and recursion approval retain their separate meanings.
+- Tier permissions, exact presets, review gates, the read-only `audit` tier, the `audit` worker ceiling, and recursion approval retain their separate meanings.
 - Claude Routing names tiers and definitions only; effort values live in the agent definitions built from `claude-agents-template.md`.
 - No template prompt, placeholder, project map, active status, or copied upstream review prompt remains.

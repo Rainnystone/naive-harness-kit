@@ -324,9 +324,10 @@ class InstructionExampleTests(unittest.TestCase):
             "`standard`: GPT-6 Sol xhigh.",
             "`deep`: GPT-6 Astra medium.",
             "`audit`: GPT-6 Astra xhigh.",
-            "Ultra authorization and recursion authorization never imply each other",
+            "No worker configuration exceeds the `audit` preset",
         ):
             self.assertIn(token, codex)
+        self.assertNotIn("Ultra", codex)
         self.assertNotRegex(codex, r"\bBand\s+\d|\bmax\b(?<!Luna max)")
         claude = section_text(example, "Claude Routing")
         self.assertIn(
@@ -334,6 +335,12 @@ class InstructionExampleTests(unittest.TestCase):
             "and `audit` uses the read-only `nhk-audit`",
             claude,
         )
+        for token in (
+            "never the one-shot Explore or Plan agents",
+            "Never continue a diagnostic worker for open items.",
+            "the clarification lapses and no fresh worker replaces it",
+        ):
+            self.assertIn(token, claude)
 
     def test_generated_recovery_preserves_runtime_boundaries(self) -> None:
         example = assemble_companion(
