@@ -85,8 +85,8 @@ LEGACY_CODEX_PRESET_LADDER = (
 
 CODEX_TIER_LINES = (
     "`light`: GPT-6 Luna max.",
-    "`standard`: GPT-6 Sol xhigh.",
-    "`deep`: GPT-6 Astra medium.",
+    "`standard`: GPT-6.1 Sol xhigh.",
+    "`deep`: GPT-6 Astra xhigh.",
     "`audit`: GPT-6 Astra xhigh.",
 )
 
@@ -193,7 +193,7 @@ def human_routing_exception(**overrides: str) -> str:
         "target": "billing-module",
         "scope": "src/billing/",
         "role": 'task-implementation',
-        "preset": "GPT-6 Astra medium",
+        "preset": "GPT-6 Astra xhigh",
         "approval": "decisions/billing.md#low-route",
     }
     record.update(overrides)
@@ -216,7 +216,7 @@ def literal_routing_record_cases():
     yield record, "", ("GPT-6 Luna max", "GPT-6 Luna high"), 1
     yield human_routing_exception(approval="decisions/gpt-6-astra-low.md"), "", None, 1
     yield human_routing_exception(preset="GPT-6 Astra max"), "", None, 1
-    yield human_routing_exception(preset="GPT-6 Astra xhigh"), "", None, 1
+    yield human_routing_exception(preset="GPT-6 Astra medium"), "", None, 1
 
 
 def worker_policy_text() -> str:
@@ -873,7 +873,7 @@ class SourceValidationTests(ValidatorTestCase):
         path.write_text(
             path.read_text(encoding="utf-8").replace(
                 CODEX_TIER_LINES[2],
-                CODEX_TIER_LINES[2].replace("GPT-6 Astra medium", "GPT-6 Astra max"),
+                CODEX_TIER_LINES[2].replace("GPT-6 Astra xhigh", "GPT-6 Astra max"),
                 1,
             ),
             encoding="utf-8",
@@ -881,6 +881,32 @@ class SourceValidationTests(ValidatorTestCase):
         result = run_cli("--root", root)
         self.assertEqual(result.returncode, 1)
         self.assertIn("exact tier preset", result.stdout.lower())
+
+    def test_worker_policy_rejects_superseded_codex_defaults_source_and_final(self) -> None:
+        mutations = (
+            (CODEX_TIER_LINES[1], "`standard`: GPT-6 Sol xhigh."),
+            (CODEX_TIER_LINES[2], "`deep`: GPT-6 Astra medium."),
+            ("`gpt-6.1-sol`", "`gpt-6-sol`"),
+        )
+        for current, superseded in mutations:
+            with self.subTest(superseded=superseded):
+                root = self.make_source_fixture()
+                path = root / "references" / "worker-policy-template.md"
+                source = path.read_text(encoding="utf-8")
+                self.assertIn(current, source)
+                path.write_text(source.replace(current, superseded, 1), encoding="utf-8")
+                source_result = run_cli("--root", root)
+                self.assertEqual(source_result.returncode, 1, source_result.stdout)
+                self.assertIn("worker-policy", source_result.stdout.lower())
+
+                final = worker_policy_text()
+                self.assertIn(current, final)
+                final_result = run_cli(
+                    "--final", self.write_final(final.replace(current, superseded, 1)),
+                    "--kind", "worker-policy",
+                )
+                self.assertEqual(final_result.returncode, 1, final_result.stdout)
+                self.assertIn("worker-policy", final_result.stdout.lower())
 
     def test_policy_surfaces_reject_legacy_strict_ladder(self) -> None:
         root = self.make_source_fixture()
@@ -1004,7 +1030,7 @@ class SourceValidationTests(ValidatorTestCase):
                 for name in names:
                     path = root / name
                     paragraphs = path.read_text(encoding="utf-8").split("\n\n")
-                    guidance = [p for p in paragraphs if "GPT-6 Sol" in p]
+                    guidance = [p for p in paragraphs if "GPT-6.1 Sol" in p]
                     self.assertEqual(len(guidance), 1)
                     paragraphs.remove(guidance[0])
                     path.write_text("\n\n".join(paragraphs), encoding="utf-8")
@@ -1015,11 +1041,11 @@ class SourceValidationTests(ValidatorTestCase):
 
     def test_readme_main_thread_guidance_drift_fails(self) -> None:
         cases = (
-            ("README.md", "we suggest GPT-6 Sol xhigh", "we suggest another available model"),
+            ("README.md", "we suggest GPT-6.1 Sol xhigh", "we suggest another available model"),
             ("README.md", "human-facing suggestion only", "mandatory main-thread policy"),
             ("README.md", "you choose the main-thread model and effort", "NHK chooses the main-thread model and effort"),
             ("README.md", "NHK worker permissions do not depend on that choice", "NHK worker permissions depend on that choice"),
-            ("README_CN.md", "建议使用 GPT-6 Sol xhigh", "建议考虑其他可用型号"),
+            ("README_CN.md", "建议使用 GPT-6.1 Sol xhigh", "建议考虑其他可用型号"),
             ("README_CN.md", "这只是给使用者的建议", "这是强制的主线程规则"),
             ("README_CN.md", "主线程型号和 effort 由你选择", "主线程型号和 effort 由 NHK 选择"),
             ("README_CN.md", "NHK 的 worker 权限不依赖该选择", "NHK 的 worker 权限依赖该选择"),
@@ -1594,7 +1620,7 @@ class FinalValidationTests(ValidatorTestCase):
             human_routing_exception(approval="approved"),
             human_routing_exception(role="all"),
             human_routing_exception(preset="GPT-6 Astra max"),
-            human_routing_exception(preset="GPT-6 Astra xhigh"),
+            human_routing_exception(preset="GPT-6 Astra medium"),
             human_routing_exception(preset="Ultra"),
             human_routing_exception(role="recursive-delegation"),
             human_routing_exception(role='initial-task-review', preset="GPT-6 Luna max"),
@@ -1618,7 +1644,7 @@ class FinalValidationTests(ValidatorTestCase):
             human_routing_exception(target="billing-project"),
             human_routing_exception(role='initial-task-review'),
             human_routing_exception(role="scoped-re-review", preset="GPT-6 Luna max"),
-            human_routing_exception(role="local-fix", preset="GPT-6 Sol xhigh"),
+            human_routing_exception(role="local-fix", preset="GPT-6.1 Sol xhigh"),
         ):
             text = worker_policy_text().replace("## Codex Routing", "## Codex Routing\n" + record, 1)
             result = run_cli("--final", self.write_final(text), "--kind", "worker-policy")
@@ -1805,15 +1831,15 @@ class FinalValidationTests(ValidatorTestCase):
     def test_worker_policy_rejects_wrong_missing_extra_or_duplicate_presets(self) -> None:
         valid = CODEX_TIER_LINES[1]
         invalid = (
-            valid.replace("GPT-6 Sol xhigh", "GPT-6 Sol max"),
-            valid.replace("GPT-6 Sol xhigh", "GPT-6 Sol high"),
-            valid.replace("GPT-6 Sol xhigh", "GPT-6 Astra xhigh"),
-            valid.replace("GPT-6 Sol xhigh", "GPT-5.6 Terra xhigh"),
-            valid.replace("GPT-6 Sol xhigh", "GPT-5.5 xhigh"),
-            valid.replace("GPT-6 Sol xhigh", ""),
-            valid.replace("GPT-6 Sol xhigh", "GPT-5.6 Sol medium"),
-            valid.replace("GPT-6 Sol xhigh", "GPT-6 Sol xhigh; GPT-6 Luna max"),
-            valid.replace("GPT-6 Sol xhigh", "GPT-6 Sol xhigh; GPT-6 Sol xhigh"),
+            valid.replace("GPT-6.1 Sol xhigh", "GPT-6.1 Sol max"),
+            valid.replace("GPT-6.1 Sol xhigh", "GPT-6.1 Sol high"),
+            valid.replace("GPT-6.1 Sol xhigh", "GPT-6 Astra xhigh"),
+            valid.replace("GPT-6.1 Sol xhigh", "GPT-5.6 Terra xhigh"),
+            valid.replace("GPT-6.1 Sol xhigh", "GPT-5.5 xhigh"),
+            valid.replace("GPT-6.1 Sol xhigh", ""),
+            valid.replace("GPT-6.1 Sol xhigh", "GPT-5.6 Sol medium"),
+            valid.replace("GPT-6.1 Sol xhigh", "GPT-6.1 Sol xhigh; GPT-6 Luna max"),
+            valid.replace("GPT-6.1 Sol xhigh", "GPT-6.1 Sol xhigh; GPT-6.1 Sol xhigh"),
             valid + "\n- `audit`: GPT-6 Astra xhigh.",
         )
         for replacement in invalid:
@@ -1956,7 +1982,7 @@ class FinalValidationTests(ValidatorTestCase):
             "## Codex Routing",
             """## Codex Routing
 
-- Do not use GPT-6 Astra xhigh for ordinary implementation.
+- Do not use the `audit` tier for ordinary implementation.
 - GPT-6 Luna max must not perform initial task reviews.""",
             1,
         ).replace(
@@ -1988,7 +2014,7 @@ class FinalValidationTests(ValidatorTestCase):
             "GPT-9 Nova max is also approved for ordinary implementation.",
             "GPT-5.6 Luna max is also approved for ordinary implementation.",
             "GPT-6 Astra low is also approved for ordinary implementation.",
-            "GPT-6 Sol max is also approved for ordinary implementation.",
+            "GPT-6.1 Sol max is also approved for ordinary implementation.",
             "GPT-6 Astra max is also approved for ordinary implementation.",
             "GPT-5.6 Sol high is also approved for ordinary implementation.",
             "gpt-5.6-sol is also approved for ordinary implementation.",

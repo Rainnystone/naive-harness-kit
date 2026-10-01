@@ -79,10 +79,10 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 ### Codex Routing
 
 - Every fresh Codex worker uses `fork_turns: none` and receives a self-contained brief, required files, and binding global constraints.
-- Runtime model IDs are `gpt-6-luna`, `gpt-6-sol`, and `gpt-6-astra`; UI Extra High maps to `xhigh`.
+- Runtime model IDs are `gpt-6-luna`, `gpt-6.1-sol`, and `gpt-6-astra`; UI Extra High maps to `xhigh`.
 - `light`: GPT-6 Luna max.
-- `standard`: GPT-6 Sol xhigh.
-- `deep`: GPT-6 Astra medium.
+- `standard`: GPT-6.1 Sol xhigh.
+- `deep`: GPT-6 Astra xhigh.
 - `audit`: GPT-6 Astra xhigh.
 - No worker configuration exceeds the `audit` preset; the top effort stays with the human-chosen main thread.
 

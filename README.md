@@ -131,7 +131,7 @@ Thin CLAUDE imports only AGENTS. The five companion docs stay as backticked lite
 
 **Which model for the main conversation?** One suggestion per platform:
 
-For a Codex main thread, we suggest GPT-6 Sol xhigh during implementation. A long-lived thread rereads its context constantly, and Sol keeps those cache reads far cheaper than the stronger Astra family. This is a human-facing suggestion only: you choose the main-thread model and effort, and NHK worker permissions do not depend on that choice. See [OpenAI model guidance](https://learn.chatgpt.com/docs/models) for current options.
+For a Codex main thread, we suggest GPT-6.1 Sol xhigh during implementation. A long-lived thread rereads its context constantly, and Sol keeps those cache reads far cheaper than the stronger Astra family. This is a human-facing suggestion only: you choose the main-thread model and effort, and NHK worker permissions do not depend on that choice. See [OpenAI model guidance](https://learn.chatgpt.com/docs/models) for current options.
 
 For a Claude Code main thread, we suggest Opus high during implementation, one level above its default, because the main thread carries the coordination. Treat it the same way: a suggestion for you, not a rule, and helper tiers stay the same whatever you pick. See [Anthropic effort guidance](https://platform.claude.com/docs/en/build-with-claude/effort) for current options.
 
@@ -158,7 +158,7 @@ The [worker policy template](references/worker-policy-template.md) defines the t
 
 ### Codex only
 
-**Tier presets.** The everyday `standard` tier runs Sol at xhigh, which clears most well-sized atomic tasks at a fraction of the stronger family's price. `deep` moves to Astra at medium: stronger than Sol xhigh, and still the implementation ceiling. `audit` runs Astra at xhigh for read-only work only, and max is not a worker preset. `light` stays on Luna. The template holds the exact presets.
+**Tier presets.** The everyday `standard` tier runs Sol at xhigh for well-sized atomic tasks at a fraction of Astra's price. `deep` moves to Astra at xhigh and remains the implementation ceiling. `audit` uses the same Astra xhigh preset with read-only permissions for diagnosis and complex final review. Sharing a preset does not merge their role permissions. `light` stays on Luna, and Astra max is not a worker preset. The template holds the exact presets.
 
 ### Claude Code only
 

@@ -131,7 +131,7 @@ thin CLAUDE 只 import AGENTS。五份 companion docs 始终使用反引号普�
 
 **主线程用什么型号？** 两个平台各给一条建议：
 
-对于实施阶段的 Codex 主线程，建议使用 GPT-6 Sol xhigh。长期运行的主线程会反复读取自己的上下文，Sol 的 cache read 比更强的 Astra 系列便宜得多。这只是给使用者的建议：主线程型号和 effort 由你选择，NHK 的 worker 权限不依赖该选择。当前选项可参阅 [OpenAI 模型说明](https://learn.chatgpt.com/docs/models)。
+对于实施阶段的 Codex 主线程，建议使用 GPT-6.1 Sol xhigh。长期运行的主线程会反复读取自己的上下文，Sol 的 cache read 比更强的 Astra 系列便宜得多。这只是给使用者的建议：主线程型号和 effort 由你选择，NHK 的 worker 权限不依赖该选择。当前选项可参阅 [OpenAI 模型说明](https://learn.chatgpt.com/docs/models)。
 
 对于实施阶段的 Claude Code 主线程，建议使用 Opus high，比默认 effort 高一档，因为协调工作压在主线程上。它和上面一样只是建议，不是规则；无论你怎么选，帮手的档位都不变。当前选项可参阅 [Anthropic effort 说明](https://platform.claude.com/docs/en/build-with-claude/effort)。
 
@@ -158,7 +158,7 @@ thin CLAUDE 只 import AGENTS。五份 companion docs 始终使用反引号普�
 
 ### 仅 Codex
 
-**各档预设。** 日常的 `standard` 档用 Sol xhigh，只花更强系列一小部分的价格，就能完成大多数切分合理的原子任务。`deep` 换到 Astra medium：比 Sol xhigh 更强，同时仍是实施上限。`audit` 用 Astra xhigh，只做只读工作；max 不再是 worker 预设。`light` 继续用 Luna。精确预设以模板为准。
+**各档预设。** 日常的 `standard` 档用 Sol xhigh，以 Astra 一小部分的价格处理切分合理的原子任务。`deep` 换到 Astra xhigh，仍是实施上限。`audit` 使用同一份 Astra xhigh 预设，但权限仍限于只读诊断和复杂最终审查。共用预设不合并两档的角色权限。`light` 继续用 Luna，Astra max 不属于 worker 预设。精确预设以模板为准。
 
 ### 仅 Claude Code
 
