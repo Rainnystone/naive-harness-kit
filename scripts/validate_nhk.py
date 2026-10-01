@@ -244,8 +244,8 @@ LEGACY_CODEX_PRESET_LADDER = (
 # to exactly one preset.
 CODEX_TIER_PRESETS = {
     "light": "GPT-6 Luna max",
-    "standard": "GPT-6 Sol xhigh",
-    "deep": "GPT-6 Astra medium",
+    "standard": "GPT-6.1 Sol xhigh",
+    "deep": "GPT-6 Astra xhigh",
     "audit": "GPT-6 Astra xhigh",
 }
 # Human routing exceptions may choose only ordinary tiers, never the read-only audit tier.
@@ -265,8 +265,8 @@ TIER_ROUTE_PATTERN = (
     rf"(?:^|\s-\s)(?:{TIER_WORDS})\s*:|"
     r"\bnhk-[\w-]+"
 )
-CODEX_ALLOWED_FAMILY_NAMES = ("GPT-6 Luna", "GPT-6 Sol", "GPT-6 Astra")
-CODEX_ALLOWED_RUNTIME_IDS = ("gpt-6-luna", "gpt-6-sol", "gpt-6-astra")
+CODEX_ALLOWED_FAMILY_NAMES = ("GPT-6 Luna", "GPT-6.1 Sol", "GPT-6 Astra")
+CODEX_ALLOWED_RUNTIME_IDS = ("gpt-6-luna", "gpt-6.1-sol", "gpt-6-astra")
 CODEX_QUALIFIER_STOPWORDS = (
     "a",
     "an",
@@ -675,7 +675,7 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                       'another tier, an older model, or the `audit` configuration as fallback.'],
  'Codex Routing': ['Every fresh Codex worker uses `fork_turns: none` and receives a self-contained '
                    'brief, required files, and binding global constraints.',
-                   'Runtime model IDs are `gpt-6-luna`, `gpt-6-sol`, and `gpt-6-astra`; UI Extra '
+                   'Runtime model IDs are `gpt-6-luna`, `gpt-6.1-sol`, and `gpt-6-astra`; UI Extra '
                    'High maps to `xhigh`.',
                    'No worker configuration exceeds the `audit` preset; the top effort stays with '
                    'the human-chosen main thread.',
@@ -1029,7 +1029,7 @@ def validate_worker_policy_contract(
         if heading == "Codex Routing":
             body = without_valid_codex_catalogs(body)
         for prohibition in (
-            f"Do not use {CODEX_TIER_PRESETS['audit']} for ordinary implementation.",
+            "Do not use the `audit` tier for ordinary implementation.",
             "Workers may not inherit Fable for ordinary coding.",
             "GPT-6 Luna max must not perform initial task reviews.",
         ):
@@ -1627,7 +1627,7 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         "sorts helper work into four capability tiers",
         "both must pass",
         "one recovery fix and one independent re-review",
-        "Codex main thread, we suggest GPT-6 Sol xhigh",
+        "Codex main thread, we suggest GPT-6.1 Sol xhigh",
         "human-facing suggestion only",
         "you choose the main-thread model and effort",
         "NHK worker permissions do not depend on that choice",
@@ -1645,7 +1645,7 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         "把帮手的工作分成四个能力档位",
         "需求符合度与实现质量结论，两项都要通过",
         "一轮恢复修正和一次复审",
-        "Codex 主线程，建议使用 GPT-6 Sol xhigh",
+        "Codex 主线程，建议使用 GPT-6.1 Sol xhigh",
         "这只是给使用者的建议",
         "主线程型号和 effort 由你选择",
         "NHK 的 worker 权限不依赖该选择",
@@ -1772,7 +1772,7 @@ def validate_forbidden_legacy(root: Path, issues: list[str]) -> None:
             issues.append(f"{relative}: human routing exception belongs only in the worker-policy Codex Routing contract")
         model_text = text
         if relative in {Path("README.md"), Path("README_CN.md")}:
-            model_text = model_text.replace("GPT-6 Sol", "")
+            model_text = model_text.replace("GPT-6.1 Sol", "")
         model_matches = list(versioned_model.finditer(model_text))
         if relative not in allowed_versioned_model_surfaces and model_matches:
             issues.append(

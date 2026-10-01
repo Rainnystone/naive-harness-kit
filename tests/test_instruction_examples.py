@@ -321,8 +321,8 @@ class InstructionExampleTests(unittest.TestCase):
         for token in (
             "fork_turns: none",
             "`light`: GPT-6 Luna max.",
-            "`standard`: GPT-6 Sol xhigh.",
-            "`deep`: GPT-6 Astra medium.",
+            "`standard`: GPT-6.1 Sol xhigh.",
+            "`deep`: GPT-6 Astra xhigh.",
             "`audit`: GPT-6 Astra xhigh.",
             "No worker configuration exceeds the `audit` preset",
         ):
