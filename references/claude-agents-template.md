@@ -10,23 +10,34 @@ Use this template to create the optional NHK agent definitions for a Claude Code
 
 - Offer the definitions only in a Claude Code workspace, meaning one with a canonical or thin `CLAUDE.md`. Create them only after the human agrees; recommend agreeing.
 - Their presence records that agreement. Upkeep reconciles existing `nhk-*` definitions with this template and leaves an absent set absent.
-- Retired definitions: `nhk-audit` succeeds `nhk-diagnosis`, and `nhk-light` has no successor. When reconciling a set that still has them, upkeep creates any missing current definition and reports each retired file for the human to delete; it never deletes or renames one itself.
+- Retired definitions: `nhk-audit` succeeds `nhk-diagnosis`. When reconciling a set that still has it, upkeep creates any missing current definition and reports the retired file for the human to delete; it never deletes or renames one itself. An older `nhk-light` is a current definition and is reconciled like the others.
 - Each file is one definition's frontmatter below followed by the Shared Body, and nothing else.
-- Keep `model: opus` so every definition follows the current Opus through its alias.
-- The `effort` values are calibrated once, here, for the current Opus generation. Recalibrate this file when the Opus alias moves; `worker-policy.md` stays unchanged.
-- The top effort level is not a worker effort; it stays with the human-chosen main thread.
+- Keep `model: haiku` for `nhk-light` and `model: opus` for the others, so every definition follows its current family through the alias.
+- The `effort` values are calibrated once, here, for Haiku 5.5 and the current Opus generation. Recalibrate this file when an alias moves; `worker-policy.md` stays unchanged.
+- The top effort level is not an Opus worker effort; it stays with the human-chosen main thread. Only the Haiku definition may use it.
 - Keep each `description` a short pointer back to `worker-policy.md` so dispatch follows the policy.
 - Source-template hard limit: 80 lines. Never use a Claude `@` import.
 - Tell the human that creating the first file in a new `.claude/agents/` directory needs a fresh session before Claude Code discovers it.
 
 ## Definitions
 
+### nhk-light
+
+```yaml
+---
+name: nhk-light
+description: NHK light tier worker. Dispatch only as routed by worker-policy.md.
+model: haiku
+effort: max
+---
+```
+
 ### nhk-standard
 
 ```yaml
 ---
 name: nhk-standard
-description: NHK standard worker for the light and standard tiers. Dispatch only as routed by worker-policy.md.
+description: NHK standard tier worker. Dispatch only as routed by worker-policy.md.
 model: opus
 effort: medium
 ---
