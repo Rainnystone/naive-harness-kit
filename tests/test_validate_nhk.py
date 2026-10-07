@@ -1081,12 +1081,14 @@ class SourceValidationTests(ValidatorTestCase):
         cases = (
             ("README.md", "eleven controlled references", "several references"),
             ("README.md", "Claude's light helper runs Haiku", "Claude helpers use a model"),
+            ("README.md", "every other Claude helper runs Opus", "every other Claude helper runs Sonnet"),
             ("README.md", "Claude Code main thread, we suggest Opus high", "Claude Code main thread, pick anything"),
             ("README.md", "seven required pieces", "the foundation"),
             ("README.md", "Superpowers overlay", "planning helper"),
             ("README.md", "sorts helper work into four capability tiers", "picks helpers"),
             ("README_CN.md", "十一个受控 reference", "几份 reference"),
             ("README_CN.md", "Claude 的 light 帮手使用 Haiku", "Claude 的帮手随便选"),
+            ("README_CN.md", "其余帮手全部使用 Opus", "其余帮手全部使用 Sonnet"),
             ("README_CN.md", "Claude Code 主线程，建议使用 Opus high", "Claude Code 主线程随意"),
             ("README_CN.md", "把帮手的工作分成四个能力档位", "随便挑帮手"),
             ("README_CN.md", "七项基础内容", "基础文档"),
@@ -1115,6 +1117,18 @@ class SourceValidationTests(ValidatorTestCase):
             ("model: opus\neffort: medium", "model: haiku\neffort: medium", "model: opus"),
             ("name: nhk-light\n", "name: nhk-small\n", "nhk-light"),
             ("`nhk-audit` succeeds `nhk-diagnosis`", "`nhk-audit` replaces nothing", "retired definitions"),
+            (
+                "An older `nhk-light` is a current definition and is reconciled like the others.",
+                "An older `nhk-light` is retired; report it for the human to delete.",
+                "retired definitions",
+            ),
+            ("`ANTHROPIC_DEFAULT_HAIKU_MODEL`", "the provider settings", "provider contract"),
+            (
+                "otherwise leave it out, and `light` work runs on `nhk-standard`",
+                "otherwise keep it on Haiku 4.5",
+                "provider contract",
+            ),
+            ("it never adds `nhk-light` on its own", "it adds `nhk-light` itself", "provider contract"),
             ("effort: high", "effort: low", "effort"),
             ("disallowedTools: Write, Edit, NotebookEdit\n", "", "disallowedTools"),
             (
@@ -1804,7 +1818,7 @@ class FinalValidationTests(ValidatorTestCase):
             "`deep`: a concrete reasoning difficulty remaining after those checks, or demonstrated `standard` capability limits.",
             "`audit` is read-only: independent diagnosis (including recovery consultation) and complex whole-change final review, never implementation or recovery fixes.",
             "Other whole-change final reviews use `deep`.",
-            "Map tiers to definitions: `light` uses `nhk-light`, `standard` uses `nhk-standard`, `deep` uses `nhk-deep`, and `audit` uses the read-only `nhk-audit`.",
+            "Map tiers to definitions: `light` uses `nhk-light`, or `nhk-standard` while `nhk-light` is absent, `standard` uses `nhk-standard`, `deep` uses `nhk-deep`, and `audit` uses the read-only `nhk-audit`.",
         ):
             with self.subTest(clause=clause):
                 self.assertIn(clause, content)
@@ -2468,7 +2482,8 @@ Read @worker-policy.md before dispatching.
             ("Claude workers run Opus, except that `nhk-light` runs Haiku.", "Every Claude worker runs Opus."),
             ("Claude workers run Opus, except that `nhk-light` runs Haiku.", "Claude workers run Sonnet."),
             ("`deep` uses `nhk-deep`, and `audit` uses the read-only `nhk-audit`", "`deep` and `audit` use `nhk-deep`"),
-            ("`light` uses `nhk-light`, `standard` uses `nhk-standard`", "`light` and `standard` use `nhk-standard`"),
+            ("`light` uses `nhk-light`, or `nhk-standard` while `nhk-light` is absent, `standard` uses `nhk-standard`", "`light` and `standard` use `nhk-standard`"),
+            ("`light` uses `nhk-light`, or `nhk-standard` while `nhk-light` is absent,", "`light` uses `nhk-light`,"),
             (
                 "Built-in agents also receive `model: opus` explicitly, so Fable is never inherited.",
                 "Built-in agents inherit the main thread model.",

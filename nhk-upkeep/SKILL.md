@@ -24,7 +24,7 @@ On every upkeep run, compare NHK-owned rules against the currently installed ref
 5. Compare `execution-recovery.md` against `../references/execution-recovery-template.md`; reconcile diagnosis, recovery, and stop rules within 80 lines.
 6. Compare `documentation-governance.md` against actual document roles and `../references/documentation-governance-template.md`; keep it at or below 100 lines.
 7. Compare `archive/README.md` against existing archived workstreams and `../references/archive-readme-template.md`; keep every index entry resolvable.
-8. When `.claude/agents/nhk-*.md` definitions exist, compare them against `../references/claude-agents-template.md` and reconcile their frontmatter and shared body. Create any missing current definition in that set and report each retired definition the template names for the human to delete. An absent set stays absent; the human declined or was never offered it.
+8. When `.claude/agents/nhk-*.md` definitions exist, compare them against `../references/claude-agents-template.md` and reconcile their frontmatter and shared body. Create any missing current definition in that set, except that `nhk-light` follows the template's offer rule, and report each retired definition the template names for the human to delete. An absent set stays absent; the human declined or was never offered it.
 9. Inspect existing implementation plans, task lists, `task_plan.md`, `progress.md`, and `findings.md` as active surfaces, not permanent assumptions.
 10. Repair inaccurate active references and status descriptions, replace any Claude companion `@` import with a literal on-demand path, then verify cross-links and instruction structure.
 
