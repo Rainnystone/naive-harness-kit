@@ -366,14 +366,6 @@ CLAUDE_RETIRED_DEFINITION_TOKENS = (
     "never deletes or renames one itself",
     "An older `nhk-light` is a current definition and is reconciled like the others",
 )
-# Haiku aliases resolve to an effort-less Haiku on some providers, so the
-# template must keep the provider check and the human-approved offer.
-CLAUDE_LIGHT_PROVIDER_TOKENS = (
-    "needs `haiku` to resolve to Haiku 5.5 or later",
-    "`ANTHROPIC_DEFAULT_HAIKU_MODEL`",
-    "otherwise leave it out, and `light` work runs on `nhk-standard`",
-    "it never adds `nhk-light` on its own",
-)
 CLAUDE_AGENT_SKILLS = ("nhk-bootstrap", "nhk-upkeep")
 
 
@@ -719,9 +711,8 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                     'Without those definitions, pass `model: opus` on every dispatch; the worker '
                     'then runs at session effort, as the human chose when declining them.',
                     'The definitions alone carry model and effort. Map tiers to definitions: '
-                    '`light` uses `nhk-light`, or `nhk-standard` while `nhk-light` is absent, '
-                    '`standard` uses `nhk-standard`, `deep` uses `nhk-deep`, and `audit` uses '
-                    'the read-only `nhk-audit`.',
+                    '`light` uses `nhk-light`, `standard` uses `nhk-standard`, `deep` uses '
+                    '`nhk-deep`, and `audit` uses the read-only `nhk-audit`.',
                     'Delegate a packet only when it is independent and larger than the main thread '
                     'finishes in a handful of tool calls; use one worker when one suffices.',
                     'A worker report with open acceptance items and no named blocker is a report, '
@@ -1869,9 +1860,6 @@ def validate_claude_agents_template(text: str, issues: list[str]) -> None:
     for token in CLAUDE_RETIRED_DEFINITION_TOKENS:
         if token not in text:
             issues.append(f"{label}: retired definitions contract is missing {token!r}")
-    for token in CLAUDE_LIGHT_PROVIDER_TOKENS:
-        if token not in text:
-            issues.append(f"{label}: nhk-light provider contract is missing {token!r}")
     if "## Shared Body" not in text or "Your final message ends your run" not in text:
         issues.append(f"{label}: Shared Body must define the worker's final report")
     for token in ("Source-template hard limit: 80 lines", "Never use a Claude `@` import"):

@@ -331,9 +331,8 @@ class InstructionExampleTests(unittest.TestCase):
         self.assertNotRegex(codex, r"\bBand\s+\d|\bmax\b(?<!Luna max)")
         claude = section_text(example, "Claude Routing")
         self.assertIn(
-            "`light` uses `nhk-light`, or `nhk-standard` while `nhk-light` is absent, "
-            "`standard` uses `nhk-standard`, `deep` uses `nhk-deep`, and `audit` uses "
-            "the read-only `nhk-audit`",
+            "`light` uses `nhk-light`, `standard` uses `nhk-standard`, `deep` uses "
+            "`nhk-deep`, and `audit` uses the read-only `nhk-audit`",
             claude,
         )
         for token in (

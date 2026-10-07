@@ -1122,13 +1122,6 @@ class SourceValidationTests(ValidatorTestCase):
                 "An older `nhk-light` is retired; report it for the human to delete.",
                 "retired definitions",
             ),
-            ("`ANTHROPIC_DEFAULT_HAIKU_MODEL`", "the provider settings", "provider contract"),
-            (
-                "otherwise leave it out, and `light` work runs on `nhk-standard`",
-                "otherwise keep it on Haiku 4.5",
-                "provider contract",
-            ),
-            ("it never adds `nhk-light` on its own", "it adds `nhk-light` itself", "provider contract"),
             ("effort: high", "effort: low", "effort"),
             ("disallowedTools: Write, Edit, NotebookEdit\n", "", "disallowedTools"),
             (
@@ -1818,7 +1811,7 @@ class FinalValidationTests(ValidatorTestCase):
             "`deep`: a concrete reasoning difficulty remaining after those checks, or demonstrated `standard` capability limits.",
             "`audit` is read-only: independent diagnosis (including recovery consultation) and complex whole-change final review, never implementation or recovery fixes.",
             "Other whole-change final reviews use `deep`.",
-            "Map tiers to definitions: `light` uses `nhk-light`, or `nhk-standard` while `nhk-light` is absent, `standard` uses `nhk-standard`, `deep` uses `nhk-deep`, and `audit` uses the read-only `nhk-audit`.",
+            "Map tiers to definitions: `light` uses `nhk-light`, `standard` uses `nhk-standard`, `deep` uses `nhk-deep`, and `audit` uses the read-only `nhk-audit`.",
         ):
             with self.subTest(clause=clause):
                 self.assertIn(clause, content)
@@ -2482,8 +2475,7 @@ Read @worker-policy.md before dispatching.
             ("Claude workers run Opus, except that `nhk-light` runs Haiku.", "Every Claude worker runs Opus."),
             ("Claude workers run Opus, except that `nhk-light` runs Haiku.", "Claude workers run Sonnet."),
             ("`deep` uses `nhk-deep`, and `audit` uses the read-only `nhk-audit`", "`deep` and `audit` use `nhk-deep`"),
-            ("`light` uses `nhk-light`, or `nhk-standard` while `nhk-light` is absent, `standard` uses `nhk-standard`", "`light` and `standard` use `nhk-standard`"),
-            ("`light` uses `nhk-light`, or `nhk-standard` while `nhk-light` is absent,", "`light` uses `nhk-light`,"),
+            ("`light` uses `nhk-light`, `standard` uses `nhk-standard`", "`light` and `standard` use `nhk-standard`"),
             (
                 "Built-in agents also receive `model: opus` explicitly, so Fable is never inherited.",
                 "Built-in agents inherit the main thread model.",
