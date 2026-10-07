@@ -94,9 +94,9 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 
 ### Claude Routing
 
-- Every Claude worker runs Opus. When `.claude/agents/nhk-*.md` definitions exist, dispatch through them and omit the per-invocation model so each definition stays authoritative.
+- Claude workers run Opus, except that `nhk-light` runs Haiku. When `.claude/agents/nhk-*.md` definitions exist, dispatch through them and omit the per-invocation model so each definition stays authoritative.
 - Without those definitions, pass `model: opus` on every dispatch; the worker then runs at session effort, as the human chose when declining them.
-- The definitions alone carry model and effort. Map tiers to definitions: `light` and `standard` use `nhk-standard`, `deep` uses `nhk-deep`, and `audit` uses the read-only `nhk-audit`.
+- The definitions alone carry model and effort. Map tiers to definitions: `light` uses `nhk-light`, `standard` uses `nhk-standard`, `deep` uses `nhk-deep`, and `audit` uses the read-only `nhk-audit`.
 - Delegate a packet only when it is independent and larger than the main thread finishes in a handful of tool calls; use one worker when one suffices.
 - A worker report with open acceptance items and no named blocker is a report, not completion: continue that worker with the open items, at most twice. Continuations are not repair rounds; afterwards classify the failure.
 - Dispatch independent diagnosis to a resumable worker: `nhk-audit`, or without definitions a general-purpose agent with `model: opus`; never the one-shot Explore or Plan agents. Record its agent ID with the diagnostic use.

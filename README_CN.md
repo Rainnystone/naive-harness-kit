@@ -119,11 +119,11 @@ NHK 用这两者，让指令初始化、日常维护和归档判断不再拍脑�
 | --- | --- | --- |
 | 主指令文件 | `AGENTS.md` | standalone `CLAUDE.md`，或 import `AGENTS.md` 的 thin `CLAUDE.md` |
 | 配套说明 | 需要时按文件路径读取 | 同左；绝不用 `@` 导入 |
-| 帮手型号 | 四个能力档位，每档对应[派工模板](references/worker-policy-template.md)里的一个预设 | 只用 Opus；light 与 standard 共用一份定义，另有 deep 和只读的 audit |
+| 帮手型号 | 四个能力档位，每档对应[派工模板](references/worker-policy-template.md)里的一个预设 | 每个档位一份定义：light 用 Haiku，standard、deep 和只读的 audit 用 Opus |
 | 帮手的 effort 怎么设 | 派发每个帮手时直接选 | 通过 bootstrap 提议的可选 `.claude/agents/nhk-*.md` 文件；不装就跟随你的会话设置 |
 | 需要你明确批准 | 帮手再找帮手 | 主线程使用 Fable，以及帮手再找帮手 |
 
-为什么不一样？两个平台共用同样的四个档位和同样的权限，差别只在映射。Codex 允许主线程在派发每个帮手时同时选型号和 effort，所以每个档位对应一个预设。Claude Code 可以按次选帮手的型号，但 effort 只能写在 agent 定义文件里。所以 NHK 准备了三份现成的定义，只用一个足够强的型号系列，各份之间只调整思考的力度；light 档的活由 standard 定义承担。
+为什么不一样？两个平台共用同样的四个档位和同样的权限，差别只在映射。Codex 允许主线程在派发每个帮手时同时选型号和 effort，所以每个档位对应一个预设。Claude Code 可以按次选帮手的型号，但 effort 只能写在 agent 定义文件里。所以 NHK 准备了四份现成的定义，每个档位一份：light 档的活交给小而便宜的 Haiku 系列，并用它的最高 effort；其余三份使用 Opus，各份之间只调整思考的力度。
 
 **哪个指令文件说了算。** NHK 不会在这件事上瞎猜。如果两个文件都在，而 `CLAUDE.md` 在正文里有一行严格等于 `@AGENTS.md` 或 `@./AGENTS.md` 的真实 import，AGENTS 就是 canonical，不必多问。只有导入行却没有 AGENTS 的 CLAUDE 是 broken adapter；两个互相独立的文件才是真歧义，这时 NHK 会请你来选。
 
@@ -162,7 +162,7 @@ thin CLAUDE 只 import AGENTS。五份 companion docs 始终使用反引号普�
 
 ### 仅 Claude Code
 
-**各档定义。** Claude 的帮手全部使用 Opus。Claude Code 只能通过 agent 定义文件设置帮手的 effort，所以在 Claude Code workspace 里，`nhk-bootstrap` 会按 [agent 定义模板](references/claude-agents-template.md) 提议在 `.claude/agents/` 下添加三个可选文件：`nhk-standard` 使用 Opus 的默认 effort，同时承担 `light` 和 `standard`；`nhk-deep` 想得更深；只读的 `nhk-audit` 想得最深。之所以没有单独的 light 定义，是因为默认 effort 的 Opus 做小活已经足够经济；以后可以换一个更轻的型号系列来占这个位置，而不用改任何档位规则。我们建议接受；如果拒绝，帮手仍然使用 Opus，effort 跟随你的会话设置。新建的 `.claude/agents/` 目录要开一个新会话，Claude Code 才能发现。Fable 留在主线程，而且要由你选择或同意。恢复阶段的诊断会交给一个可以续跑的帮手，而不是一次性的内置探索 agent，这样唯一允许的那次追问才能回到同一个帮手；如果那个帮手已经无法续跑，这次追问就作废，不会转交给新的帮手。
+**各档定义。** Claude 的 light 帮手使用 Haiku，其余帮手全部使用 Opus。Claude Code 只能通过 agent 定义文件设置帮手的 effort，所以在 Claude Code workspace 里，`nhk-bootstrap` 会按 [agent 定义模板](references/claude-agents-template.md) 提议在 `.claude/agents/` 下添加四个可选文件：`nhk-light` 以 max effort 运行 Haiku 5.5，承担 `light`；`nhk-standard` 以默认的 medium effort 运行 Opus，承担 `standard`；`nhk-deep` 想得更深；只读的 `nhk-audit` 想得最深。Haiku 5.5 的定价远低于 Opus，即使开到最高 effort，用它做 `light` 允许的小而清晰的活也很经济；档位规则本身不变。我们建议接受；如果拒绝，所有帮手都使用 Opus，effort 跟随你的会话设置。新建的 `.claude/agents/` 目录要开一个新会话，Claude Code 才能发现。Fable 留在主线程，而且要由你选择或同意。恢复阶段的诊断会交给一个可以续跑的帮手，而不是一次性的内置探索 agent，这样唯一允许的那次追问才能回到同一个帮手；如果那个帮手已经无法续跑，这次追问就作废，不会转交给新的帮手。
 
 ### 两个平台通用
 
@@ -180,7 +180,7 @@ thin CLAUDE 只 import AGENTS。五份 companion docs 始终使用反引号普�
 
 计划保留 Files、Interfaces、具体 TDD steps、边界样例、命令、预期结果和必要代码范例；局部实现交给 worker，不要求主线程先写完整实现代码。Worker class 描述工作性质，不等于模型档位。SDD 每个任务或合格批次使用新的实施上下文，并保持实施串行；native 是独立的执行选择。沿用上游 brief、report、diff package 和 ledger 文件；即使提取工具只取得任务段落，交接也必须带上绑定的全局约束和相关接口。NHK 的原子粒度、规划详细度、角色路由、复用与等待规则覆盖冲突的上游默认，但不修改插件。规划字段保留为活跃文本。
 
-**更新旧项目。** Upkeep 将 NHK 自有的完整模块默认规则改为原子任务契约，保留项目事实和已批准例外。旧 `module-implementation` / `initial-module-review` 记录只有仍指向同一个任务、相同范围和已确认批准依据时，才改为 `task-implementation` / `initial-task-review`。旧模块拆成多个任务或对应关系不明确时，报告给人决定，不把授权自动复制到新任务。旧版本按 Band 划分的路由改为档位规则；例外记录只有在其预设仍是该角色允许的 `light`、`standard` 或 `deep` 预设时才保留，其余情况等你决定。在 Claude Code 中，upkeep 会在已退役的 `nhk-diagnosis` 旁补上 `nhk-audit`，并请你删除退役的 `nhk-light` 和 `nhk-diagnosis` 文件，因为 upkeep 自己从不删除文件。仅更新安装包不会自动改写项目文件。
+**更新旧项目。** Upkeep 将 NHK 自有的完整模块默认规则改为原子任务契约，保留项目事实和已批准例外。旧 `module-implementation` / `initial-module-review` 记录只有仍指向同一个任务、相同范围和已确认批准依据时，才改为 `task-implementation` / `initial-task-review`。旧模块拆成多个任务或对应关系不明确时，报告给人决定，不把授权自动复制到新任务。旧版本按 Band 划分的路由改为档位规则；例外记录只有在其预设仍是该角色允许的 `light`、`standard` 或 `deep` 预设时才保留，其余情况等你决定。在 Claude Code 中，upkeep 会把旧的 `nhk-light` 定义改为 Haiku，补上缺失的当前定义（例如在已退役的 `nhk-diagnosis` 旁补上 `nhk-audit`），并请你删除退役的 `nhk-diagnosis` 文件，因为 upkeep 自己从不删除文件。仅更新安装包不会自动改写项目文件。
 
 **修复开始打转时。** 普通 bug 继续用 Superpowers 的系统性调试流程。同一个问题熬过了第五轮，NHK 会让主线程先重看自己的判断，再伸手去拿第六个补丁。每项任务最多五轮普通修复与复审；跨任务遇到同一个未解决的问题，次数也接着算，换个任务名不会清零。次数记在当前工作流已有的记录里。
 

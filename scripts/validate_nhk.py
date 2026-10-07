@@ -345,17 +345,26 @@ VALIDATOR_COMPANION_COMMANDS = (
     "python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance",
 )
 
-# Definition order and strictly rising effort are the contract; the effort values
-# themselves are calibrated only in claude-agents-template.md so a new Claude
-# generation is a template edit plus, for a new model family, one alias here.
-CLAUDE_AGENT_DEFINITIONS = ("nhk-standard", "nhk-deep", "nhk-audit")
-CLAUDE_AGENT_MODELS = ("opus",)
-CLAUDE_WORKER_EFFORTS = ("low", "medium", "high", "xhigh")
+# Definition order, each definition's model family, and strictly rising Opus
+# effort are the contract; the effort values themselves are calibrated only in
+# claude-agents-template.md so a new Claude generation is a template edit plus,
+# for a new model family, one alias here.
+CLAUDE_AGENT_DEFINITIONS = ("nhk-light", "nhk-standard", "nhk-deep", "nhk-audit")
+CLAUDE_AGENT_MODELS = {
+    "nhk-light": "haiku",
+    "nhk-standard": "opus",
+    "nhk-deep": "opus",
+    "nhk-audit": "opus",
+}
+CLAUDE_EFFORTS = ("low", "medium", "high", "xhigh", "max")
+# The top effort stays with the human-chosen Opus main thread; only the
+# smaller Haiku family may run a worker at it.
+CLAUDE_WORKER_EFFORTS = {"haiku": CLAUDE_EFFORTS, "opus": CLAUDE_EFFORTS[:-1]}
 CLAUDE_READ_ONLY_DEFINITION = "nhk-audit"
 CLAUDE_RETIRED_DEFINITION_TOKENS = (
     "`nhk-audit` succeeds `nhk-diagnosis`",
-    "`nhk-light` has no successor",
     "never deletes or renames one itself",
+    "An older `nhk-light` is a current definition and is reconciled like the others",
 )
 CLAUDE_AGENT_SKILLS = ("nhk-bootstrap", "nhk-upkeep")
 
@@ -695,14 +704,15 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                    'Records change only that preset choice, not worker class, review gates, '
                    'budgets, the `audit` tier, or recursion. Initial reviews still exclude '
                    'the `light` preset.'],
- 'Claude Routing': ['Every Claude worker runs Opus. When `.claude/agents/nhk-*.md` definitions '
+ 'Claude Routing': ['Claude workers run Opus, except that `nhk-light` runs Haiku. When '
+                    '`.claude/agents/nhk-*.md` definitions '
                     'exist, dispatch through them and omit the per-invocation model so each '
                     'definition stays authoritative.',
                     'Without those definitions, pass `model: opus` on every dispatch; the worker '
                     'then runs at session effort, as the human chose when declining them.',
                     'The definitions alone carry model and effort. Map tiers to definitions: '
-                    '`light` and `standard` use `nhk-standard`, `deep` uses `nhk-deep`, and '
-                    '`audit` uses the read-only `nhk-audit`.',
+                    '`light` uses `nhk-light`, `standard` uses `nhk-standard`, `deep` uses '
+                    '`nhk-deep`, and `audit` uses the read-only `nhk-audit`.',
                     'Delegate a packet only when it is independent and larger than the main thread '
                     'finishes in a handful of tool calls; use one worker when one suffices.',
                     'A worker report with open acceptance items and no named blocker is a report, '
@@ -1619,7 +1629,8 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         require_text(chinese, token, "README_CN.md", issues, case_sensitive=False)
     for token in (
         "eleven controlled references",
-        "Every Claude helper runs Opus",
+        "Claude's light helper runs Haiku",
+        "every other Claude helper runs Opus",
         "Claude Code main thread, we suggest Opus high",
         "seven required pieces",
         "Superpowers overlay",
@@ -1637,7 +1648,8 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         require_text(english, token, "README.md", issues, case_sensitive=False)
     for token in (
         "十一个受控 reference",
-        "Claude 的帮手全部使用 Opus",
+        "Claude 的 light 帮手使用 Haiku",
+        "其余帮手全部使用 Opus",
         "Claude Code 主线程，建议使用 Opus high",
         "七项基础内容",
         "Superpowers overlay",
@@ -1812,17 +1824,22 @@ def validate_claude_agents_template(text: str, issues: list[str]) -> None:
         )
 
     ranks: list[int] = []
+    opus_definitions = 0
     for name, fields in definitions:
-        if fields.get("model") not in CLAUDE_AGENT_MODELS:
-            issues.append(f"{label}: {name} must declare model: {' or '.join(CLAUDE_AGENT_MODELS)}")
+        model = CLAUDE_AGENT_MODELS.get(name)
+        if model and fields.get("model") != model:
+            issues.append(f"{label}: {name} must declare model: {model}")
+        allowed = CLAUDE_WORKER_EFFORTS.get(model or "", ())
         effort = fields.get("effort", "")
-        if effort not in CLAUDE_WORKER_EFFORTS:
+        if model and effort not in allowed:
             issues.append(
-                f"{label}: {name} effort must be one of {', '.join(CLAUDE_WORKER_EFFORTS)}; "
-                "the top effort level stays with the main thread"
+                f"{label}: {name} effort must be one of {', '.join(allowed)}; "
+                "the top Opus effort level stays with the main thread"
             )
-        else:
-            ranks.append(CLAUDE_WORKER_EFFORTS.index(effort))
+        elif model == "opus":
+            ranks.append(CLAUDE_EFFORTS.index(effort))
+        if model == "opus":
+            opus_definitions += 1
         description = fields.get("description", "")
         if "worker-policy.md" not in description or re.search(r"proactiv", description, re.IGNORECASE):
             issues.append(
@@ -1832,13 +1849,13 @@ def validate_claude_agents_template(text: str, issues: list[str]) -> None:
         denied = {tool.strip() for tool in fields.get("disallowedTools", "").split(",")}
         if name == CLAUDE_READ_ONLY_DEFINITION and not {"Write", "Edit"} <= denied:
             issues.append(f"{label}: {name} must deny Write and Edit through disallowedTools")
-    if len(ranks) == len(definitions) and any(low >= high for low, high in zip(ranks, ranks[1:])):
-        issues.append(f"{label}: effort must rise strictly with definition order")
+    if len(ranks) == opus_definitions and any(low >= high for low, high in zip(ranks, ranks[1:])):
+        issues.append(f"{label}: Opus effort must rise strictly with definition order")
 
-    forbidden = re.search(r"\b(?:Sonnet|Haiku|Fable|inherit)\b", text, re.IGNORECASE)
+    forbidden = re.search(r"\b(?:Sonnet|Fable|inherit)\b", text, re.IGNORECASE)
     if forbidden:
         issues.append(
-            f"{label}: Opus-only definitions must not name {forbidden.group(0)!r}"
+            f"{label}: Haiku and Opus definitions must not name {forbidden.group(0)!r}"
         )
     for token in CLAUDE_RETIRED_DEFINITION_TOKENS:
         if token not in text:
