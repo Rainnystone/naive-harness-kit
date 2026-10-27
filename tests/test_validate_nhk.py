@@ -84,7 +84,7 @@ LEGACY_CODEX_PRESET_LADDER = (
 )
 
 CODEX_TIER_LINES = (
-    "`light`: GPT-6 Luna max.",
+    "`light`: GPT-6.1 Terra xhigh.",
     "`standard`: GPT-6.1 Sol xhigh.",
     "`deep`: GPT-6 Astra xhigh.",
     "`audit`: GPT-6 Astra xhigh.",
@@ -213,7 +213,7 @@ def literal_routing_record_cases():
     record = records[0]
     yield record, "Whole modules may use GPT-6 Astra low.", None, 1
     yield record, "Use GPT-6 Astra xhigh for ordinary implementation.", None, 1
-    yield record, "", ("GPT-6 Luna max", "GPT-6 Luna high"), 1
+    yield record, "", ("GPT-6.1 Terra xhigh", "GPT-6.1 Terra high"), 1
     yield human_routing_exception(approval="decisions/gpt-6-astra-low.md"), "", None, 1
     yield human_routing_exception(preset="GPT-6 Astra max"), "", None, 1
     yield human_routing_exception(preset="GPT-6 Astra medium"), "", None, 1
@@ -884,6 +884,10 @@ class SourceValidationTests(ValidatorTestCase):
 
     def test_worker_policy_rejects_superseded_codex_defaults_source_and_final(self) -> None:
         mutations = (
+            (CODEX_TIER_LINES[0], "`light`: GPT-6 Luna max."),
+            (CODEX_TIER_LINES[0], "`light`: GPT-6.1 Terra high."),
+            (CODEX_TIER_LINES[0], "`light`: GPT-6.1 Terra max."),
+            ("`gpt-6.1-terra`", "`gpt-6-luna`"),
             (CODEX_TIER_LINES[1], "`standard`: GPT-6 Sol xhigh."),
             (CODEX_TIER_LINES[2], "`deep`: GPT-6 Astra medium."),
             ("`gpt-6.1-sol`", "`gpt-6-sol`"),
@@ -1283,7 +1287,7 @@ class AtomicRoutingRegressionTests(ValidatorTestCase):
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_unrecognized_codex_tier_rows_fail(self) -> None:
-        for row in ("- `fast`: local.", "- `fast`: GPT-6 Luna max.", "- `audit-plus`: GPT-6 Astra xhigh."):
+        for row in ("- `fast`: local.", "- `fast`: GPT-6.1 Terra xhigh.", "- `audit-plus`: GPT-6 Astra xhigh."):
             with self.subTest(row=row):
                 content = worker_policy_text().replace("## Claude Routing", row + "\n\n## Claude Routing", 1)
                 result = run_cli("--final", self.write_final(content), "--kind", "worker-policy")
@@ -1303,6 +1307,37 @@ class AtomicRoutingRegressionTests(ValidatorTestCase):
                 content = execution_recovery_text().rstrip() + "\n\n" + fact.replace("The", "Inspect the", 1) + "\n"
                 result = run_cli("--final", self.write_final(content), "--kind", "execution-recovery")
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_terra_project_facts_are_not_routes(self) -> None:
+        for fact in (
+            "The project name is Terra.",
+            "Terra stores customer records.",
+            "The Terra endpoint returns JSON.",
+        ):
+            for kind, content in (
+                ("worker-policy", worker_policy_text()),
+                ("execution-recovery", execution_recovery_text()),
+            ):
+                with self.subTest(fact=fact, kind=kind):
+                    result = run_cli(
+                        "--final", self.write_final(content.rstrip() + "\n\n" + fact + "\n"),
+                        "--kind", kind,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_terra_model_selections_remain_routes(self) -> None:
+        for selection in ("Use Terra.", "Dispatch Terra.", "Model: Terra.", "Terra xhigh."):
+            for kind, content in (
+                ("worker-policy", worker_policy_text()),
+                ("execution-recovery", execution_recovery_text()),
+            ):
+                with self.subTest(selection=selection, kind=kind):
+                    result = run_cli(
+                        "--final", self.write_final(content.rstrip() + "\n\n" + selection + "\n"),
+                        "--kind", kind,
+                    )
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn("routing", result.stdout)
 
     def test_legacy_band_routes_require_tier_migration(self) -> None:
         for extra in (
@@ -1634,8 +1669,9 @@ class FinalValidationTests(ValidatorTestCase):
             human_routing_exception(preset="GPT-6 Astra max"),
             human_routing_exception(preset="GPT-6 Astra medium"),
             human_routing_exception(preset="Ultra"),
+            human_routing_exception(preset="GPT-6 Luna max"),
             human_routing_exception(role="recursive-delegation"),
-            human_routing_exception(role='initial-task-review', preset="GPT-6 Luna max"),
+            human_routing_exception(role='initial-task-review', preset="GPT-6.1 Terra xhigh"),
             human_routing_exception() + " Whole modules may use GPT-6 Astra low.",
         )
         for record in records:
@@ -1655,7 +1691,7 @@ class FinalValidationTests(ValidatorTestCase):
             human_routing_exception(target="计费模块", scope="src/计费/", approval="decisions/计费.md#批准"),
             human_routing_exception(target="billing-project"),
             human_routing_exception(role='initial-task-review'),
-            human_routing_exception(role="scoped-re-review", preset="GPT-6 Luna max"),
+            human_routing_exception(role="scoped-re-review", preset="GPT-6.1 Terra xhigh"),
             human_routing_exception(role="local-fix", preset="GPT-6.1 Sol xhigh"),
         ):
             text = worker_policy_text().replace("## Codex Routing", "## Codex Routing\n" + record, 1)
@@ -1765,11 +1801,12 @@ class FinalValidationTests(ValidatorTestCase):
     def test_atomic_routing_rejects_additive_authorizations(self) -> None:
         for clause in (
             "Whole modules may use GPT-6 Astra low.",
-            "Module implementation may use GPT-6 Luna max.",
+            "Module implementation may use GPT-6.1 Terra xhigh.",
             "Mechanical fixes may include design judgment and use Band 1.",
             "Initial module reviews may use Band 1.",
             "Mechanical fixes may include design judgment and use `light`.",
             "Initial task reviews may use `light`.",
+            "Use Terra.",
         ):
             with self.subTest(clause=clause):
                 text = worker_policy_text().replace("## Claude Routing", clause + "\n\n## Claude Routing")
@@ -1850,7 +1887,7 @@ class FinalValidationTests(ValidatorTestCase):
             valid.replace("GPT-6.1 Sol xhigh", "GPT-5.5 xhigh"),
             valid.replace("GPT-6.1 Sol xhigh", ""),
             valid.replace("GPT-6.1 Sol xhigh", "GPT-5.6 Sol medium"),
-            valid.replace("GPT-6.1 Sol xhigh", "GPT-6.1 Sol xhigh; GPT-6 Luna max"),
+            valid.replace("GPT-6.1 Sol xhigh", "GPT-6.1 Sol xhigh; GPT-6.1 Terra xhigh"),
             valid.replace("GPT-6.1 Sol xhigh", "GPT-6.1 Sol xhigh; GPT-6.1 Sol xhigh"),
             valid + "\n- `audit`: GPT-6 Astra xhigh.",
         )
@@ -1959,7 +1996,7 @@ class FinalValidationTests(ValidatorTestCase):
                         self.assertEqual(result.returncode, 1, result.stdout)
 
     def test_additive_diagnostic_routes_fail(self) -> None:
-        for route in ("Band 3", "the `audit` tier", "deep", "`nhk-audit`", "GPT-6 Astra xhigh", "GPT-6 Astra max", "gpt-6-astra max", "Sonnet", "max", "xhigh", "Extra High"):
+        for route in ("Band 3", "the `audit` tier", "deep", "`nhk-audit`", "GPT-6 Astra xhigh", "GPT-6 Astra max", "gpt-6-astra max", "Sonnet", "Terra", "max", "xhigh", "Extra High"):
             with self.subTest(route=route):
                 content = execution_recovery_text().replace(
                     "## Recovery and Stop",
@@ -1995,7 +2032,7 @@ class FinalValidationTests(ValidatorTestCase):
             """## Codex Routing
 
 - Do not use the `audit` tier for ordinary implementation.
-- GPT-6 Luna max must not perform initial task reviews.""",
+- GPT-6.1 Terra xhigh must not perform initial task reviews.""",
             1,
         ).replace(
             "## Claude Routing",

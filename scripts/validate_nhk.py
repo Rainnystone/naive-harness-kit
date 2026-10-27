@@ -243,7 +243,7 @@ LEGACY_CODEX_PRESET_LADDER = (
 # Capability Tiers owns every tier permission; Codex Routing only maps each tier
 # to exactly one preset.
 CODEX_TIER_PRESETS = {
-    "light": "GPT-6 Luna max",
+    "light": "GPT-6.1 Terra xhigh",
     "standard": "GPT-6.1 Sol xhigh",
     "deep": "GPT-6 Astra xhigh",
     "audit": "GPT-6 Astra xhigh",
@@ -265,8 +265,16 @@ TIER_ROUTE_PATTERN = (
     rf"(?:^|\s-\s)(?:{TIER_WORDS})\s*:|"
     r"\bnhk-[\w-]+"
 )
-CODEX_ALLOWED_FAMILY_NAMES = ("GPT-6 Luna", "GPT-6.1 Sol", "GPT-6 Astra")
-CODEX_ALLOWED_RUNTIME_IDS = ("gpt-6-luna", "gpt-6.1-sol", "gpt-6-astra")
+# Terra can also be a project name. Require model-selection syntax rather
+# than rejecting every mention in worker-policy or execution-recovery facts.
+TERRA_ROUTE_PATTERN = (
+    r"\b(?:use[sd]?|using|select\w*|choos\w*|rout\w*|dispatch\w*|assign\w*)"
+    r"\s+(?:the\s+|a\s+|an\s+)?Terra\b|"
+    r"\bTerra\s+(?:(?:at|with)\s+)?(?:models?|presets?|workers?|low|medium|high|xhigh|max|Extra\s+High)\b|"
+    r"\b(?:model|preset)\s*(?::|=|\bis\b)?\s*Terra\b"
+)
+CODEX_ALLOWED_FAMILY_NAMES = ("GPT-6.1 Terra", "GPT-6.1 Sol", "GPT-6 Astra")
+CODEX_ALLOWED_RUNTIME_IDS = ("gpt-6.1-terra", "gpt-6.1-sol", "gpt-6-astra")
 CODEX_QUALIFIER_STOPWORDS = (
     "a",
     "an",
@@ -573,7 +581,7 @@ CONSULTATION_DECLARATIONS = {
 }
 DIAGNOSTIC_MENTION_RE = re.compile(
     r"\b(?:Band\s+\d+|GPT-\d[\w.-]*(?:\s+\w+)?|Sonnet|Opus|Fable|Haiku|Astra|Luna|Sol|"
-    r"Extra\s+High|xhigh|max)\b|" + TIER_ROUTE_PATTERN,
+    r"Extra\s+High|xhigh|max)\b|" + TIER_ROUTE_PATTERN + "|" + TERRA_ROUTE_PATTERN,
     re.IGNORECASE,
 )
 
@@ -684,7 +692,7 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                       'another tier, an older model, or the `audit` configuration as fallback.'],
  'Codex Routing': ['Every fresh Codex worker uses `fork_turns: none` and receives a self-contained '
                    'brief, required files, and binding global constraints.',
-                   'Runtime model IDs are `gpt-6-luna`, `gpt-6.1-sol`, and `gpt-6-astra`; UI Extra '
+                   'Runtime model IDs are `gpt-6.1-terra`, `gpt-6.1-sol`, and `gpt-6-astra`; UI Extra '
                    'High maps to `xhigh`.',
                    'No worker configuration exceeds the `audit` preset; the top effort stays with '
                    'the human-chosen main thread.',
@@ -1041,14 +1049,14 @@ def validate_worker_policy_contract(
         for prohibition in (
             "Do not use the `audit` tier for ordinary implementation.",
             "Workers may not inherit Fable for ordinary coding.",
-            "GPT-6 Luna max must not perform initial task reviews.",
+            "GPT-6.1 Terra xhigh must not perform initial task reviews.",
         ):
             body = body.replace(prohibition, "")
         declared_sections[heading] = body
     validate_declared_clauses(
         declared_sections, WORKER_DECLARATIONS, label, issues,
         r"\b(?:Band\s*\d|GPT[- ]|gpt-|Astra|Luna|Sol|modules?|tasks?|mechanical|standard|judgment|"
-        r"review|consolidat\w*|repair|fix(?:es)?|Sonnet|Opus|Fable|Ultra)\b|" + TIER_ROUTE_PATTERN,
+        r"review|consolidat\w*|repair|fix(?:es)?|Sonnet|Opus|Fable|Ultra)\b|" + TIER_ROUTE_PATTERN + "|" + TERRA_ROUTE_PATTERN,
     )
     validate_ui_alias_routes(declared_sections, label, issues)
     validate_exact_codex_tiers(policy_sections.get("Codex Routing", ""), label, issues)

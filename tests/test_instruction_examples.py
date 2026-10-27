@@ -320,7 +320,7 @@ class InstructionExampleTests(unittest.TestCase):
         codex = section_text(example, "Codex Routing")
         for token in (
             "fork_turns: none",
-            "`light`: GPT-6 Luna max.",
+            "`light`: GPT-6.1 Terra xhigh.",
             "`standard`: GPT-6.1 Sol xhigh.",
             "`deep`: GPT-6 Astra xhigh.",
             "`audit`: GPT-6 Astra xhigh.",
@@ -328,7 +328,7 @@ class InstructionExampleTests(unittest.TestCase):
         ):
             self.assertIn(token, codex)
         self.assertNotIn("Ultra", codex)
-        self.assertNotRegex(codex, r"\bBand\s+\d|\bmax\b(?<!Luna max)")
+        self.assertNotRegex(codex, r"\bBand\s+\d|\bmax\b")
         claude = section_text(example, "Claude Routing")
         self.assertIn(
             "`light` uses `nhk-light`, `standard` uses `nhk-standard`, `deep` uses "
