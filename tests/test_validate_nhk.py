@@ -1308,6 +1308,37 @@ class AtomicRoutingRegressionTests(ValidatorTestCase):
                 result = run_cli("--final", self.write_final(content), "--kind", "execution-recovery")
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_terra_project_facts_are_not_routes(self) -> None:
+        for fact in (
+            "The project name is Terra.",
+            "Terra stores customer records.",
+            "The Terra endpoint returns JSON.",
+        ):
+            for kind, content in (
+                ("worker-policy", worker_policy_text()),
+                ("execution-recovery", execution_recovery_text()),
+            ):
+                with self.subTest(fact=fact, kind=kind):
+                    result = run_cli(
+                        "--final", self.write_final(content.rstrip() + "\n\n" + fact + "\n"),
+                        "--kind", kind,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_terra_model_selections_remain_routes(self) -> None:
+        for selection in ("Use Terra.", "Dispatch Terra.", "Model: Terra.", "Terra xhigh."):
+            for kind, content in (
+                ("worker-policy", worker_policy_text()),
+                ("execution-recovery", execution_recovery_text()),
+            ):
+                with self.subTest(selection=selection, kind=kind):
+                    result = run_cli(
+                        "--final", self.write_final(content.rstrip() + "\n\n" + selection + "\n"),
+                        "--kind", kind,
+                    )
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn("routing", result.stdout)
+
     def test_legacy_band_routes_require_tier_migration(self) -> None:
         for extra in (
             "- Band 2: GPT-6 Astra medium.",

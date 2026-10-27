@@ -265,6 +265,14 @@ TIER_ROUTE_PATTERN = (
     rf"(?:^|\s-\s)(?:{TIER_WORDS})\s*:|"
     r"\bnhk-[\w-]+"
 )
+# Terra can also be a project name. Require model-selection syntax rather
+# than rejecting every mention in worker-policy or execution-recovery facts.
+TERRA_ROUTE_PATTERN = (
+    r"\b(?:use[sd]?|using|select\w*|choos\w*|rout\w*|dispatch\w*|assign\w*)"
+    r"\s+(?:the\s+|a\s+|an\s+)?Terra\b|"
+    r"\bTerra\s+(?:(?:at|with)\s+)?(?:models?|presets?|workers?|low|medium|high|xhigh|max|Extra\s+High)\b|"
+    r"\b(?:model|preset)\s*(?::|=|\bis\b)?\s*Terra\b"
+)
 CODEX_ALLOWED_FAMILY_NAMES = ("GPT-6.1 Terra", "GPT-6.1 Sol", "GPT-6 Astra")
 CODEX_ALLOWED_RUNTIME_IDS = ("gpt-6.1-terra", "gpt-6.1-sol", "gpt-6-astra")
 CODEX_QUALIFIER_STOPWORDS = (
@@ -572,8 +580,8 @@ CONSULTATION_DECLARATIONS = {
     ],
 }
 DIAGNOSTIC_MENTION_RE = re.compile(
-    r"\b(?:Band\s+\d+|GPT-\d[\w.-]*(?:\s+\w+)?|Sonnet|Opus|Fable|Haiku|Astra|Luna|Terra|Sol|"
-    r"Extra\s+High|xhigh|max)\b|" + TIER_ROUTE_PATTERN,
+    r"\b(?:Band\s+\d+|GPT-\d[\w.-]*(?:\s+\w+)?|Sonnet|Opus|Fable|Haiku|Astra|Luna|Sol|"
+    r"Extra\s+High|xhigh|max)\b|" + TIER_ROUTE_PATTERN + "|" + TERRA_ROUTE_PATTERN,
     re.IGNORECASE,
 )
 
@@ -1047,8 +1055,8 @@ def validate_worker_policy_contract(
         declared_sections[heading] = body
     validate_declared_clauses(
         declared_sections, WORKER_DECLARATIONS, label, issues,
-        r"\b(?:Band\s*\d|GPT[- ]|gpt-|Astra|Luna|Terra|Sol|modules?|tasks?|mechanical|standard|judgment|"
-        r"review|consolidat\w*|repair|fix(?:es)?|Sonnet|Opus|Fable|Ultra)\b|" + TIER_ROUTE_PATTERN,
+        r"\b(?:Band\s*\d|GPT[- ]|gpt-|Astra|Luna|Sol|modules?|tasks?|mechanical|standard|judgment|"
+        r"review|consolidat\w*|repair|fix(?:es)?|Sonnet|Opus|Fable|Ultra)\b|" + TIER_ROUTE_PATTERN + "|" + TERRA_ROUTE_PATTERN,
     )
     validate_ui_alias_routes(declared_sections, label, issues)
     validate_exact_codex_tiers(policy_sections.get("Codex Routing", ""), label, issues)
