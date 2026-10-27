@@ -158,7 +158,7 @@ thin CLAUDE 只 import AGENTS。五份 companion docs 始终使用反引号普�
 
 ### 仅 Codex
 
-**各档预设。** 日常的 `standard` 档用 Sol xhigh，以 Astra 一小部分的价格处理切分合理的原子任务。`deep` 换到 Astra xhigh，仍是实施上限。`audit` 使用同一份 Astra xhigh 预设，但权限仍限于只读诊断和复杂最终审查。共用预设不合并两档的角色权限。`light` 继续用 Luna，Astra max 不属于 worker 预设。精确预设以模板为准。
+**各档预设。** 日常的 `standard` 档用 Sol xhigh，以 Astra 一小部分的价格处理切分合理的原子任务。`deep` 换到 Astra xhigh，仍是实施上限。`audit` 使用同一份 Astra xhigh 预设，但权限仍限于只读诊断和复杂最终审查。共用预设不合并两档的角色权限。`light` 使用 Terra xhigh，Astra max 不属于 worker 预设。精确预设以模板为准。
 
 ### 仅 Claude Code
 

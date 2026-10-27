@@ -23,7 +23,7 @@ Legacy routing migration: map `module-implementation` to `task-implementation` a
 Optional exception illustration (generation guidance, not an actual approval): after confirming an existing decision, replace this synthetic record with its real target, scope, role, preset, and evidence. Omit records when no such decision exists.
 
 ```md
-- Human routing exception: {"target":"billing-task","scope":"src/billing/","role":"task-implementation","preset":"GPT-6 Luna max","approval":"decisions/billing.md#luna-route"}
+- Human routing exception: {"target":"billing-task","scope":"src/billing/","role":"task-implementation","preset":"GPT-6.1 Terra xhigh","approval":"decisions/billing.md#terra-route"}
 ```
 
 The record must be one complete JSON object with unique keys and no trailing prose. Use a stable target identifier of up to 80 letters/digits/underscores/hyphens; literal path components may also contain spaces and dots. Unicode names are supported. Keep one record per target/scope/role, reject blanket targets (`all`, `any`, `global`, `default`, `current`, or their prefixed forms; also bare `project`, `workspace`, or `session`), and retain all normal clauses and catalogs.
@@ -79,8 +79,8 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 ### Codex Routing
 
 - Every fresh Codex worker uses `fork_turns: none` and receives a self-contained brief, required files, and binding global constraints.
-- Runtime model IDs are `gpt-6-luna`, `gpt-6.1-sol`, and `gpt-6-astra`; UI Extra High maps to `xhigh`.
-- `light`: GPT-6 Luna max.
+- Runtime model IDs are `gpt-6.1-terra`, `gpt-6.1-sol`, and `gpt-6-astra`; UI Extra High maps to `xhigh`.
+- `light`: GPT-6.1 Terra xhigh.
 - `standard`: GPT-6.1 Sol xhigh.
 - `deep`: GPT-6 Astra xhigh.
 - `audit`: GPT-6 Astra xhigh.

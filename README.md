@@ -158,7 +158,7 @@ The [worker policy template](references/worker-policy-template.md) defines the t
 
 ### Codex only
 
-**Tier presets.** The everyday `standard` tier runs Sol at xhigh for well-sized atomic tasks at a fraction of Astra's price. `deep` moves to Astra at xhigh and remains the implementation ceiling. `audit` uses the same Astra xhigh preset with read-only permissions for diagnosis and complex final review. Sharing a preset does not merge their role permissions. `light` stays on Luna, and Astra max is not a worker preset. The template holds the exact presets.
+**Tier presets.** The everyday `standard` tier runs Sol at xhigh for well-sized atomic tasks at a fraction of Astra's price. `deep` moves to Astra at xhigh and remains the implementation ceiling. `audit` uses the same Astra xhigh preset with read-only permissions for diagnosis and complex final review. Sharing a preset does not merge their role permissions. `light` runs Terra at xhigh, and Astra max is not a worker preset. The template holds the exact presets.
 
 ### Claude Code only
 
