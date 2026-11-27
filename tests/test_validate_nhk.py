@@ -436,6 +436,13 @@ class SourceValidationTests(ValidatorTestCase):
             for rule in (
                 "In SDD, implementers may run in parallel.",
                 "Parallel implementation is allowed in SDD.",
+                "Run SDD implementers in parallel.",
+                "Allow parallel implementation in SDD.",
+                "SDD implementers can be dispatched in parallel.",
+                "SDD allows parallel implementation.",
+                "In SDD, implementers are permitted to run in parallel.",
+                "SDD implementation may be parallel.",
+                "Never run SDD implementers in parallel. In SDD, implementers may run concurrently.",
                 "All implementation is sequential.",
             ):
                 with self.subTest(source=source, rule=rule):
@@ -443,6 +450,22 @@ class SourceValidationTests(ValidatorTestCase):
                     result = self.check_worker_policy(invalid, source)
                     self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                     self.assertIn("additional routing", result.stdout)
+
+    def test_worker_policy_accepts_prohibitions_on_parallel_sdd(self) -> None:
+        for source in (False, True):
+            content = self.worker_policy_input(source)
+            heading = "### Dispatch Contract" if source else "## Dispatch Contract"
+            for rule in (
+                "Never run SDD implementers in parallel.",
+                "In SDD, implementers must not run concurrently.",
+                "Parallel implementation is not permitted in SDD.",
+                "No SDD implementers may run in parallel.",
+                "Never allow parallel implementation in SDD.",
+            ):
+                with self.subTest(source=source, rule=rule):
+                    policy = content.replace(heading, f"{heading}\n\n- {rule}", 1)
+                    result = self.check_worker_policy(policy, source)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_worker_policy_limits_luna_to_an_explicit_current_run_batch(self) -> None:
         permission = (
@@ -2670,6 +2693,7 @@ class FinalValidationTests(ValidatorTestCase):
         )
         for label, content in (
             ("legacy", legacy),
+            ("legacy with remote evidence", legacy + "\nRetain remote links to the release evidence in the archive index.\n"),
             ("superpowers", superpowers),
             ("matt", matt),
             ("legacy with a quoted example", legacy + "\n> Workflow: Matt\n"),

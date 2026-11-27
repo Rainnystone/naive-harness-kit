@@ -200,7 +200,7 @@ In both `worker-policy.md` and `execution-recovery.md`, unrelated facts such as 
 
 **Setup:** A fresh worker, a replacement after a normal fix, and two proposed independent research tasks are dispatched.
 
-**Expected:** Every fresh Codex worker uses `fork_turns: none`. The initial brief and any fresh replacement carry a self-contained objective, scope, read/write authority, acceptance, verification, forbidden actions, expected return, selected configuration, and binding interfaces/constraints through brief, report, and fixed diff handoff. Normal fixes resume the original implementer. Superpowers SDD implementers remain sequential; read-only parallel work is allowed only when ownership, state, artifacts, services, and verification resources are independent. The main thread checks real progress and lifecycle before treating a timeout as a blocker, and owns integration and the final result.
+**Expected:** Every fresh Codex worker uses `fork_turns: none`. The initial brief and any fresh replacement carry a self-contained objective, scope, read/write authority, acceptance, verification, forbidden actions, expected return, selected configuration, and binding interfaces/constraints through brief, report, and fixed diff handoff. Normal fixes resume the original implementer. Superpowers SDD implementers remain sequential. An explicit prohibition on parallel SDD implementation passes source and final validation; a grant of parallel implementation fails. Read-only parallel work is allowed only when ownership, state, artifacts, services, and verification resources are independent. The main thread checks real progress and lifecycle before treating a timeout as a blocker, and owns integration and the final result.
 
 ### D7a. Uninterrupted SDD work and responsive exceptions
 
@@ -340,6 +340,8 @@ For a consequential unresolved engineering question, optionally consult once bef
 ### F0. First Matt archive, local and remote
 
 A completed Matt release uses a closed remote issue. With explicit approval to archive that release, create the local archive index on demand, link the original issue once, and verify its identity. Do not copy ticket bodies, close or mutate remote issues during archive. An unverified remote identity leaves the transition pending. If identity and completion are already confirmed but the verified URL cannot be opened locally, the index and delivery distinguish that access limit from local link checks. In a local tracker keep referenced ticket paths and shared documents in place; do not relocate the glossary, ADRs, tracker configuration or another open release. A second pass retains one resolvable index entry.
+
+An unmarked legacy Superpowers governance document that satisfies the copy-and-verify rules may link remote release evidence. Matt’s reference-only archive requires its workflow marker.
 
 ### F1. User says no
 

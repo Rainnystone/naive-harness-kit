@@ -1191,6 +1191,29 @@ def without_routing_exceptions(
     return cleaned
 
 
+def allows_parallel_sdd(clause: str) -> bool:
+    parallel = r"(?:in parallel|concurrently)"
+    role = r"implement(?:ation|ers?)"
+    scope = r"(?:SDD|subagent-driven development)"
+    subject = rf"(?:(?:the|Superpowers|{scope})\s+)*{role}"
+    action = r"(?:run|work|execute|be (?:run|dispatched|executed))"
+    modal = r"(?:may|can|must|should|shall|will|(?:is|are) (?:allowed|permitted) to)"
+    grant = (
+        rf"(?:^|[,:])\s*[-*+]?\s*(?:"
+        rf"{subject}\s+(?:{modal}\s+)?(?:{action}\s+{parallel}|be (?:parallel|concurrent))"
+        rf"|(?:parallel|concurrent)\s+{subject}\s+is\s+(?:allowed|permitted|required)"
+        rf"|(?:run|dispatch|start|execute)\s+{subject}\s+{parallel}"
+        rf"|(?:{scope}\s+)?(?:allows?|permits?|enables?)\s+"
+        rf"(?:(?:parallel|concurrent)\s+{subject}|{subject}\s+to\s+{action}\s+{parallel})"
+        rf"|parallelize\s+{subject})\b"
+    )
+    return any(
+        re.search(rf"\b{scope}\b", sentence, re.IGNORECASE)
+        and re.search(grant, sentence, re.IGNORECASE)
+        for sentence in re.split(r"[.;!?]|\b(?:whereas|but|while)\b", clause, flags=re.IGNORECASE)
+    )
+
+
 def validate_worker_policy_contract(
     text: str,
     headings: tuple[str, ...],
@@ -1224,12 +1247,12 @@ def validate_worker_policy_contract(
         r"\b(?:Band\s*\d|GPT[- ]|gpt-|Astra|Luna|Sol|modules?|tasks?|mechanical|standard|judgment|"
         r"reviews?|consolidat\w*|repair|fix(?:es)?|Sonnet|Opus|Fable|Ultra|consult(?:s|ing|ed|ations?|ants?)?)\b|"
         r"\bimplementers?\s+(?:must\s+be\s+)?sequential\b|"
-        r"(?=[^.;]*\b(?:SDD|subagent-driven development)\b)(?=[^.;]*\bimplement(?:ation|ers?)\b)"
-        r"[^.;]*\b(?:parallel\w*|concurrent\w*)\b|"
         r"\bimplementation\s+(?:is|remains|runs|must (?:be|remain|run))\s+(?:always\s+)?"
         r"(?:sequential\w*|serial\w*)\b|"
         + TIER_ROUTE_PATTERN + "|" + TERRA_ROUTE_PATTERN,
     )
+    if any(allows_parallel_sdd(clause) for clause in undeclared_clauses(declared_sections, WORKER_DECLARATIONS)):
+        issues.append(f"{label} contains additional routing that permits parallel SDD implementation")
     validate_ui_alias_routes(declared_sections, label, issues)
     validate_exact_codex_tiers(policy_sections.get("Codex Routing", ""), label, issues)
     validate_codex_declared_presets(policy_sections.get("Codex Routing", ""), label, issues)
@@ -2335,10 +2358,6 @@ def validate_governance_workflow(
         "remote links",
         "preserve local sources and tracking",
     )
-    if not markers and any(token in invariants for token in matt_invariants):
-        issues.append("doc-governance Matt archive rules require a 'Workflow: Matt' marker")
-        return
-
     if re.search(r"\b(?:do not require|without|skip|bypass) (?:explicit )?human approval\b"
                  r"|\bhuman approval is (?:optional|not required)\b", invariants):
         issues.append("doc-governance archive requires explicit human approval")
@@ -2355,9 +2374,12 @@ def validate_governance_workflow(
         )
         if markers:
             required += ("archive foundation is required",)
-    for token in required:
-        if token not in invariants:
-            issues.append(f"doc-governance workflow archive invariants are missing {token!r}")
+    missing = [token for token in required if token not in invariants]
+    if not markers and missing and all(token in invariants for token in matt_invariants):
+        issues.append("doc-governance Matt archive rules require a 'Workflow: Matt' marker")
+        return
+    for token in missing:
+        issues.append(f"doc-governance workflow archive invariants are missing {token!r}")
 
 
 def validate_final(
