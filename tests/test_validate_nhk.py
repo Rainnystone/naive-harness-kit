@@ -2681,6 +2681,8 @@ class FinalValidationTests(ValidatorTestCase):
             ("Never archive draft release notes and tickets without explicit human approval.", True),
             ("Never archive draft tickets but proceed without human approval.", False),
             ("No workstream may be archived without human approval.", True),
+            ("Add a reminder to obtain explicit human approval unless the checklist already includes it. "
+             "Explicit human approval is required before archiving.", True),
             ("Archive without explicit human approval.", False),
             ("Human approval is optional.", False),
             ("- Never archive drafts\n- Archive completed workstreams without human approval.", False),
@@ -2698,6 +2700,10 @@ class FinalValidationTests(ValidatorTestCase):
             ("Unless the tracker is closed, you must obtain explicit human approval before archiving.", False),
             ("Unless verification succeeds, keep the originals and then obtain human approval before archiving.", True),
             ("Except for local archives, the team must never archive without human approval.", False),
+            ("Archive approval: Unless the tracker is closed, obtain explicit human approval before archiving.", False),
+            ("Except for local archives, never archive release notes and tickets without explicit human approval.", False),
+            ("Unless the checklist already covers it, add a reminder to obtain explicit human approval before archiving. "
+             "Explicit human approval is required before archiving.", True),
             ("Require explicit human approval before archiving a release unless the tracker is closed.", False),
             ("Obtain explicit human approval before archiving, then copy all materials except temporary outputs.", True),
             ("Do not require explicit human approval before archiving.", False),

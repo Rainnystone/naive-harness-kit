@@ -2346,25 +2346,27 @@ def archive_approval_waived(body: str) -> bool:
     requirement = rf"\b(?:{approval} is (?:required|mandatory)|(?:require|obtain) {approval})\b"
     approval_rule = rf"(?:{protected}|{requirement})"
     exception = r"(?:unless|except)\b"
-    scope_words = r"(?: (?!and\b|or\b|then\b|but\b|even\b|unless\b|except\b)[\w'’/`-]+)*"
+    # A consequence can be an imperative, or a subject followed by an obligation.
+    # Match its predicate at the start so a reminder mentioning consent stays a reminder.
+    subject = r"(?:[\w'-]+|(?:the|a|an|each|all) (?:[\w'-]+ ){0,3}[\w'-]+)"
+    obligation = r"(?:must|shall|should|may|can|will|needs? to|has to|have to)"
+    approval_action = rf"(?:(?:{subject} )?{obligation} )?(?:always )?{approval_rule}"
+    scope_words = r"(?: (?!then\b|but\b|even\b|unless\b|except\b|(?:and|or) (?:then|never|do|copy|remove|keep)\b)[\w'’/`-]+)*"
     archive_scope = rf"(?: (?:before archiving|to archive|for){scope_words})?"
-    # An exception must modify the approval rule, not another action in the sentence.
-    trailing_exception = rf"{approval_rule}{archive_scope}\s*,?\s*{exception}"
-    leading_exception = rf"^\s*(?:[-+*]|\d+[.)])?\s*{exception}[^,;.!?]*,\s*"
+    # A trailing exception must immediately follow the approval action and its archive scope.
+    action_start = r"(?:^|,|\b(?:and|then|but)\b)\s*(?:[-+*]|\d+[.)])?\s*"
+    trailing_exception = rf"{action_start}{approval_action}{archive_scope}\s*,?\s*{exception}"
+    leading_exception = rf"^(?:[-+*]|\d+[.)])?\s*{exception}[^,;.!?]*,\s*"
     # Preserve statement boundaries and join soft-wrapped lines inside each Markdown item.
     for item in re.split(r"\n[ \t]*\n|\n(?=[ \t]*(?:[-+*]|\d+[.)])[ \t]+)", body.lower()):
-        for rule in re.split(r"(?<=[.!?;])\s+", normalize_space(item)):
+        for rule in re.split(r"(?<=[.!?;:])\s+", normalize_space(item)):
             if re.search(waiver, re.sub(protected, "", rule)):
                 return True
             if re.search(trailing_exception, rule):
                 return True
             condition = re.match(leading_exception, rule)
-            if condition:
-                consequence = re.split(
-                    r"[,;]|\b(?:then|and|but|while|whereas)\b", rule[condition.end():], maxsplit=1,
-                )[0]
-                if re.search(approval_rule, consequence):
-                    return True
+            if condition and re.match(approval_action, rule[condition.end():]):
+                return True
     return False
 
 
