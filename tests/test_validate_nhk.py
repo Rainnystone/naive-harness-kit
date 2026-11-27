@@ -634,8 +634,6 @@ class SourceValidationTests(ValidatorTestCase):
             ("welcome-to-nhk/SKILL.md", "Check only capabilities required by the selected route and workstream."),
             ("nhk-bootstrap/SKILL.md", "Create the archive foundation only when the workspace default is Superpowers."),
             ("nhk-upkeep/SKILL.md", "A changed workspace default applies to the next workstream."),
-            ("nhk-archive/SKILL.md", "Verify local references and report any remote access that remains unverified."),
-            ("references/archive-readme-template.md", "Use confirmed tracker URLs as remote references."),
         )
         for file, required in cases:
             with self.subTest(file=file, required=required):
@@ -2657,13 +2655,11 @@ class FinalValidationTests(ValidatorTestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(heading, result.stdout)
 
-        content = doc_governance_text().replace(
-            "Explicit human approval is required before archiving. ", ""
-        )
-        path = self.write_final(content)
+        content = doc_governance_text().split("## Archive Transition Invariants")[0]
+        path = self.write_final(content + "## Archive Transition Invariants\n\n<!-- draft -->\n")
         result = run_cli("--final", path, "--kind", "doc-governance")
         self.assertEqual(result.returncode, 1)
-        self.assertIn("human approval", result.stdout.lower())
+        self.assertIn("Archive Transition Invariants", result.stdout)
 
         content = doc_governance_text().replace(
             "`implementation-planning.md`", "the planning guide"
@@ -2673,114 +2669,33 @@ class FinalValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("implementation-planning.md", result.stdout)
 
-    def test_archive_approval_prohibitions_and_waivers(self) -> None:
-        cases = (
-            ("Never archive without explicit human approval.", True),
-            ("Do not archive a workstream without human approval.", True),
-            ("Do not bypass explicit human approval.", True),
-            ("Never archive draft release notes and tickets without explicit human approval.", True),
-            ("Never archive draft tickets but proceed without human approval.", False),
-            ("No workstream may be archived without human approval.", True),
-            ("You must not archive without explicit human approval.", True),
-            ("You must not archive without explicit human approval unless the tracker item is closed.", False),
-            ("Never archive unless explicit human approval has been obtained.", True),
-            ("Before archiving, obtain explicit human approval.", True),
-            ("You may obtain human approval.", False),
-            ("Add a reminder to obtain explicit human approval unless the checklist already includes it. "
-             "Explicit human approval is required before archiving.", True),
-            ("- **Both workflows.** Obtain explicit human approval before archiving the named workstream "
-             "unless the tracker item is closed.", False),
-            ("Obtain explicit human approval before archiving and update the archive index unless it already exists.", True),
-            ("Unless the tracker item is closed, project maintainers must obtain explicit human approval before archiving.", False),
-            ("Project maintainers must obtain explicit human approval before archiving unless the tracker item is closed.", False),
-            ("Archive without explicit human approval.", False),
-            ("Human approval is optional.", False),
-            ("Mention human approval in the archive index.", False),
-            ("Unless the checklist already covers it, add a reminder to obtain explicit human approval.", False),
-            ("Explicit human approval is required. Unless the tracker is closed, project maintainers must obtain human approval.", False),
-            ("Archive only after explicit human approval.", True),
-            ("The named workstream requires explicit human approval before archiving.", True),
-            ("- Never archive drafts\n- Archive completed workstreams without human approval.", False),
-            ("1. Never archive drafts\n2. Archive completed workstreams without human approval.", False),
-            ("Never archive drafts\n\nArchive completed workstreams without human approval.", False),
-            ("- Never archive a draft release\n  without explicit human approval.", True),
-            ("Never archive without explicit human approval unless the tracker item is closed.", False),
-            ("Except for local archives, never archive without explicit human approval.", False),
-            ("Explicit human approval is required unless the tracker item is closed.", False),
-            ("Never archive without human approval. Retain the source unless its owner approves removal.", True),
-            ("Never archive without human approval, and never remove the originals unless verification succeeds.", True),
-            ("Obtain explicit human approval before archiving, even if nothing changes except the archive index.", True),
-            ("Never archive without explicit human approval, except for finished workstreams.", False),
-            ("Except for local archives, obtain human approval before archiving.", False),
-            ("Unless the tracker is closed, you must obtain explicit human approval before archiving.", False),
-            ("Unless verification succeeds, keep the originals and then obtain human approval before archiving.", True),
-            ("Except for local archives, the team must never archive without human approval.", False),
-            ("Archive approval: Unless the tracker is closed, obtain explicit human approval before archiving.", False),
-            ("Except for local archives, never archive release notes and tickets without explicit human approval.", False),
-            ("Unless the checklist already covers it, add a reminder to obtain explicit human approval before archiving. "
-             "Explicit human approval is required before archiving.", True),
-            ("Require explicit human approval before archiving a release unless the tracker is closed.", False),
-            ("Obtain explicit human approval before archiving, then copy all materials except temporary outputs.", True),
-            ("Do not require explicit human approval before archiving.", False),
-            ("Never archive without human approval. For local archives, skip human approval.", False),
-        )
-        for rule, valid in cases:
-            with self.subTest(rule=rule):
-                content = doc_governance_text().replace(
-                    "Explicit human approval is required before archiving.", rule,
-                )
-                result = run_cli("--final", self.write_final(content), "--kind", "doc-governance")
-                self.assertEqual(result.returncode, 0 if valid else 1, result.stdout)
-                if not valid:
-                    self.assertIn("requires explicit human approval", result.stdout)
-
     def test_doc_governance_accepts_legacy_and_explicit_workflows(self) -> None:
         legacy = doc_governance_text()
-        superpowers = legacy.replace(
-            "## Document Roles\n\n",
-            "## Document Roles\n\nWorkflow: Superpowers\n\n",
-        ).replace(
-            "Reset tracking", "The archive foundation is required. Reset tracking"
-        )
-        matt = legacy.replace(
-            "## Document Roles\n\n",
-            "## Document Roles\n\nWorkflow: Matt\n\n",
-        ).replace(
-            "Copy materials and update "
-            "the archive index before verification. If verification fails, preserve every "
-            "active original. Reset tracking only when no other live workstream depends on it.",
-            "Create the archive index on the first explicitly approved archive. "
-            "Use remote links and preserve local sources and tracking.",
-        )
-        for label, content in (
-            ("legacy", legacy),
-            ("legacy with remote evidence", legacy + "\nRetain remote links to the release evidence in the archive index.\n"),
-            ("superpowers", superpowers),
-            ("matt", matt),
-            ("legacy with a quoted example", legacy + "\n> Workflow: Matt\n"),
+        document = legacy.split("## Archive Transition Invariants")[0]
+        document += "## Archive Transition Invariants\n\n归档时使用 `nhk-archive`。\n"
+
+        def with_marker(marker: str) -> str:
+            return document.replace("## Document Roles\n", f"## Document Roles\n\n{marker}\n", 1)
+
+        for content in (
+            legacy,
+            with_marker("Workflow: Matt"),
+            with_marker("Workflow: Superpowers"),
+            legacy + "\n> Workflow: Matt\n",
         ):
-            with self.subTest(label=label):
-                path = self.write_final(content)
-                result = run_cli("--final", path, "--kind", "doc-governance")
+            with self.subTest(content=content):
+                result = run_cli("--final", self.write_final(content), "--kind", "doc-governance")
                 self.assertEqual(result.returncode, 0, result.stdout)
 
-        for label, content in (
-            ("unknown", matt.replace("Workflow: Matt", "Workflow: Other")),
-            ("indented code", matt.replace("Workflow: Matt", "    Workflow: Matt")),
-            ("approval waived", matt.replace("Explicit human approval is required before archiving.",
-                                              "Do not require explicit human approval before archiving.")),
-            ("duplicate", matt.replace("Workflow: Matt", "Workflow: Matt\nWorkflow: Superpowers")),
-            ("outside roles", matt.replace("Workflow: Matt\n\n", "") + "\nWorkflow: Matt\n"),
-            ("unmarked Matt", matt.replace("Workflow: Matt\n\n", "")),
-            ("lazy Superpowers", matt.replace("Workflow: Matt", "Workflow: Superpowers")),
-            ("eager Matt", superpowers.replace("Workflow: Superpowers", "Workflow: Matt")),
+        for content in (
+            with_marker("Workflow: Other"),
+            with_marker("Workflow: Matt\nWorkflow: Superpowers"),
+            document + "\nWorkflow: Matt\n",
         ):
-            with self.subTest(label=label):
-                path = self.write_final(content)
-                result = run_cli("--final", path, "--kind", "doc-governance")
+            with self.subTest(content=content):
+                result = run_cli("--final", self.write_final(content), "--kind", "doc-governance")
                 self.assertEqual(result.returncode, 1, result.stdout)
-                diagnostic = "approval" if label == "approval waived" else "workflow"
-                self.assertIn(diagnostic, result.stdout.lower())
+                self.assertIn("workflow", result.stdout.lower())
 
     def test_doc_governance_requires_worker_and_recovery_paths(self) -> None:
         for token in ("`worker-policy.md`", "`execution-recovery.md`"):

@@ -86,7 +86,7 @@ After choosing a canonical instruction file, NHK connects five stable guides. Su
 A few opinions come baked in:
 
 - Root tracking files appear only when the work needs them, not by default.
-- Active and archived documents live apart, and archiving always waits for your confirmation.
+- Approve the named workstream once. Matt links its original records in the index. Superpowers verifies copies before moving the originals. Retrying reuses the same index entry.
 - For the beginner-sized projects NHK is built for, the routing table is the shallow code map. A second codemap would mostly give newcomers two maps to get lost between.
 - Documentation lifecycle is written down explicitly, following `references/documentation-governance-template.md`, rather than left to guesswork.
 
@@ -225,6 +225,6 @@ python3 -B scripts/validate_nhk.py --final <execution-recovery.md> --kind execut
 python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance
 ```
 
-The governance check looks for an unconditional human approval rule under `Archive Transition Invariants`. The template supplies the wording. Put conditions for copying files or updating the index in their own sentences when the wording is ambiguous.
+For archive governance, the CLI checks the section structure and any declared workflow marker. It accepts legacy files without a marker. The router resolves their workflow during use. Test approval, file moves and retries by running the archive scenarios in [Validation Scenarios](references/validation-scenarios.md#f-archive-transition).
 
 The size tests use identical project facts to compare generated `AGENTS.md` and standalone `CLAUDE.md` examples with the baseline from before the detailed rules moved into companions. Both must contain at least 20% fewer always-loaded English words, and shuffling line breaks does not count. This measures instruction size, not a promised reduction in your bill. It is a maintainer check, not homework for installing NHK.

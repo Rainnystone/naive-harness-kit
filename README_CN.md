@@ -86,7 +86,7 @@ python3 -B scripts/validate_nhk.py --install-root <skills-root>
 有几条主张是故意内置的：
 
 - 根目录 tracking 文件按需出现，不是默认永远存在。
-- active 文档和归档文档分开放，归档一定等你确认。
+- 你只需明确批准一次要归档的那项工作。Matt 在索引中链接原始记录，Superpowers 核对副本后才移动原件。重复归档会沿用同一条索引。
 - 对 NHK 面向的新手项目来说，路由表就是新手需要的浅层 code map。再另做一张 codemap，多半只是让第一次进仓库的人同时迷路在两张地图里。
 - 文档的生命周期要明确写下来，依据是 `references/documentation-governance-template.md`，不靠脑补。
 
@@ -225,6 +225,6 @@ python3 -B scripts/validate_nhk.py --final <execution-recovery.md> --kind execut
 python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance
 ```
 
-归档治理校验会在 `Archive Transition Invariants` 小节核对一条明确要求人工批准的规则，模板中已有对应原句。复制文件、更新索引各自有哪些条件，可以另起一句写清楚。
+对于归档治理，校验器检查文档结构和已声明的工作流标记。缺少标记的旧文档仍可通过检查，NHK 在使用时根据项目记录确定工作流。要验证授权、文件移动和重试行为，实际运行[归档场景](references/validation-scenarios.md#f-archive-transition)。
 
 篇幅测试会用相同的项目事实生成 `AGENTS.md` 和 standalone `CLAUDE.md` 示例，与细则拆到配套文件之前的基线比较。两者每轮加载的英文词数都要至少减少 20%，挪几个换行不算。这是在检查指令有没有真正变短，不是给实际费用打包票；也是维护者的检查，不是安装 NHK 要交的作业。

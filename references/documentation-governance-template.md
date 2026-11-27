@@ -35,7 +35,6 @@ Map instruction, routing, active documentation, optional tracking, and existing 
 
 - Keep all five stable companions active; archive completed implementation plans and recovery records under their owning workflow's transition.
 - Prefer current implementation, tests, and active docs. Start historical retrieval at `archive/README.md` when it exists.
-- Ask about archive only for one identifiable workstream with completion evidence and related materials. Explicit approval is required for its transition.
 - Upkeep may repair descriptions and links. File moves, removal, archive, and tracking resets belong to authorized transitions.
 
 ### Naming and Loading
@@ -45,11 +44,7 @@ Map instruction, routing, active documentation, optional tracking, and existing 
 
 ### Archive Transition Invariants
 
-Keep the unconditional approval instruction in its own sentence. Use the transition rules for the recorded default. A workstream already owned by the other workflow uses that workflow's transition.
-
-- **Both workflows.** Obtain explicit human approval before archiving the named workstream.
-- **Matt.** Create the archive index on the first explicitly approved archive. Verify local references and preserve local sources and tracking. Use remote links for tracker items and record any limits on remote verification.
-- **Superpowers.** The archive foundation is required. Copy selected materials and update the archive index before verification and removal of active originals. If verification fails, preserve every active original and repair the staged archive first. Reset or clear tracking only after the verified move and when no other live workstream depends on it.
+Point to `nhk-archive` for approval and execution. Name the workspace’s archive index and the records its workstreams use. Matt indexes authoritative records in place. Superpowers keeps verified copies at the archive destination. A workstream keeps its owning workflow when the default changes.
 
 ### Project-Specific Exceptions
 

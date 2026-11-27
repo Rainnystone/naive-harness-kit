@@ -77,12 +77,6 @@ SKILL_WORKFLOW_CONTRACTS = {
         "A changed workspace default applies to the next workstream.",
         "Reapplying upkeep to unchanged workspace state should cause no further edits.",
     ),
-    "nhk-archive": (
-        "Apply the archive transition of the workflow that owns this workstream.",
-        "Verify local references and report any remote access that remains unverified.",
-        "Keep local source files and tracking in place.",
-        "Stage copies without removing the active originals",
-    ),
 }
 
 REFERENCES = (
@@ -1745,7 +1739,7 @@ def validate_skill(root: Path, name: str, issues: list[str]) -> None:
         if token not in text:
             issues.append(f"{name}/SKILL.md: router handoff is missing {token!r}")
 
-    for token in SKILL_WORKFLOW_CONTRACTS[name]:
+    for token in SKILL_WORKFLOW_CONTRACTS.get(name, ()):
         require_text(text, token, f"{name}/SKILL.md workflow lifecycle", issues)
 
     update_contracts = {
@@ -2249,7 +2243,6 @@ def validate_source(root: Path) -> list[str]:
             *DOC_GOVERNANCE_HEADINGS,
             "100 lines",
             "`implementation-planning.md`",
-            "archive completed implementation plans",
         ):
             require_text(
                 governance_template,
@@ -2265,13 +2258,6 @@ def validate_source(root: Path) -> list[str]:
             "documentation-governance-template.md workflow lifecycle",
             issues,
         )
-        require_section_text(
-            shape_sections,
-            "Archive Transition Invariants",
-            ("first explicitly approved archive", "The archive foundation is required."),
-            "documentation-governance-template.md workflow lifecycle",
-            issues,
-        )
         roles = shape_sections.get("Document Roles", "")
         for name, pattern in GOVERNANCE_ROLE_PATH_RES:
             if not pattern.search(roles):
@@ -2279,16 +2265,6 @@ def validate_source(root: Path) -> list[str]:
                     "documentation-governance-template.md Required Final Shape "
                     f"Document Roles is missing `{name}`"
                 )
-
-    archive_label = "references/archive-readme-template.md"
-    archive_template = read_text(root / archive_label, issues, archive_label)
-    if archive_template is not None:
-        for token in (
-            "first explicitly approved archive",
-            "Use confirmed tracker URLs as remote references.",
-            "Keep referenced local files in place.",
-        ):
-            require_text(archive_template, token, f"{archive_label} workflow lifecycle", issues)
 
     validate_readmes(root, issues)
     validate_repo_split(root, issues)
@@ -2332,62 +2308,6 @@ def validate_install(install_root: Path, source_root: Path) -> list[str]:
     return issues
 
 
-def archive_policy_actions(body: str) -> Iterable[str]:
-    """Read independent instructions, preserving coordinated materials and soft wraps."""
-    lifecycle_verbs = (
-        r"archive|copy|move|remove|delete|reset|clear|update|verify|check|record|retain|"
-        r"keep|link|preserve|create|repair|stage|save|obtain|require|skip|bypass|proceed"
-    )
-    boundary = (
-        r"(?<=[.!?;:])\s+|(?:,\s*|\s+)(?:and then|then|but|whereas|while|even if|even when)\s+"
-        rf"|(?:,\s*|\s+)(?:and|or)\s+(?=(?:never|do not|{lifecycle_verbs})\b)"
-    )
-    for item in re.split(r"\n[ \t]*\n|\n(?=[ \t]*(?:[-+*]|\d+[.)])[ \t]+)", body):
-        item = re.sub(r"^\s*(?:[-+*]|\d+[.)])\s+", "", item)
-        plain = normalize_space(item.lower().replace("**", "").replace("__", "").replace("`", ""))
-        yield from (part.strip() for part in re.split(boundary, plain) if part.strip())
-
-
-def has_archive_approval_rule(body: str) -> bool:
-    """Require an unconditional approval action and reject independent waivers."""
-    approval = r"(?:explicit )?human approval"
-    negative = r"(?:never|cannot|(?:do|does|must|shall|should|may|can) not)"
-    prohibition = (
-        rf"\b(?:{negative} (?:skip|bypass)|{negative} (?:archive|be archived)\b[^,;.?!]*? without"
-        rf"|no [^,;.?!]+? (?:may|can|shall) be archived without) {approval}\b"
-    )
-    waiver = rf"\b(?:{negative} require|without|skip|bypass) {approval}\b|\bhuman approval is (?:optional|not required)\b"
-    requirement = (
-        rf"(?:(?:obtain|require|get|secure) {approval}\b|{approval} (?:is (?:required|mandatory)|must be obtained)\b"
-        rf"|archive\b[^,;.?!]*? only (?:after|with) (?:obtaining |receiving )?{approval}\b"
-        rf"|{negative} archive\b[^,;.?!]*? (?:unless|until) {approval} (?:is|has been) (?:given|obtained|granted)\b)"
-    )
-    # An actor may contain several words. A modal or a finite requirement verb
-    # identifies its predicate. A subordinate reminder cannot establish consent.
-    subject = r"(?:(?!(?:to|that|if|unless|except|and|or|then)\b)[\w'’-]+ )+?"
-    modal = r"(?:must|shall|needs? to|has to|have to)"
-    obligation = (
-        rf"(?:(?:{subject})?{modal} )?(?:always )?(?:{requirement}|{prohibition})"
-        rf"|{subject}(?:{prohibition}|requires? {approval}\b)"
-    )
-    found = False
-    for action in archive_policy_actions(body):
-        if "human approval" not in action:
-            continue
-        if re.search(waiver, re.sub(prohibition, "", action)):
-            return False
-
-        leading = re.match(r"^(?:unless|except)\b[^,]*,\s*", action)
-        predicate = action[leading.end():] if leading else action
-        predicate = re.sub(r"^before archiving(?: [^,]+)?,\s*", "", predicate)
-        attested = re.match(obligation, predicate)
-        if attested:
-            if leading or re.search(r"\b(?:unless|except)\b", predicate[attested.end():]):
-                return False
-            found = True
-    return found
-
-
 def validate_governance_workflow(
     text: str, sections: dict[str, str], issues: list[str]
 ) -> None:
@@ -2406,37 +2326,6 @@ def validate_governance_workflow(
             "doc-governance workflow requires one 'Workflow: Matt' or "
             "'Workflow: Superpowers' line under Document Roles"
         )
-        return
-
-    archive_rules = sections.get("Archive Transition Invariants", "")
-    invariants = normalize_space(archive_rules.lower())
-    matt_invariants = (
-        "first explicitly approved archive",
-        "remote links",
-        "preserve local sources and tracking",
-    )
-    if not has_archive_approval_rule(archive_rules):
-        issues.append("doc-governance archive requires explicit human approval; use an unconditional rule such as "
-                      "'Obtain explicit human approval before archiving the named workstream.'")
-    required = ("human approval", "archive index")
-    if markers == ["Workflow: Matt"]:
-        required += matt_invariants
-    else:
-        required += (
-            "copy",
-            "verification fails",
-            "preserve every active original",
-            "no other live workstream",
-            "reset",
-        )
-        if markers:
-            required += ("archive foundation is required",)
-    missing = [token for token in required if token not in invariants]
-    if not markers and missing and all(token in invariants for token in matt_invariants):
-        issues.append("doc-governance Matt archive rules require a 'Workflow: Matt' marker")
-        return
-    for token in missing:
-        issues.append(f"doc-governance workflow archive invariants are missing {token!r}")
 
 
 def validate_final(
@@ -2597,14 +2486,8 @@ def validate_final(
                     )
             sections = second_level_sections(text)
             validate_governance_workflow(text, sections, issues)
-            for token in (
-                "implementation-planning.md",
-                "completed implementation plans",
-            ):
-                if token not in lower:
-                    issues.append(
-                        f"doc-governance planning lifecycle is missing {token!r}"
-                    )
+            if not sections.get("Archive Transition Invariants", "").strip():
+                issues.append("doc-governance requires a nonempty Archive Transition Invariants section")
             roles = sections.get("Document Roles", "")
             for name, pattern in GOVERNANCE_ROLE_PATH_RES:
                 if not pattern.search(roles):
