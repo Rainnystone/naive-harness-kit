@@ -8,7 +8,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tests.test_instruction_examples import assemble_companion, assemble_standalone
+from tests.test_instruction_examples import (
+    assemble_companion,
+    assemble_planning_guide,
+    assemble_standalone,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -85,9 +89,9 @@ LEGACY_CODEX_PRESET_LADDER = (
 
 CODEX_TIER_LINES = (
     "`light`: GPT-6.1 Terra xhigh.",
-    "`standard`: GPT-6.1 Sol xhigh.",
-    "`deep`: GPT-6 Astra xhigh.",
-    "`audit`: GPT-6 Astra xhigh.",
+    "`standard`: GPT-6.2 Sol xhigh.",
+    "`deep`: GPT-6.2 Sol xhigh.",
+    "`audit`: GPT-6.2 Sol xhigh.",
 )
 
 STANDARD_TIER_CLAUSE = (
@@ -175,17 +179,8 @@ def doc_governance_text(extra_lines: int = 0) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def planning_guide_text(extra_lines: int = 0) -> str:
-    text = assemble_companion(
-        ROOT / "references" / "implementation-planning-template.md", "Implementation Planning"
-    )
-    for placeholder in (
-        "one observable, independently acceptable result",
-        "task identifiers, or None",
-        "mechanical | standard | judgment",
-    ):
-        text = text.replace(f"<{placeholder}>", placeholder)
-    return text + "extra\n" * extra_lines
+def planning_guide_text(extra_lines: int = 0, *, workflow: str = "Superpowers") -> str:
+    return assemble_planning_guide(workflow) + "extra\n" * extra_lines
 
 
 def human_routing_exception(**overrides: str) -> str:
@@ -193,7 +188,7 @@ def human_routing_exception(**overrides: str) -> str:
         "target": "billing-module",
         "scope": "src/billing/",
         "role": 'task-implementation',
-        "preset": "GPT-6 Astra xhigh",
+        "preset": "GPT-6.2 Sol xhigh",
         "approval": "decisions/billing.md#low-route",
     }
     record.update(overrides)
@@ -287,6 +282,10 @@ class RecoveryConsultationTests(ValidatorTestCase):
             "at most one targeted clarification with the same diagnostic worker",
             "Record counts, diagnostic use, clarification use, and recovery use for both the task and stable acceptance gap",
             "never resets diagnostic or clarification use",
+            "For ordinary uncertainty, the main thread examines available evidence",
+            "reasonable experiments leave that question unresolved",
+            "If either the task or stable acceptance gap has used diagnosis, the allowance is exhausted.",
+            "The bounded Codex dispatch is already authorized within the current task",
             "record why advice was accepted or rejected and the verification results",
             "Agreement between agents is not causal evidence",
         )
@@ -327,6 +326,12 @@ class RecoveryConsultationTests(ValidatorTestCase):
             "The diagnosis allowance resets after a new session.",
             "Diagnostic workers may dispatch another helper.",
             "Clarifications can be repeated after resumption.",
+            "Ordinary uncertainty requires a consultation.",
+            "The main thread must obtain human approval before consultation.",
+            "Routine ambiguity triggers independent consultation.",
+            "Consultations are required for routine bugs.",
+            "A consultation requires separate human approval.",
+            "Always consult another agent before continuing.",
         )
         for source in (False, True):
             for grant in grants:
@@ -356,6 +361,7 @@ class RecoveryConsultationTests(ValidatorTestCase):
             "Diagnostic workers must authenticate to read production logs.",
             "Consultants must sign the data-access agreement before reading dashboards.",
             "Diagnostic workers can read production logs through the read-only replica.",
+            "Request human confirmation before making an out-of-scope permission change.",
         )
         for source in (False, True):
             for addition in additions:
@@ -379,6 +385,20 @@ class RecoveryConsultationTests(ValidatorTestCase):
                     self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                     self.assertIn("consultation", result.stdout)
 
+    def test_recovery_rejects_routing_routine_decisions_to_the_human(self) -> None:
+        for source in (False, True):
+            content = self.recovery_input(source)
+            heading = "### Main-thread Reassessment" if source else "## Main-thread Reassessment"
+            for rule in (
+                "The main thread must hand every decision to the human when consultation is unavailable.",
+                "The main thread is required to request human confirmation for all routine engineering choices.",
+            ):
+                with self.subTest(source=source, rule=rule):
+                    invalid = content.replace(heading, f"{heading}\n\n- {rule}", 1)
+                    result = self.check_recovery(invalid, source)
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn("human decision", result.stdout)
+
     def test_consultation_required_clauses_must_be_active_and_in_owning_section(self) -> None:
         clause = "at most one targeted clarification with the same diagnostic worker"
         for source in (False, True):
@@ -397,6 +417,112 @@ class RecoveryConsultationTests(ValidatorTestCase):
 
 
 class SourceValidationTests(ValidatorTestCase):
+    def check_worker_policy(self, content: str, source: bool) -> subprocess.CompletedProcess[str]:
+        if source:
+            root = self.make_source_fixture()
+            (root / "references" / "worker-policy-template.md").write_text(content, encoding="utf-8")
+            return run_cli("--root", root)
+        return run_cli("--final", self.write_final(content), "--kind", "worker-policy")
+
+    def worker_policy_input(self, source: bool) -> str:
+        if source:
+            return (ROOT / "references" / "worker-policy-template.md").read_text(encoding="utf-8")
+        return worker_policy_text()
+
+    def test_worker_policy_rejects_parallel_sdd_and_globally_serial_implementation(self) -> None:
+        for source in (False, True):
+            content = self.worker_policy_input(source)
+            heading = "### Dispatch Contract" if source else "## Dispatch Contract"
+            for rule in (
+                "In SDD, implementers may run in parallel.",
+                "Parallel implementation is allowed in SDD.",
+                "Run SDD implementers in parallel.",
+                "Allow parallel implementation in SDD.",
+                "SDD implementers can be dispatched in parallel.",
+                "SDD allows parallel implementation.",
+                "In SDD, implementers are permitted to run in parallel.",
+                "SDD implementation may be parallel.",
+                "Never run SDD implementers in parallel. In SDD, implementers may run concurrently.",
+                "All implementation is sequential.",
+            ):
+                with self.subTest(source=source, rule=rule):
+                    invalid = content.replace(heading, f"{heading}\n\n- {rule}", 1)
+                    result = self.check_worker_policy(invalid, source)
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn("additional routing", result.stdout)
+
+    def test_worker_policy_accepts_prohibitions_on_parallel_sdd(self) -> None:
+        for source in (False, True):
+            content = self.worker_policy_input(source)
+            heading = "### Dispatch Contract" if source else "## Dispatch Contract"
+            for rule in (
+                "Never run SDD implementers in parallel.",
+                "In SDD, implementers must not run concurrently.",
+                "Parallel implementation is not permitted in SDD.",
+                "No SDD implementers may run in parallel.",
+                "Never allow parallel implementation in SDD.",
+            ):
+                with self.subTest(source=source, rule=rule):
+                    policy = content.replace(heading, f"{heading}\n\n- {rule}", 1)
+                    result = self.check_worker_policy(policy, source)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_worker_policy_limits_luna_to_an_explicit_current_run_batch(self) -> None:
+        permission = (
+            "A qualifying mechanical batch may use runtime-supported Luna only if the human "
+            "explicitly names Luna for that batch in the current run. Never use Luna for automatic "
+            "dispatch, review, recovery, or fallback. Keep that permission out of persistent routing records."
+        )
+        for source in (False, True):
+            content = self.worker_policy_input(source)
+            heading = "### Codex Routing" if source else "## Codex Routing"
+            for replacement in ("", f"<!-- {permission} -->\n"):
+                with self.subTest(source=source, inactive=bool(replacement)):
+                    invalid = content.replace(f"- {permission}\n", replacement, 1)
+                    result = self.check_worker_policy(invalid, source)
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn("Codex Routing is missing", result.stdout)
+            for grant in (
+                "Automatically dispatch Luna for mechanical batches.",
+                "Use Luna when Sol is unavailable.",
+                "Use Luna for final review.",
+                "Use Luna for recovery.",
+            ):
+                with self.subTest(source=source, grant=grant):
+                    invalid = content.replace(heading, f"{heading}\n\n- {grant}", 1)
+                    result = self.check_worker_policy(invalid, source)
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn("additional routing", result.stdout)
+
+    def test_active_source_and_final_reject_extra_astra_permissions(self) -> None:
+        for grant in (
+            "Use GPT-6.2 Astra xhigh for implementation.",
+            "Use `gpt-6.2-astra` for final review.",
+            "The independent consultant may write files after reporting.",
+            "For ordinary uncertainty, always consult another agent.",
+            "Use the independent consultation as fallback when Sol is unavailable.",
+        ):
+            for source in (False, True):
+                with self.subTest(source=source, grant=grant):
+                    if source:
+                        root = self.make_source_fixture()
+                        path = root / "references" / "worker-policy-template.md"
+                        content = path.read_text(encoding="utf-8")
+                        heading = "### Codex Routing"
+                    else:
+                        content = worker_policy_text()
+                        heading = "## Codex Routing"
+                    content = content.replace(heading, f"{heading}\n\n- {grant}", 1)
+                    if source:
+                        path.write_text(content, encoding="utf-8")
+                        result = run_cli("--root", root)
+                    else:
+                        result = run_cli(
+                            "--final", self.write_final(content), "--kind", "worker-policy"
+                        )
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn("additional routing", result.stdout)
+
     def test_compliant_source_fixture_passes(self) -> None:
         result = run_cli("--root", self.make_source_fixture())
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -458,12 +584,13 @@ class SourceValidationTests(ValidatorTestCase):
 
     def test_router_handoff_contract_fails(self) -> None:
         cases = (
+            ("**Workflow**", "**Default**"),
             ("**Dependencies**", "**Tools**"),
             ("only in conversation", "available temporarily"),
             ("current workspace", "selected workspace"),
             (
-                "dependency state, instruction topology, foundation state, "
-                "lifecycle intent, or workspace changes",
+                "workflow selection, capability state, instruction topology, "
+                "foundation state, lifecycle intent, or workspace changes",
                 "workspace changes",
             ),
             ("human choice remains unresolved", "a choice is pending"),
@@ -500,6 +627,26 @@ class SourceValidationTests(ValidatorTestCase):
                     result = run_cli("--root", root)
                     self.assertEqual(result.returncode, 1)
                     self.assertIn("handoff", result.stdout.lower())
+
+    def test_source_requires_workflow_specific_lifecycle_contracts(self) -> None:
+        cases = (
+            ("welcome-to-nhk/SKILL.md", "A glossary by itself does not identify the workflow."),
+            ("welcome-to-nhk/SKILL.md", "Check only capabilities required by the selected route and workstream."),
+            ("nhk-bootstrap/SKILL.md", "Create the archive foundation only when the workspace default is Superpowers."),
+            ("nhk-upkeep/SKILL.md", "A changed workspace default applies to the next workstream."),
+            ("nhk-archive/SKILL.md", "Verify local references and report any remote access that remains unverified."),
+            ("references/archive-readme-template.md", "Use confirmed tracker URLs as remote references."),
+        )
+        for file, required in cases:
+            with self.subTest(file=file, required=required):
+                root = self.make_source_fixture()
+                path = root / file
+                path.write_text(
+                    path.read_text().replace(required, "", 1), encoding="utf-8"
+                )
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("workflow lifecycle", result.stdout.lower())
 
     def test_upkeep_requires_installed_contract_reconciliation(self) -> None:
         cases = (
@@ -594,7 +741,7 @@ class SourceValidationTests(ValidatorTestCase):
         path = root / "references" / "CLAUDE-template.md"
         path.write_text(
             path.read_text(encoding="utf-8").replace(
-                "Prefer the smallest direct change",
+                "Choose the simplest maintainable solution",
                 "Prefer a broad speculative change",
                 1,
             ),
@@ -611,7 +758,7 @@ class SourceValidationTests(ValidatorTestCase):
                 "`worker-policy.md` when useful",
             ),
             (
-                "`execution-recovery.md` after five failed rounds on one task or one acceptance gap, or earlier evidence of architectural stagnation",
+                "`execution-recovery.md` for independent consultation, after five failed rounds on one task or acceptance gap, or earlier evidence of architectural stagnation",
                 "`execution-recovery.md` after problems",
             ),
         )
@@ -688,13 +835,34 @@ class SourceValidationTests(ValidatorTestCase):
                 mutated_path = (
                     mutated / "references" / "implementation-planning-template.md"
                 )
+                text = mutated_path.read_text(encoding="utf-8")
+                original = f"### {token}" if token in PLANNING_GUIDE_HEADINGS else token
                 mutated_path.write_text(
-                    planning_guide_text().replace(token, "missing contract", 1),
+                    text.replace(original, "missing contract"),
                     encoding="utf-8",
                 )
                 result = run_cli("--root", mutated)
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(token, result.stdout)
+
+    def test_planning_template_requires_both_workflow_contracts(self) -> None:
+        for token, workflow in (
+            ("\nWorkflow: Superpowers\n", "Superpowers"),
+            ("\nWorkflow: Matt\n", "Matt"),
+            ("isolated worktrees", "Matt"),
+            ("configured ready-state mapping", "Matt"),
+            ("including untracked files", "Matt"),
+            ("has a different owner", "Superpowers"),
+        ):
+            with self.subTest(token=token):
+                root = self.make_source_fixture()
+                path = root / "references" / "implementation-planning-template.md"
+                text = path.read_text(encoding="utf-8")
+                self.assertIn(token, text)
+                path.write_text(text.replace(token, "", 1), encoding="utf-8")
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn(f"implementation-planning-template.md ({workflow})", result.stdout)
 
     def test_governance_template_requires_new_companion_paths(self) -> None:
         root = self.make_source_fixture()
@@ -849,8 +1017,8 @@ class SourceValidationTests(ValidatorTestCase):
             ("there is no mandatory `light` trial", "always start in `light`"),
             ("Tiers determine permission", "Escalate whenever useful"),
             (
-                "No worker configuration exceeds the `audit` preset",
-                "Ultra exceeds the `audit` preset with approval",
+                "Its trigger and existing authorization cover one fresh-context dispatch, shared with recovery diagnosis.",
+                "Another fresh dispatch is allowed every time recovery starts.",
             ),
         )
         for required, replacement in mutations:
@@ -873,7 +1041,7 @@ class SourceValidationTests(ValidatorTestCase):
         path.write_text(
             path.read_text(encoding="utf-8").replace(
                 CODEX_TIER_LINES[2],
-                CODEX_TIER_LINES[2].replace("GPT-6 Astra xhigh", "GPT-6 Astra max"),
+                CODEX_TIER_LINES[2].replace("GPT-6.2 Sol xhigh", "GPT-6 Astra max"),
                 1,
             ),
             encoding="utf-8",
@@ -888,9 +1056,11 @@ class SourceValidationTests(ValidatorTestCase):
             (CODEX_TIER_LINES[0], "`light`: GPT-6.1 Terra high."),
             (CODEX_TIER_LINES[0], "`light`: GPT-6.1 Terra max."),
             ("`gpt-6.1-terra`", "`gpt-6-luna`"),
-            (CODEX_TIER_LINES[1], "`standard`: GPT-6 Sol xhigh."),
-            (CODEX_TIER_LINES[2], "`deep`: GPT-6 Astra medium."),
-            ("`gpt-6.1-sol`", "`gpt-6-sol`"),
+            (CODEX_TIER_LINES[1], "`standard`: GPT-6.1 Sol xhigh."),
+            (CODEX_TIER_LINES[2], "`deep`: GPT-6 Astra xhigh."),
+            (CODEX_TIER_LINES[3], "`audit`: GPT-6.2 Astra xhigh."),
+            ("`gpt-6.2-sol`", "`gpt-6.1-sol`"),
+            ("`gpt-6.2-astra`", "`gpt-6-astra`"),
         )
         for current, superseded in mutations:
             with self.subTest(superseded=superseded):
@@ -939,7 +1109,7 @@ class SourceValidationTests(ValidatorTestCase):
                     )
                     result = run_cli("--root", root)
                     self.assertEqual(result.returncode, 1)
-                    self.assertIn("seven-surface foundation", result.stdout.lower())
+                    self.assertIn("five-companion foundation", result.stdout.lower())
 
     def test_sdd_check_interval_and_exceptions_are_required(self) -> None:
         for old, new in (
@@ -1034,7 +1204,7 @@ class SourceValidationTests(ValidatorTestCase):
                 for name in names:
                     path = root / name
                     paragraphs = path.read_text(encoding="utf-8").split("\n\n")
-                    guidance = [p for p in paragraphs if "GPT-6.1 Sol" in p]
+                    guidance = [p for p in paragraphs if "GPT-6.2 Astra" in p]
                     self.assertEqual(len(guidance), 1)
                     paragraphs.remove(guidance[0])
                     path.write_text("\n\n".join(paragraphs), encoding="utf-8")
@@ -1045,11 +1215,11 @@ class SourceValidationTests(ValidatorTestCase):
 
     def test_readme_main_thread_guidance_drift_fails(self) -> None:
         cases = (
-            ("README.md", "we suggest GPT-6.1 Sol xhigh", "we suggest another available model"),
+            ("README.md", "we suggest GPT-6.2 Astra xhigh", "we suggest another available model"),
             ("README.md", "human-facing suggestion only", "mandatory main-thread policy"),
-            ("README.md", "you choose the main-thread model and effort", "NHK chooses the main-thread model and effort"),
+            ("README.md", "You choose the main-thread model and effort", "NHK chooses the main-thread model and effort"),
             ("README.md", "NHK worker permissions do not depend on that choice", "NHK worker permissions depend on that choice"),
-            ("README_CN.md", "建议使用 GPT-6.1 Sol xhigh", "建议考虑其他可用型号"),
+            ("README_CN.md", "建议使用 GPT-6.2 Astra xhigh", "建议考虑其他可用型号"),
             ("README_CN.md", "这只是给使用者的建议", "这是强制的主线程规则"),
             ("README_CN.md", "主线程型号和 effort 由你选择", "主线程型号和 effort 由 NHK 选择"),
             ("README_CN.md", "NHK 的 worker 权限不依赖该选择", "NHK 的 worker 权限依赖该选择"),
@@ -1087,7 +1257,7 @@ class SourceValidationTests(ValidatorTestCase):
             ("README.md", "Claude's light helper runs Haiku", "Claude helpers use a model"),
             ("README.md", "every other Claude helper runs Opus", "every other Claude helper runs Sonnet"),
             ("README.md", "Claude Code main thread, we suggest Opus high", "Claude Code main thread, pick anything"),
-            ("README.md", "seven required pieces", "the foundation"),
+            ("README.md", "five stable guides", "several guides"),
             ("README.md", "Superpowers overlay", "planning helper"),
             ("README.md", "sorts helper work into four capability tiers", "picks helpers"),
             ("README_CN.md", "十一个受控 reference", "几份 reference"),
@@ -1095,16 +1265,17 @@ class SourceValidationTests(ValidatorTestCase):
             ("README_CN.md", "其余帮手全部使用 Opus", "其余帮手全部使用 Sonnet"),
             ("README_CN.md", "Claude Code 主线程，建议使用 Opus high", "Claude Code 主线程随意"),
             ("README_CN.md", "把帮手的工作分成四个能力档位", "随便挑帮手"),
-            ("README_CN.md", "七项基础内容", "基础文档"),
+            ("README_CN.md", "五份配套说明", "若干配套说明"),
             ("README_CN.md", "Superpowers overlay", "规划辅助"),
         )
         for name, required, replacement in cases:
             with self.subTest(name=name, required=required):
                 root = self.make_source_fixture()
                 path = root / name
+                self.assertIn(required, path.read_text(encoding="utf-8"))
                 path.write_text(
                     path.read_text(encoding="utf-8").replace(
-                        required, replacement, 1
+                        required, replacement
                     ),
                     encoding="utf-8",
                 )
@@ -1217,6 +1388,7 @@ class AtomicRoutingRegressionTests(ValidatorTestCase):
             "same single task, scope, and confirmed approval",
             "never copy its authorization across the new tasks",
             "Legacy tier migration",
+            "the superseded GPT-6.1 Sol and GPT-6 Astra presets",
             "its role remains permitted for that tier",
         ):
             with self.subTest(phrase=phrase):
@@ -1434,6 +1606,36 @@ class FinalValidationTests(ValidatorTestCase):
                     )
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_matt_navigation_is_optional_unique_and_canonical(self) -> None:
+        nav = (
+            "\n## Agent skills\n\n### Issue tracker\nSee `docs/agents/issue-tracker.md`.\n"
+            "\n### Domain docs\nSee [domain rules](docs/agents/domain.md).\n"
+        )
+        base = assemble_standalone(ROOT / "references/AGENTS-template.md", "simple")
+        for kind in ("agents", "claude"):
+            for section, valid in (
+                (nav, True), (nav + "\n### Triage labels\nSee `docs/agents/triage-labels.md`.\n", True),
+                (nav.split("### Domain docs")[0], True), ("\n## Agent skills\n### Domain docs\nSee `docs/agents/domain.md`.\n", True),
+                ("\n## Agent skills\nNo routes.\n", False), (nav.replace("### Domain docs", ""), False), (nav + nav, False), (nav + "\n### Triage labels\nSee project labels.\n", False),
+                (nav.replace("docs/agents/domain.md", "docs/agents/domain.md.old"), False),
+                (nav.replace("See `docs/agents/issue-tracker.md`.", "<!-- `docs/agents/issue-tracker.md` -->"), False),
+            ):
+                with self.subTest(kind=kind, section=section):
+                    result = run_cli("--final", self.write_final(base + section), "--kind", kind,
+                                     "--mode", "standalone", "--complexity", "simple")
+                    self.assertEqual(result.returncode, 0 if valid else 1, result.stdout)
+        result = run_cli("--final", self.write_final("@AGENTS.md\n" + nav), "--kind", "claude", "--mode", "thin")
+        self.assertEqual(result.returncode, 1, result.stdout)
+
+    def test_authorized_implementation_cannot_end_on_routine_uncertainty(self) -> None:
+        base = assemble_standalone(ROOT / "references/AGENTS-template.md", "simple")
+        damaged = base.replace("resolve engineering uncertainty and take the next in-scope action",
+                               "ask the user about each engineering decision before proceeding")
+        self.assertNotEqual(base, damaged)
+        result = run_cli("--final", self.write_final(damaged), "--kind", "agents", "--mode", "standalone")
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("Blockers and Human Approval", result.stdout)
+
     def test_simple_line_limit_fails(self) -> None:
         path = self.write_final(standalone_text(extra_lines=80))
         result = run_cli(
@@ -1626,11 +1828,50 @@ class FinalValidationTests(ValidatorTestCase):
                     self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
 
     def test_review_planning_template_assembles_without_hidden_repairs(self) -> None:
-        text = assemble_companion(ROOT / "references" / "implementation-planning-template.md", "Implementation Planning")
-        for value in ("one observable, independently acceptable result", "task identifiers, or None", "mechanical | standard | judgment"):
-            text = text.replace("<" + value + ">", value)
-        result = run_cli("--final", self.write_final(text), "--kind", "planning-guide")
+        for workflow in ("Matt", "Superpowers"):
+            with self.subTest(workflow=workflow):
+                text = planning_guide_text(workflow=workflow)
+                result = run_cli("--final", self.write_final(text), "--kind", "planning-guide")
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_matt_planning_guide_uses_native_artifacts_and_allows_other_skill_references(self) -> None:
+        text = planning_guide_text(workflow="Matt")
+        for token in ("`to-spec`", "`to-tickets`", "`implement-spec`", "`code-review`", "isolated worktrees"):
+            self.assertIn(token, text)
+        for token in ("Superpowers", "Task N", "**Files:**", "concrete TDD steps", "**Worker class:**"):
+            self.assertNotIn(token, text)
+        content = text + "\n- For an unrelated bug, use Superpowers `systematic-debugging` when available.\n"
+        result = run_cli("--final", self.write_final(content), "--kind", "planning-guide")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_matt_tickets_cannot_be_assigned_a_second_execution_workflow(self) -> None:
+        guide = planning_guide_text(workflow="Matt")
+        result = run_cli("--final", self.write_final(guide + "\nRun Superpowers SDD for every Matt ticket."),
+                         "--kind", "planning-guide")
+        self.assertEqual(result.returncode, 1, result.stdout)
+
+    def test_matt_planning_guide_requires_active_workflow_and_native_contract(self) -> None:
+        text = planning_guide_text(workflow="Matt")
+        for original, replacement, diagnostic in (
+            ("Workflow: Matt", "<!-- Workflow: Matt -->", "Workflow Compatibility"),
+            ("Workflow: Matt", "```md\nWorkflow: Matt\n```", "Workflow Compatibility"),
+            ("Workflow: Matt", "Workflow: Superpowers", "Workflow Compatibility"),
+            ("vertical slice", "component", "Plan Layers"),
+            ("observable acceptance criteria", "completion", "Task Contract"),
+            ("isolated worktrees", "one shared checkout", "Dependencies and Execution"),
+            ("configured ready-state mapping", "call setup", "Workflow Compatibility"),
+            ("including untracked files", "only committed files", "Dependencies and Execution"),
+            ("has a different owner", "also uses a plugin", "Workflow Compatibility"),
+            ("Keep ticket state in the configured tracker", "Duplicate ticket state in a separate ledger", "Dependencies and Execution"),
+            ("verifiable batches", "one step", "Wide Changes"),
+            ("Standards and Spec", "Standards alone", "Plan Review"),
+        ):
+            with self.subTest(original=original, replacement=replacement):
+                self.assertIn(original, text)
+                content = text.replace(original, replacement, 1)
+                result = run_cli("--final", self.write_final(content), "--kind", "planning-guide")
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn(diagnostic, result.stdout)
 
     def test_review_final_fields_must_remain_active(self) -> None:
         text = planning_guide_text()
@@ -1668,6 +1909,10 @@ class FinalValidationTests(ValidatorTestCase):
             human_routing_exception(role="all"),
             human_routing_exception(preset="GPT-6 Astra max"),
             human_routing_exception(preset="GPT-6 Astra medium"),
+            human_routing_exception(preset="GPT-6 Astra xhigh"),
+            human_routing_exception(preset="GPT-6.1 Sol xhigh"),
+            human_routing_exception(preset="GPT-6.2 Astra xhigh"),
+            human_routing_exception(role="independent-consultation"),
             human_routing_exception(preset="Ultra"),
             human_routing_exception(preset="GPT-6 Luna max"),
             human_routing_exception(role="recursive-delegation"),
@@ -1692,7 +1937,7 @@ class FinalValidationTests(ValidatorTestCase):
             human_routing_exception(target="billing-project"),
             human_routing_exception(role='initial-task-review'),
             human_routing_exception(role="scoped-re-review", preset="GPT-6.1 Terra xhigh"),
-            human_routing_exception(role="local-fix", preset="GPT-6.1 Sol xhigh"),
+            human_routing_exception(role="local-fix", preset="GPT-6.2 Sol xhigh"),
         ):
             text = worker_policy_text().replace("## Codex Routing", "## Codex Routing\n" + record, 1)
             result = run_cli("--final", self.write_final(text), "--kind", "worker-policy")
@@ -1846,7 +2091,7 @@ class FinalValidationTests(ValidatorTestCase):
             *CODEX_TIER_LINES,
             STANDARD_TIER_CLAUSE,
             "`deep`: a concrete reasoning difficulty remaining after those checks, or demonstrated `standard` capability limits.",
-            "`audit` is read-only: independent diagnosis (including recovery consultation) and complex whole-change final review, never implementation or recovery fixes.",
+            "`audit` is read-only and covers complex whole-change final review and independent diagnosis when the platform routes diagnosis to that tier.",
             "Other whole-change final reviews use `deep`.",
             "Map tiers to definitions: `light` uses `nhk-light`, `standard` uses `nhk-standard`, `deep` uses `nhk-deep`, and `audit` uses the read-only `nhk-audit`.",
         ):
@@ -1880,16 +2125,16 @@ class FinalValidationTests(ValidatorTestCase):
     def test_worker_policy_rejects_wrong_missing_extra_or_duplicate_presets(self) -> None:
         valid = CODEX_TIER_LINES[1]
         invalid = (
-            valid.replace("GPT-6.1 Sol xhigh", "GPT-6.1 Sol max"),
-            valid.replace("GPT-6.1 Sol xhigh", "GPT-6.1 Sol high"),
-            valid.replace("GPT-6.1 Sol xhigh", "GPT-6 Astra xhigh"),
-            valid.replace("GPT-6.1 Sol xhigh", "GPT-5.6 Terra xhigh"),
-            valid.replace("GPT-6.1 Sol xhigh", "GPT-5.5 xhigh"),
-            valid.replace("GPT-6.1 Sol xhigh", ""),
-            valid.replace("GPT-6.1 Sol xhigh", "GPT-5.6 Sol medium"),
-            valid.replace("GPT-6.1 Sol xhigh", "GPT-6.1 Sol xhigh; GPT-6.1 Terra xhigh"),
-            valid.replace("GPT-6.1 Sol xhigh", "GPT-6.1 Sol xhigh; GPT-6.1 Sol xhigh"),
-            valid + "\n- `audit`: GPT-6 Astra xhigh.",
+            valid.replace("GPT-6.2 Sol xhigh", "GPT-6.2 Sol max"),
+            valid.replace("GPT-6.2 Sol xhigh", "GPT-6.2 Sol high"),
+            valid.replace("GPT-6.2 Sol xhigh", "GPT-6.2 Astra xhigh"),
+            valid.replace("GPT-6.2 Sol xhigh", "GPT-5.6 Terra xhigh"),
+            valid.replace("GPT-6.2 Sol xhigh", "GPT-5.5 xhigh"),
+            valid.replace("GPT-6.2 Sol xhigh", ""),
+            valid.replace("GPT-6.2 Sol xhigh", "GPT-5.6 Sol medium"),
+            valid.replace("GPT-6.2 Sol xhigh", "GPT-6.2 Sol xhigh; GPT-6.1 Terra xhigh"),
+            valid.replace("GPT-6.2 Sol xhigh", "GPT-6.2 Sol xhigh; GPT-6.2 Sol xhigh"),
+            valid + "\n- " + CODEX_TIER_LINES[3],
         )
         for replacement in invalid:
             with self.subTest(replacement=replacement):
@@ -1902,6 +2147,26 @@ class FinalValidationTests(ValidatorTestCase):
     def test_worker_policy_rejects_drift_in_review_and_special_roles(self) -> None:
         mutations = (
             (
+                "Keep Superpowers SDD implementers sequential.",
+                "Keep subagent-driven implementers sequential.",
+                "Dispatch Contract",
+            ),
+            (
+                "independent ready tickets may run concurrently",
+                "all tickets may run concurrently",
+                "Dispatch Contract",
+            ),
+            (
+                "independent read-only Standards and Spec reviewers in parallel",
+                "an independent read-only reviewer issuing one combined verdict",
+                "Review Gates",
+            ),
+            (
+                "All other Superpowers plans",
+                "All other plans",
+                "Review Gates",
+            ),
+            (
                 "Both must pass; self-review is not a substitute.",
                 "Either verdict may pass; self-review is enough.",
                 "Review Gates",
@@ -1912,7 +2177,7 @@ class FinalValidationTests(ValidatorTestCase):
                 "Capability Tiers",
             ),
             (
-                "`audit` is read-only: independent diagnosis (including recovery consultation) and complex whole-change final review, never implementation or recovery fixes.",
+                "`audit` is read-only and covers complex whole-change final review and independent diagnosis when the platform routes diagnosis to that tier.",
                 "`audit` may perform ordinary implementation and recovery.",
                 "Capability Tiers",
             ),
@@ -1927,8 +2192,8 @@ class FinalValidationTests(ValidatorTestCase):
                 "Claude Routing",
             ),
             (
-                "No worker configuration exceeds the `audit` preset;",
-                "Ultra may exceed the `audit` preset with approval;",
+                "only for the read-only independent consultation defined in `execution-recovery.md`.",
+                "for any authorized fix or final review.",
                 "Codex Routing",
             ),
             (
@@ -2315,6 +2580,33 @@ class FinalValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("Workflow Compatibility", result.stdout)
 
+    def test_planning_guide_rejects_invalid_workflow_declarations(self) -> None:
+        text = planning_guide_text().replace("Workflow: Superpowers\n", "", 1)
+        for declaration, heading in (
+            ("Workflow: Unknown", "Workflow Compatibility"),
+            ("Workflow: Matt\nWorkflow: Superpowers", "Workflow Compatibility"),
+            ("Workflow: Superpowers\nWorkflow: Superpowers", "Workflow Compatibility"),
+            ("Workflow: Superpowers", "Plan Review"),
+        ):
+            with self.subTest(declaration=declaration, heading=heading):
+                content = text.replace(f"## {heading}\n", f"## {heading}\n\n{declaration}\n", 1)
+                result = run_cli("--final", self.write_final(content), "--kind", "planning-guide")
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("Workflow Compatibility", result.stdout)
+
+    def test_planning_guide_preserves_legacy_superpowers_contract(self) -> None:
+        text = "\n".join(
+            line for line in planning_guide_text().splitlines()
+            if not line.startswith(("Workflow: ", "- Choose one primary workflow"))
+        )
+        result = run_cli("--final", self.write_final(text), "--kind", "planning-guide")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+        content = text.replace("**Delivers:**", "Delivery:", 1)
+        result = run_cli("--final", self.write_final(content), "--kind", "planning-guide")
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("field syntax", result.stdout)
+
     def test_planning_guide_rejects_generation_prompts_and_placeholders(self) -> None:
         cases = (
             "Template Contract",
@@ -2380,6 +2672,54 @@ class FinalValidationTests(ValidatorTestCase):
         result = run_cli("--final", path, "--kind", "doc-governance")
         self.assertEqual(result.returncode, 1)
         self.assertIn("implementation-planning.md", result.stdout)
+
+    def test_doc_governance_accepts_legacy_and_explicit_workflows(self) -> None:
+        legacy = doc_governance_text()
+        superpowers = legacy.replace(
+            "## Document Roles\n\n",
+            "## Document Roles\n\nWorkflow: Superpowers\n\n",
+        ).replace(
+            "Reset tracking", "The archive foundation is required. Reset tracking"
+        )
+        matt = legacy.replace(
+            "## Document Roles\n\n",
+            "## Document Roles\n\nWorkflow: Matt\n\n",
+        ).replace(
+            "Copy materials and update "
+            "the archive index before verification. If verification fails, preserve every "
+            "active original. Reset tracking only when no other live workstream depends on it.",
+            "Create the archive index on the first explicitly approved archive. "
+            "Use remote links and preserve local sources and tracking.",
+        )
+        for label, content in (
+            ("legacy", legacy),
+            ("legacy with remote evidence", legacy + "\nRetain remote links to the release evidence in the archive index.\n"),
+            ("superpowers", superpowers),
+            ("matt", matt),
+            ("legacy with a quoted example", legacy + "\n> Workflow: Matt\n"),
+        ):
+            with self.subTest(label=label):
+                path = self.write_final(content)
+                result = run_cli("--final", path, "--kind", "doc-governance")
+                self.assertEqual(result.returncode, 0, result.stdout)
+
+        for label, content in (
+            ("unknown", matt.replace("Workflow: Matt", "Workflow: Other")),
+            ("indented code", matt.replace("Workflow: Matt", "    Workflow: Matt")),
+            ("approval waived", matt.replace("Explicit human approval is required before archiving.",
+                                              "Do not require explicit human approval before archiving.")),
+            ("duplicate", matt.replace("Workflow: Matt", "Workflow: Matt\nWorkflow: Superpowers")),
+            ("outside roles", matt.replace("Workflow: Matt\n\n", "") + "\nWorkflow: Matt\n"),
+            ("unmarked Matt", matt.replace("Workflow: Matt\n\n", "")),
+            ("lazy Superpowers", matt.replace("Workflow: Matt", "Workflow: Superpowers")),
+            ("eager Matt", superpowers.replace("Workflow: Superpowers", "Workflow: Matt")),
+        ):
+            with self.subTest(label=label):
+                path = self.write_final(content)
+                result = run_cli("--final", path, "--kind", "doc-governance")
+                self.assertEqual(result.returncode, 1, result.stdout)
+                diagnostic = "approval" if label == "approval waived" else "workflow"
+                self.assertIn(diagnostic, result.stdout.lower())
 
     def test_doc_governance_requires_worker_and_recovery_paths(self) -> None:
         for token in ("`worker-policy.md`", "`execution-recovery.md`"):

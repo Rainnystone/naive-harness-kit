@@ -29,6 +29,7 @@ SKILL_DESCRIPTION_LEADS = {
 
 ROUTER_HANDOFF_TOKENS = (
     "## Router Handoff",
+    "**Workflow**",
     "**Dependencies**",
     "**Instruction**",
     "**Foundation**",
@@ -36,8 +37,8 @@ ROUTER_HANDOFF_TOKENS = (
     "only in conversation",
     "current workspace",
     "current NHK run",
-    "dependency state, instruction topology, foundation state, lifecycle intent, "
-    "or workspace changes",
+    "workflow selection, capability state, instruction topology, foundation state, "
+    "lifecycle intent, or workspace changes",
     "human choice remains unresolved",
 )
 
@@ -60,6 +61,29 @@ BOOTSTRAP_HANDOFF_TOKENS = (
     "missing and the canonical instruction has no superseded NHK-owned policy or "
     "recovery text.",
 )
+
+SKILL_WORKFLOW_CONTRACTS = {
+    "welcome-to-nhk": (
+        "A glossary by itself does not identify the workflow.",
+        "Check only capabilities required by the selected route and workstream.",
+        "one workflow owns implementation and task tracking",
+    ),
+    "nhk-bootstrap": (
+        "Create the archive foundation only when the workspace default is Superpowers.",
+        "Add `docs/agents/triage-labels.md` only when the triage skill",
+        "merge existing navigation into canonical `AGENTS.md`",
+    ),
+    "nhk-upkeep": (
+        "A changed workspace default applies to the next workstream.",
+        "Reapplying upkeep to unchanged workspace state should cause no further edits.",
+    ),
+    "nhk-archive": (
+        "Apply the archive transition of the workflow that owns this workstream.",
+        "Verify local references and report any remote access that remains unverified.",
+        "Keep local source files and tracking in place.",
+        "Stage copies without removing the active originals",
+    ),
+}
 
 REFERENCES = (
     "AGENTS-template.md",
@@ -179,7 +203,7 @@ EXECUTION_RECOVERY_HEADINGS = (
     "Recovery and Stop",
 )
 
-PLANNING_WORKFLOW_TOKENS = (
+SUPERPOWERS_PLANNING_WORKFLOW_TOKENS = (
     "Superpowers",
     "Files",
     "Interfaces",
@@ -210,6 +234,17 @@ PLANNING_FIELD_PATTERNS = {
     )
     for field in ("Delivers", "Blocked by", "Worker class")
 }
+
+PLANNING_PRIMARY_WORKFLOW = (
+    "Choose one primary workflow per workstream. Other skills may contribute "
+    "without replacing the primary workflow or duplicating its artifacts."
+)
+
+PLANNING_OTHER_OWNER = (
+    "If the current workstream has a different owner, use its original spec, tickets or plan and "
+    "the matching workflow section in the installed NHK package’s `references/implementation-planning-template.md`. "
+    "Keep the workspace guide on its default."
+)
 
 LEGACY_CODING_GUIDE_HEADINGS = {
     "Current Execution State",
@@ -244,10 +279,12 @@ LEGACY_CODEX_PRESET_LADDER = (
 # to exactly one preset.
 CODEX_TIER_PRESETS = {
     "light": "GPT-6.1 Terra xhigh",
-    "standard": "GPT-6.1 Sol xhigh",
-    "deep": "GPT-6 Astra xhigh",
-    "audit": "GPT-6 Astra xhigh",
+    "standard": "GPT-6.2 Sol xhigh",
+    "deep": "GPT-6.2 Sol xhigh",
+    "audit": "GPT-6.2 Sol xhigh",
 }
+CODEX_CONSULTATION_PRESET = "GPT-6.2 Astra xhigh"
+CODEX_CONSULTATION_MODEL_ID = "gpt-6.2-astra"
 # Human routing exceptions may choose only ordinary tiers, never the read-only audit tier.
 CODEX_EXCEPTION_TIERS = ("light", "standard", "deep")
 # Any backticked row label in Codex Routing is a catalog row, so an extra tier
@@ -273,8 +310,8 @@ TERRA_ROUTE_PATTERN = (
     r"\bTerra\s+(?:(?:at|with)\s+)?(?:models?|presets?|workers?|low|medium|high|xhigh|max|Extra\s+High)\b|"
     r"\b(?:model|preset)\s*(?::|=|\bis\b)?\s*Terra\b"
 )
-CODEX_ALLOWED_FAMILY_NAMES = ("GPT-6.1 Terra", "GPT-6.1 Sol", "GPT-6 Astra")
-CODEX_ALLOWED_RUNTIME_IDS = ("gpt-6.1-terra", "gpt-6.1-sol", "gpt-6-astra")
+CODEX_ALLOWED_FAMILY_NAMES = ("GPT-6.1 Terra", "GPT-6.2 Sol")
+CODEX_ALLOWED_RUNTIME_IDS = ("gpt-6.1-terra", "gpt-6.2-sol", CODEX_CONSULTATION_MODEL_ID)
 CODEX_QUALIFIER_STOPWORDS = (
     "a",
     "an",
@@ -328,12 +365,20 @@ GOVERNANCE_ROLE_PATH_RES = (
     ("execution-recovery.md", re.compile(r"`(?:\./)?execution-recovery\.md`")),
 )
 
+INSTRUCTION_BEHAVIOR = {
+    "Execution Rules": ("Choose the simplest maintainable solution that meets acceptance without introducing avoidable technical debt.",),
+    "Blockers and Human Approval": (
+        "During authorized implementation, resolve engineering uncertainty and take the next in-scope action through verification.",
+    ),
+    "Git and Delivery": ("Lead with the outcome in the user’s language. Use plain words for verified results and decisions they must make.",),
+}
+
 INSTRUCTION_COMPANION_ROUTES = (
     "Read `coding-agent-guide.md` to route a task or symptom to code and first-pass verification.",
-    "Read `implementation-planning.md` before writing, approving, or materially revising an implementation plan.",
+    "Read `implementation-planning.md` before writing, approving or revising a plan or ticket breakdown.",
     "Read `worker-policy.md` only when orchestrating, dispatching, or reviewing workers. Load its common sections and the current platform section.",
-    "Read `execution-recovery.md` after five failed rounds on one task or one acceptance gap, or earlier evidence of architectural stagnation.",
-    "Treat `documentation-governance.md` as the source of truth for documentation lifecycle rules.",
+    "Read `execution-recovery.md` for independent consultation, after five failed rounds on one task or acceptance gap, or earlier evidence of architectural stagnation.",
+    "Treat `documentation-governance.md` as the source for workflow selection, tracking, and document lifecycles.",
 )
 
 INSTALL_COMMAND = (
@@ -430,11 +475,14 @@ def second_level_sections(text: str) -> dict[str, str]:
     return sections
 
 
-def final_shape_sections(text: str) -> tuple[tuple[str, ...], dict[str, str]]:
+def final_shape_sections(
+    text: str, *,
+    start_heading: str = "## Required Final Shape", end_heading: str = "## Final Check",
+) -> tuple[tuple[str, ...], dict[str, str]]:
     lines = text.splitlines()
     try:
-        start = lines.index("## Required Final Shape") + 1
-        end = lines.index("## Final Check", start)
+        start = lines.index(start_heading) + 1
+        end = lines.index(end_heading, start)
     except ValueError:
         return (), {}
 
@@ -508,6 +556,7 @@ def validate_codex_declared_presets(
     allowed_display = {
         *(preset.lower() for preset in CODEX_TIER_PRESETS.values()),
         *(name.lower() for name in CODEX_ALLOWED_FAMILY_NAMES),
+        CODEX_CONSULTATION_PRESET.lower(),
     }
     allowed_runtime = {item.lower() for item in CODEX_ALLOWED_RUNTIME_IDS}
     seen: set[str] = set()
@@ -520,7 +569,7 @@ def validate_codex_declared_presets(
         seen.add(declared)
         issues.append(
             f"{label} Codex Routing declares unapproved versioned preset "
-            f"{match.group(0)!r}; allowed presets are the tier catalog"
+            f"{match.group(0)!r}; use the tier catalog or the declared consultation"
         )
 
     leftover = CODEX_DISPLAY_PRESET_RE.sub(" ", codex)
@@ -531,7 +580,7 @@ def validate_codex_declared_presets(
         seen.add(token)
         issues.append(
             f"{label} Codex Routing declares unapproved versioned preset "
-            f"{match.group(0)!r}; allowed presets are the tier catalog"
+            f"{match.group(0)!r}; use the tier catalog or the declared consultation"
         )
 
 
@@ -545,7 +594,7 @@ DIAGNOSTIC_ROUTE = (
 CONSULTATION_DECLARATIONS = {
     "Triggers and Accounting": [
         "Record counts, diagnostic use, clarification use, and recovery use for both the task "
-        "and stable acceptance gap in that record. Other trackers only reference it.",
+        "and stable acceptance gap in that record. Record a Codex consultation as diagnostic use.",
         "Worker, session, model, commit, task rename, or replanning never resets diagnostic or clarification use.",
         "Read-only diagnosis spends no fix round and grants no additional modification authority.",
     ],
@@ -555,15 +604,23 @@ CONSULTATION_DECLARATIONS = {
         "Include a provisional explanation and recovery direction if available; explicitly state when no credible "
         "hypothesis exists. A complete solution is not a prerequisite for consultation.",
         "The main thread decides directly when evidence is sufficient and remains responsible for the final judgment.",
+        "For ordinary uncertainty, the main thread examines available evidence, tests reasonable alternatives, "
+        "records consequential decisions, and continues within scope.",
         "After consultation, verify key evidence and record why advice was accepted or rejected and the verification "
         "results. Agreement between agents is not causal evidence.",
+        "The main thread decides and continues the authorized work when verified evidence supports a path.",
     ],
     "Independent Diagnosis": [
-        "Use diagnosis only for competing explanations, review-versus-implementation conflict, an unverified old "
-        "premise, or no credible explanation for repeated failure.",
+        "In recovery, use independent diagnosis only for competing explanations, review-versus-implementation "
+        "conflict, an unverified old premise, or no credible explanation for repeated failure.",
+        "Codex may also consult before recovery when a concrete question could materially affect acceptance, a "
+        "public contract, or the ability to finish within scope, and the main thread's evidence and reasonable "
+        "experiments leave that question unresolved.",
         DIAGNOSTIC_ROUTE,
-        "Recovery consultation uses the existing diagnosis allowance; if either the task or stable acceptance gap "
-        "has used diagnosis, do not dispatch another diagnostic worker.",
+        "Codex independent consultation and recovery diagnosis share one allowance. If either the task or stable "
+        "acceptance gap has used diagnosis, the allowance is exhausted.",
+        "The bounded Codex dispatch is already authorized within the current task. Existing human approval "
+        "boundaries still apply to the main thread's decisions.",
         "Give the diagnostic worker the reassessment handoff and an explicit no-write boundary. "
         "Separate observations from prior hypotheses.",
         "Diagnosis checks source evidence and forms its own explanation before comparing the main thread's "
@@ -575,8 +632,8 @@ CONSULTATION_DECLARATIONS = {
         "allowance and grants no new investigation scope.",
         "A diagnostic worker does not authorize a fix or replace the main thread's judgment; select any recovery "
         "fix and re-review for their own roles in `worker-policy.md`.",
-        "If evidence remains insufficient after diagnosis and any clarification, present blockers and options "
-        "to the human. Do not start a diagnostic chain.",
+        "If an exhausted task or gap still lacks a credible recovery after diagnosis and any clarification, "
+        "present blockers and options to the human. Do not start a diagnostic chain.",
     ],
 }
 DIAGNOSTIC_MENTION_RE = re.compile(
@@ -623,9 +680,13 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                        'constraints.',
                        'Recursive delegation needs separate human authorization for a named '
                        'packet.',
-                       'Keep subagent-driven implementers sequential. Parallelize read-only work '
+                       'Keep Superpowers SDD implementers sequential. Parallelize read-only work '
                        'only when ownership, state, artifacts, services, and verification '
                        'resources are independent.',
+                       'In the Matt Pocock workflow, independent ready tickets may run concurrently '
+                       'when the workflow and runtime support isolated write scopes and independent '
+                       'state, artifacts, services, and verification resources. Keep dependent or '
+                       'overlapping tickets sequential.',
                        'Check runtime progress and lifecycle. A timeout alone is not a blocker and '
                        'does not require a nonexistent close tool.',
                        'The main thread owns integration, cross-task verification, recovery '
@@ -633,10 +694,10 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
  'Review Gates': ['In SDD, every atomic task or qualifying mechanical batch gets one independent '
                   'read-only reviewer with separate spec-compliance and task-quality verdicts. '
                   'Both must pass; self-review is not a substitute.',
-                  'Internal task steps do not dispatch separate reviewers. Native execution '
-                  'retains its own task verification and one independent whole-change final '
-                  'review, without per-task subagent reviews.',
-                  'Use the upstream task-reviewer, re-review, and final-review prompts. Do not '
+                  'In Superpowers, internal task steps do not dispatch separate reviewers. Its inline '
+                  'execution retains task verification and one independent whole-change final review, '
+                  'without per-task subagent reviews.',
+                  'In Superpowers, use the upstream task-reviewer, re-review, and final-review prompts. Do not '
                   'maintain copied NHK review prompts.',
                   'Give reviewers fixed BASE and HEAD revisions, binding constraints, the report, '
                   'and evidence. Check implementer claims against the diff and test output.',
@@ -647,12 +708,15 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                   'at identical final scope and fixed version.',
                   'Re-evaluate consolidation when scope, version, or evidence changes; never reuse '
                   'stale approval.',
-                  'All other plans, including multi-task and complex plans, retain one '
-                  'whole-change final review. Final review allows at most one concentrated fix '
+                  'All other Superpowers plans, including multi-task and complex plans, retain one '
+                  'whole-change final review. Its final review allows at most one concentrated fix '
                   'wave and one scoped re-review.',
-                  'Consolidation never resets or extends task or acceptance-gap repair counts, '
-                  'execution recovery, or final fix-wave bounds.'],
- 'Capability Tiers': ['Route each packet to one tier: `light`, `standard`, `deep`, or `audit`. '
+                  'Superpowers review consolidation never resets or extends task or acceptance-gap repair counts, '
+                  'execution recovery, or final fix-wave bounds.',
+                  'For a Matt Pocock code review, use its native `code-review` at a fixed diff with '
+                  'independent read-only Standards and Spec reviewers in parallel. Keep review '
+                  "findings on separate axes and apply the selected workflow's verification and review rules."],
+ 'Capability Tiers': ['Route each ordinary worker packet to one tier: `light`, `standard`, `deep`, or `audit`. '
                       'Tiers determine permission; the platform section maps them to '
                       'configurations, and there is no mandatory `light` trial.',
                       '`light`: small mechanical or standard tasks meeting the low-risk '
@@ -672,10 +736,8 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                       'failed lower-tier trial.',
                       'A review uses `deep` when the review itself meets that difficulty '
                       'condition; assess review difficulty separately from implementation.',
-                      '`audit` is read-only: independent diagnosis (including recovery consultation) '
-                      'and complex whole-change final review, never implementation or recovery fixes. After a failed `deep` '
-                      'implementation it may be selected directly for the one independent '
-                      'diagnosis.',
+                      '`audit` is read-only and covers complex whole-change final review and '
+                      'independent diagnosis when the platform routes diagnosis to that tier.',
                       'Other whole-change final reviews use `deep`.',
                       'First classify failures as scope, context, environment, verification, or '
                       'capability. Escalate one tier only for demonstrated capability limits of a '
@@ -692,10 +754,15 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                       'another tier, an older model, or the `audit` configuration as fallback.'],
  'Codex Routing': ['Every fresh Codex worker uses `fork_turns: none` and receives a self-contained '
                    'brief, required files, and binding global constraints.',
-                   'Runtime model IDs are `gpt-6.1-terra`, `gpt-6.1-sol`, and `gpt-6-astra`; UI Extra '
-                   'High maps to `xhigh`.',
-                   'No worker configuration exceeds the `audit` preset; the top effort stays with '
-                   'the human-chosen main thread.',
+                   'Ordinary worker model IDs are `gpt-6.1-terra` and `gpt-6.2-sol`. UI Extra High maps to `xhigh`.',
+                   f'Use {CODEX_CONSULTATION_PRESET} (`{CODEX_CONSULTATION_MODEL_ID}`) only for the read-only '
+                   'independent consultation defined in `execution-recovery.md`. Its trigger and existing '
+                   'authorization cover one fresh-context dispatch, shared with recovery diagnosis.',
+                   'The independent consultation grants no authority to implement, fix, review, substitute '
+                   'for an unavailable worker, or delegate recursively.',
+                   'A qualifying mechanical batch may use runtime-supported Luna only if the human '
+                   'explicitly names Luna for that batch in the current run. Never use Luna for automatic '
+                   'dispatch, review, recovery, or fallback. Keep that permission out of persistent routing records.',
                    'Preserve an existing human routing exception only as an active `Human routing '
                    'exception:` JSON bullet in Codex Routing with exactly `target`, `scope`, '
                    '`role`, `preset`, and `approval` string fields.',
@@ -728,7 +795,8 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                     'Continuations are not repair rounds; afterwards classify the failure.',
                     'Dispatch independent diagnosis to a resumable worker: `nhk-audit`, or without '
                     'definitions a general-purpose agent with `model: opus`; never the one-shot '
-                    'Explore or Plan agents. Record its agent ID with the diagnostic use.',
+                    'Explore or Plan agents. Record its agent ID with the diagnostic use. After a failed '
+                    '`deep` implementation, this route may be used directly when the diagnosis trigger applies.',
                     'Never continue a diagnostic worker for open items. Its only continuation is the '
                     'one recovery clarification, sent with SendMessage to the recorded worker; if '
                     'that worker cannot be resumed, the clarification lapses and no fresh worker '
@@ -800,6 +868,47 @@ PLANNING_ATOMIC_DECLARATIONS = {'Workflow Compatibility': ['The installed or exp
                                 'Apply `execution-recovery.md` only when its triggers fire.'],
  'Plan Review': ['When many tasks need higher capability, recheck boundaries and shared constraints; '
                  'use no fixed quota and preserve irreducible difficult tasks.']}
+
+MATT_PLANNING_DECLARATIONS = {
+    "Workflow Compatibility": (
+        PLANNING_PRIMARY_WORKFLOW,
+        "Use `to-spec` for the shared spec and `to-tickets` for implementation tickets in Matt's "
+        "configured tracker. Use native blocking edges where available or one Markdown file per "
+        "ticket with the local tracker.",
+        "Without triage, pass the configured ready-state mapping or Matt's default `ready-for-agent` to the publishing skill.",
+    ),
+    "Plan Layers": (
+        "Keep shared outcomes, constraints, decisions, and testing seams in the spec. Make each "
+        "vertical slice independently testable through the affected layers and small enough for "
+        "one fresh context.",
+    ),
+    "Task Contract": (
+        "State end-to-end behavior, observable acceptance criteria, and blocking edges on each "
+        "ticket. Carry binding constraints and decisions through pointers to the spec and ticket.",
+    ),
+    "Dependencies and Execution": (
+        "For a local tracker, give each helper read access to the spec and ticket in their authoritative "
+        "checkout, including untracked files. The primary thread owns tracker updates.",
+        "Give `implement-spec` the spec and ticket references. Use separate branches and isolated "
+        "worktrees, one of each per ticket. Independent tickets with resolved blockers may run "
+        "concurrently when write boundaries are safe. Use Matt's `tdd` for each ticket, then merge "
+        "its result into the integration branch before unblocking dependent tickets.",
+        "Keep ticket state in the configured tracker and link to it from NHK workstream records. "
+        "Apply `worker-policy.md` for dispatch and review choices and `execution-recovery.md` "
+        "when its triggers fire.",
+    ),
+    "Wide Changes": (
+        "For a wide refactor that cannot land green as vertical slices, expand, migrate in "
+        "verifiable batches, then contract. If batches cannot stay green alone, keep the sequence "
+        "on an integration branch and finish with an integrate-and-verify ticket.",
+    ),
+    "Plan Review": (
+        "Check spec coverage, slice size, acceptance criteria, and blocking edges before execution. "
+        "Run Matt's `code-review` on the integration branch for Standards and Spec, then verify "
+        "integrated acceptance before closing tickets.",
+    ),
+}
+
 
 def normalized_contract(text: str) -> str:
     return " ".join(text.replace("`", "").split())
@@ -918,6 +1027,63 @@ def validate_planning_fields(sections: dict[str, str], label: str, issues: list[
             issues.append(f"{label} Task Contract is missing {token!r}")
 
 
+def validate_planning_contract(
+    headings: Iterable[str], sections: dict[str, str], label: str, issues: list[str],
+    *, expected_workflow: str | None = None,
+) -> None:
+    if tuple(headings) != PLANNING_GUIDE_HEADINGS:
+        issues.append(f"{label} headings must be exactly: " + ", ".join(PLANNING_GUIDE_HEADINGS))
+
+    declarations = [
+        (heading, line.strip())
+        for heading, body in sections.items()
+        for line in body.splitlines()
+        if re.match(r"^ {0,3}Workflow[ \t]*:", line, re.IGNORECASE)
+    ]
+    # An unlabeled guide can still pass through the original Superpowers contract.
+    workflow = "Superpowers"
+    if declarations or expected_workflow is not None:
+        choices = (expected_workflow,) if expected_workflow is not None else ("Matt", "Superpowers")
+        workflow = next(
+            (
+                choice for choice in choices
+                if declarations == [("Workflow Compatibility", f"Workflow: {choice}")]
+            ),
+            "",
+        )
+        if not workflow:
+            permitted = " or ".join(repr(f"Workflow: {choice}") for choice in choices)
+            issues.append(
+                f"{label} Workflow Compatibility must contain exactly one active {permitted} declaration"
+            )
+            return
+
+    if declarations:
+        compatibility = normalized_contract(sections.get("Workflow Compatibility", ""))
+        if normalized_contract(PLANNING_OTHER_OWNER) not in compatibility:
+            issues.append(f"{label} Workflow Compatibility is missing the route for a workstream with a different owner")
+
+    if workflow == "Matt":
+        validate_declared_clauses(
+            sections, MATT_PLANNING_DECLARATIONS, label, issues,
+            r"\b(?:run|require|use) Superpowers SDD for (?:each|every|all) (?:Matt )?tickets?\b"
+            r"|\b(?:track|record|maintain) (?:progress|state) (?:separately )?in both ledgers\b",
+        )
+        return
+
+    validate_planning_tasks(sections, label, issues)
+    compatibility = sections.get("Workflow Compatibility", "")
+    if declarations and PLANNING_PRIMARY_WORKFLOW not in normalized_contract(compatibility):
+        issues.append(f"{label} Workflow Compatibility is missing {PLANNING_PRIMARY_WORKFLOW!r}")
+    for token in SUPERPOWERS_PLANNING_WORKFLOW_TOKENS:
+        if token.lower() not in compatibility.lower():
+            issues.append(f"{label} Workflow Compatibility is missing {token!r}")
+    wide_changes = sections.get("Wide Changes", "")
+    for token in PLANNING_WIDE_CHANGE_TOKENS:
+        if token.lower() not in wide_changes.lower():
+            issues.append(f"{label} Wide Changes is missing {token!r}")
+
+
 def without_valid_codex_catalogs(codex: str) -> str:
     lines: list[str] = []
     for line in codex.splitlines():
@@ -1006,7 +1172,7 @@ def without_routing_exceptions(
                 elif record["role"] not in ROUTING_EXCEPTION_ROLES:
                     reason = "must name one ordinary implementation or review role; it cannot authorize recursion"
                 elif record["preset"] not in ordinary_presets:
-                    reason = "may choose only a `light`, `standard`, or `deep` preset, never `audit` or Ultra permissions"
+                    reason = "may choose only a `light`, `standard`, or `deep` preset, never consultation or Ultra permissions"
                 elif record["role"] == "initial-task-review" and record["preset"] == CODEX_TIER_PRESETS["light"]:
                     reason = "does not authorize `light` initial reviews"
                 elif not approval_reference(record["approval"]):
@@ -1023,6 +1189,29 @@ def without_routing_exceptions(
             # nearby prose or replace the normal section-owned declarations.
         cleaned[heading] = "\n".join(retained)
     return cleaned
+
+
+def allows_parallel_sdd(clause: str) -> bool:
+    parallel = r"(?:in parallel|concurrently)"
+    role = r"implement(?:ation|ers?)"
+    scope = r"(?:SDD|subagent-driven development)"
+    subject = rf"(?:(?:the|Superpowers|{scope})\s+)*{role}"
+    action = r"(?:run|work|execute|be (?:run|dispatched|executed))"
+    modal = r"(?:may|can|must|should|shall|will|(?:is|are) (?:allowed|permitted) to)"
+    grant = (
+        rf"(?:^|[,:])\s*[-*+]?\s*(?:"
+        rf"{subject}\s+(?:{modal}\s+)?(?:{action}\s+{parallel}|be (?:parallel|concurrent))"
+        rf"|(?:parallel|concurrent)\s+{subject}\s+is\s+(?:allowed|permitted|required)"
+        rf"|(?:run|dispatch|start|execute)\s+{subject}\s+{parallel}"
+        rf"|(?:{scope}\s+)?(?:allows?|permits?|enables?)\s+"
+        rf"(?:(?:parallel|concurrent)\s+{subject}|{subject}\s+to\s+{action}\s+{parallel})"
+        rf"|parallelize\s+{subject})\b"
+    )
+    return any(
+        re.search(rf"\b{scope}\b", sentence, re.IGNORECASE)
+        and re.search(grant, sentence, re.IGNORECASE)
+        for sentence in re.split(r"[.;!?]|\b(?:whereas|but|while)\b", clause, flags=re.IGNORECASE)
+    )
 
 
 def validate_worker_policy_contract(
@@ -1056,8 +1245,14 @@ def validate_worker_policy_contract(
     validate_declared_clauses(
         declared_sections, WORKER_DECLARATIONS, label, issues,
         r"\b(?:Band\s*\d|GPT[- ]|gpt-|Astra|Luna|Sol|modules?|tasks?|mechanical|standard|judgment|"
-        r"review|consolidat\w*|repair|fix(?:es)?|Sonnet|Opus|Fable|Ultra)\b|" + TIER_ROUTE_PATTERN + "|" + TERRA_ROUTE_PATTERN,
+        r"reviews?|consolidat\w*|repair|fix(?:es)?|Sonnet|Opus|Fable|Ultra|consult(?:s|ing|ed|ations?|ants?)?)\b|"
+        r"\bimplementers?\s+(?:must\s+be\s+)?sequential\b|"
+        r"\bimplementation\s+(?:is|remains|runs|must (?:be|remain|run))\s+(?:always\s+)?"
+        r"(?:sequential\w*|serial\w*)\b|"
+        + TIER_ROUTE_PATTERN + "|" + TERRA_ROUTE_PATTERN,
     )
+    if any(allows_parallel_sdd(clause) for clause in undeclared_clauses(declared_sections, WORKER_DECLARATIONS)):
+        issues.append(f"{label} contains additional routing that permits parallel SDD implementation")
     validate_ui_alias_routes(declared_sections, label, issues)
     validate_exact_codex_tiers(policy_sections.get("Codex Routing", ""), label, issues)
     validate_codex_declared_presets(policy_sections.get("Codex Routing", ""), label, issues)
@@ -1104,7 +1299,7 @@ def validate_execution_recovery_contract(
         r"(?:(?:may|can|must|shall)\s+(?:(?:also|then|still|now|always|again|freely)\s+)*"
         r"(?:be\s+)?" + consultation_predicate + r"|"
         r"authorizes?|resets?|renews?|grants?|"
-        r"(?:is|are)\s+(?:allowed|permitted|authorized|reset|renewed))\b|"
+        r"(?:is|are)\s+(?:allowed|permitted|authorized|required|reset|renewed))\b|"
         # Explicit worker/allowance objects and additional counted permissions do
         # not depend on trailing timing prose. Only ambiguous bare topic objects
         # need an end boundary to avoid treating diagnosis logs/codes as a role.
@@ -1122,6 +1317,28 @@ def validate_execution_recovery_contract(
         + process_object + r")" + object_end,
         re.IGNORECASE,
     )
+    consultation_gate = re.compile(
+        r"\b(?:ordinary|routine)\s+(?:uncertaint\w*|ambiguit\w*|bugs?)\s+"
+        r"(?:requires?|triggers?)\s+(?:an?\s+|independent\s+)*(?:consult\w*|diagnosis)\b|"
+        r"\b(?:human approval|permission|consent)\s+(?:is required\s+)?"
+        r"(?:before|for)\s+(?:an?\s+|independent\s+)*consult\w*\b|"
+        r"\bconsultations?\s+requires?\s+(?:(?:separate|explicit)\s+)?"
+        r"(?:human approval|permission|consent)\b|"
+        r"\b(?:always|must)\s+consult\s+(?:another|an?|the)\s+(?:agent|worker|model)\b",
+        re.IGNORECASE,
+    )
+    routine_decision = (
+        r"(?:(?:every|all|each)\s+)?(?:ordinary|routine|reversible|in-scope)\s+"
+        r"(?:(?:engineering|implementation|technical)\s+)?(?:decisions?|choices?)"
+    )
+    human_decision_gate = re.compile(
+        r"\b(?:hand|defer|refer|leave|escalate)\w*\s+"
+        rf"(?:(?:every|all|each)\s+(?:decisions?|choices?)|{routine_decision})\s+"
+        r"to\s+(?:the\s+)?(?:human|user)\b|"
+        r"\b(?:request|require|obtain|await)\w*\s+(?:human|user)\s+"
+        rf"(?:approval|confirmation|permission|consent)\s+(?:for|on|before)\s+{routine_decision}\b",
+        re.IGNORECASE,
+    )
     prohibition = re.compile(
         r"\b(?:do not|never)\s+(?:dispatch|request)\s+(?:a second|another)\s+diagnostic worker[.;]|"
         r"\bdo not allow a second clarification[.;]|"
@@ -1133,8 +1350,10 @@ def validate_execution_recovery_contract(
         # Normalize ordinary emphasis only for the extra-declaration scan.
         clause = re.sub(r"(?<!\w)(\*{1,2}|_{1,2})(?=\S)(.+?)(?<=\S)\1(?!\w)", r"\2", clause)
         clause = prohibition.sub("", clause)
-        if consultation_grant.search(clause):
+        if consultation_grant.search(clause) or consultation_gate.search(clause):
             issues.append(f"{label} contains additional consultation permissions; use the declared contract only")
+        if human_decision_gate.search(clause):
+            issues.append(f"{label} adds a human decision gate for routine engineering choices")
 
     if headings != EXECUTION_RECOVERY_HEADINGS:
         issues.append(
@@ -1146,11 +1365,12 @@ def validate_execution_recovery_contract(
         sections,
         "Triggers and Accounting",
         (
-            "systematic-debugging",
-            "architecture check after three failed fixes",
+            "For Superpowers, use systematic-debugging and its architecture check after three failed fixes.",
+            "For Matt Pocock, use its native diagnosing-bugs workflow.",
             "five rounds are a ceiling, not a waiting requirement",
             "five fix-review rounds per task",
             "five rounds for the same stable acceptance gap across tasks",
+            "A round is one fix attempt (a dispatch in SDD) plus verification and any review required by the selected workflow.",
             "Reaching either the task-round bound or stable-gap bound stops ordinary fixing",
             "Worker, session, model, commit, task rename, or replanning never resets a task or gap count",
             "existing authoritative execution record",
@@ -1183,7 +1403,8 @@ def validate_execution_recovery_contract(
             "may be the sixth modification and supersedes an old absolute “No sixth patch” rule",
             "stop automatic fixes and ask the human",
             "Changing model, plan, or task never renews recovery",
-            "Final review retains one concentrated fix wave and one scoped re-review",
+            "Superpowers final review retains one concentrated fix wave and one scoped re-review.",
+            "Matt Pocock uses its native review process.",
             "An exhausted earlier gap cannot use final review as another repair allowance",
             "never return to the ordinary loop",
         ),
@@ -1451,6 +1672,8 @@ def validate_shared_templates(
             issues.append(f"templates: shared worker contract is missing {token!r}")
 
     validate_wait_contract(agents, "templates: shared worker contract", issues)
+    for heading, clauses in INSTRUCTION_BEHAVIOR.items():
+        require_section_text(agents, heading, clauses, "shared instruction template", issues)
 
     for template_name, blocks in (
         ("AGENTS-template.md", agents),
@@ -1522,6 +1745,9 @@ def validate_skill(root: Path, name: str, issues: list[str]) -> None:
         if token not in text:
             issues.append(f"{name}/SKILL.md: router handoff is missing {token!r}")
 
+    for token in SKILL_WORKFLOW_CONTRACTS[name]:
+        require_text(text, token, f"{name}/SKILL.md workflow lifecycle", issues)
+
     update_contracts = {
         "welcome-to-nhk": ("when the user requests upkeep", "after an NHK update needs workspace reconciliation"),
         "nhk-upkeep": (
@@ -1555,7 +1781,7 @@ def validate_skill(root: Path, name: str, issues: list[str]) -> None:
     ):
         if f"`{companion}`" not in text:
             issues.append(
-                f"{name}/SKILL.md: seven-surface foundation must name "
+                f"{name}/SKILL.md: five-companion foundation must name "
                 f"`{companion}`"
             )
 
@@ -1611,6 +1837,11 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         require_text(english, name, "README.md", issues)
         require_text(chinese, name, "README_CN.md", issues)
 
+    for label, content in (("README.md", english), ("README_CN.md", chinese)):
+        for token in ("Workflow: Matt", "Workflow: Superpowers", "docs/agents/issue-tracker.md",
+                      "GLOSSARY.md", ".scratch/<feature>/spec.md", "Astra xhigh"):
+            require_text(content, token, label, issues)
+
     normalized_install = normalize_space(INSTALL_COMMAND)
     if normalized_install not in normalize_space(english):
         issues.append("README.md: sibling install command is missing or inconsistent")
@@ -1640,13 +1871,13 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         "Claude's light helper runs Haiku",
         "every other Claude helper runs Opus",
         "Claude Code main thread, we suggest Opus high",
-        "seven required pieces",
+        "five stable guides",
         "Superpowers overlay",
         "permissions tied to the role",
         "sorts helper work into four capability tiers",
         "both must pass",
         "one recovery fix and one independent re-review",
-        "Codex main thread, we suggest GPT-6.1 Sol xhigh",
+        "Codex main thread, we suggest GPT-6.2 Astra xhigh",
         "human-facing suggestion only",
         "you choose the main-thread model and effort",
         "NHK worker permissions do not depend on that choice",
@@ -1659,13 +1890,13 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         "Claude 的 light 帮手使用 Haiku",
         "其余帮手全部使用 Opus",
         "Claude Code 主线程，建议使用 Opus high",
-        "七项基础内容",
+        "五份配套说明",
         "Superpowers overlay",
         "权限按工作角色确定",
         "把帮手的工作分成四个能力档位",
         "需求符合度与实现质量结论，两项都要通过",
         "一轮恢复修正和一次复审",
-        "Codex 主线程，建议使用 GPT-6.1 Sol xhigh",
+        "Codex 主线程，建议使用 GPT-6.2 Astra xhigh",
         "这只是给使用者的建议",
         "主线程型号和 effort 由你选择",
         "NHK 的 worker 权限不依赖该选择",
@@ -1792,7 +2023,7 @@ def validate_forbidden_legacy(root: Path, issues: list[str]) -> None:
             issues.append(f"{relative}: human routing exception belongs only in the worker-policy Codex Routing contract")
         model_text = text
         if relative in {Path("README.md"), Path("README_CN.md")}:
-            model_text = model_text.replace("GPT-6.1 Sol", "")
+            model_text = model_text.replace("GPT-6.2 Astra", "")
         model_matches = list(versioned_model.finditer(model_text))
         if relative not in allowed_versioned_model_surfaces and model_matches:
             issues.append(
@@ -1934,22 +2165,18 @@ def validate_source(root: Path) -> list[str]:
         "references/implementation-planning-template.md",
     )
     if planning_template is not None:
-        _, sections = final_shape_sections(planning_template)
-        validate_planning_tasks(sections, "implementation-planning-template.md", issues)
-        for token in (
-            *PLANNING_GUIDE_HEADINGS,
-            *PLANNING_WORKFLOW_TOKENS,
-            *PLANNING_FIELD_PATTERNS,
-            *PLANNING_TASK_CONTRACT_TOKENS,
-            *PLANNING_WIDE_CHANGE_TOKENS,
-            "80 lines",
+        for workflow, start_heading, end_heading in (
+            ("Superpowers", "## Required Final Shape", "## Matt Final Shape"),
+            ("Matt", "## Matt Final Shape", "## Final Check"),
         ):
-            require_text(
-                planning_template,
-                token,
-                "implementation-planning-template.md",
-                issues,
+            headings, sections = final_shape_sections(
+                planning_template, start_heading=start_heading, end_heading=end_heading,
             )
+            validate_planning_contract(
+                headings, sections, f"implementation-planning-template.md ({workflow})",
+                issues, expected_workflow=workflow,
+            )
+        require_text(planning_template, "80 lines", "implementation-planning-template.md", issues)
 
     worker_template = read_text(
         root / "references" / "worker-policy-template.md",
@@ -1973,6 +2200,7 @@ def validate_source(root: Path) -> list[str]:
             "same single task, scope, and confirmed approval",
             "never copy its authorization across the new tasks",
             "Legacy tier migration",
+            "the superseded GPT-6.1 Sol and GPT-6 Astra presets",
             "its role remains permitted for that tier",
         ):
             require_text(worker_template, token, "worker-policy-template.md", issues)
@@ -2030,6 +2258,20 @@ def validate_source(root: Path) -> list[str]:
                 issues,
             )
         _, shape_sections = final_shape_sections(governance_template)
+        require_section_text(
+            shape_sections,
+            "Document Roles",
+            ("`Workflow: Matt`", "`Workflow: Superpowers`"),
+            "documentation-governance-template.md workflow lifecycle",
+            issues,
+        )
+        require_section_text(
+            shape_sections,
+            "Archive Transition Invariants",
+            ("first explicitly approved archive", "The archive foundation is required."),
+            "documentation-governance-template.md workflow lifecycle",
+            issues,
+        )
         roles = shape_sections.get("Document Roles", "")
         for name, pattern in GOVERNANCE_ROLE_PATH_RES:
             if not pattern.search(roles):
@@ -2037,6 +2279,16 @@ def validate_source(root: Path) -> list[str]:
                     "documentation-governance-template.md Required Final Shape "
                     f"Document Roles is missing `{name}`"
                 )
+
+    archive_label = "references/archive-readme-template.md"
+    archive_template = read_text(root / archive_label, issues, archive_label)
+    if archive_template is not None:
+        for token in (
+            "first explicitly approved archive",
+            "Use confirmed tracker URLs as remote references.",
+            "Keep referenced local files in place.",
+        ):
+            require_text(archive_template, token, f"{archive_label} workflow lifecycle", issues)
 
     validate_readmes(root, issues)
     validate_repo_split(root, issues)
@@ -2078,6 +2330,56 @@ def validate_install(install_root: Path, source_root: Path) -> list[str]:
     for skill in SKILLS:
         validate_skill(install_root, skill, issues)
     return issues
+
+
+def validate_governance_workflow(
+    text: str, sections: dict[str, str], issues: list[str]
+) -> None:
+    def workflow_lines(lines: Iterable[str]) -> list[str]:
+        return [
+            line.strip()
+            for line in lines
+            if re.match(r"^ {0,3}workflow[ \t]*:", line, re.IGNORECASE)
+        ]
+
+    markers = workflow_lines(line for _, line in active_markdown_lines(text))
+    role_markers = workflow_lines(sections.get("Document Roles", "").splitlines())
+    accepted = {"Workflow: Matt", "Workflow: Superpowers"}
+    if markers and (len(markers) != 1 or markers != role_markers or markers[0] not in accepted):
+        issues.append(
+            "doc-governance workflow requires one 'Workflow: Matt' or "
+            "'Workflow: Superpowers' line under Document Roles"
+        )
+        return
+
+    invariants = normalize_space(sections.get("Archive Transition Invariants", "").lower())
+    matt_invariants = (
+        "first explicitly approved archive",
+        "remote links",
+        "preserve local sources and tracking",
+    )
+    if re.search(r"\b(?:do not require|without|skip|bypass) (?:explicit )?human approval\b"
+                 r"|\bhuman approval is (?:optional|not required)\b", invariants):
+        issues.append("doc-governance archive requires explicit human approval")
+    required = ("human approval", "archive index")
+    if markers == ["Workflow: Matt"]:
+        required += matt_invariants
+    else:
+        required += (
+            "copy",
+            "verification fails",
+            "preserve every active original",
+            "no other live workstream",
+            "reset",
+        )
+        if markers:
+            required += ("archive foundation is required",)
+    missing = [token for token in required if token not in invariants]
+    if not markers and missing and all(token in invariants for token in matt_invariants):
+        issues.append("doc-governance Matt archive rules require a 'Workflow: Matt' marker")
+        return
+    for token in missing:
+        issues.append(f"doc-governance workflow archive invariants are missing {token!r}")
 
 
 def validate_final(
@@ -2206,26 +2508,7 @@ def validate_final(
                         f"coding-guide final file contains legacy section {heading!r}"
                     )
         elif kind == "planning-guide":
-            if tuple(headings) != PLANNING_GUIDE_HEADINGS:
-                issues.append(
-                    "planning-guide final headings must be exactly: "
-                    + ", ".join(PLANNING_GUIDE_HEADINGS)
-                )
-            sections = second_level_sections(text)
-            validate_planning_tasks(sections, "planning-guide", issues)
-            workflow = sections.get("Workflow Compatibility", "")
-            for token in PLANNING_WORKFLOW_TOKENS:
-                if token.lower() not in workflow.lower():
-                    issues.append(
-                        "planning-guide Workflow Compatibility is missing "
-                        + repr(token)
-                    )
-            wide_changes = sections.get("Wide Changes", "")
-            for token in PLANNING_WIDE_CHANGE_TOKENS:
-                if token.lower() not in wide_changes.lower():
-                    issues.append(
-                        f"planning-guide Wide Changes is missing {token!r}"
-                    )
+            validate_planning_contract(headings, second_level_sections(text), "planning-guide", issues)
         elif kind == "worker-policy":
             validate_worker_policy_contract(
                 text,
@@ -2255,20 +2538,8 @@ def validate_final(
                     issues.append(
                         f"doc-governance final file contains unexpected section {heading!r}"
                     )
-            invariant_tokens = (
-                "human approval",
-                "copy",
-                "archive index",
-                "verification fails",
-                "preserve every active original",
-                "no other live workstream",
-                "reset",
-            )
-            for token in invariant_tokens:
-                if token not in lower:
-                    issues.append(
-                        f"doc-governance archive invariants are missing {token!r}"
-                    )
+            sections = second_level_sections(text)
+            validate_governance_workflow(text, sections, issues)
             for token in (
                 "implementation-planning.md",
                 "completed implementation plans",
@@ -2277,7 +2548,7 @@ def validate_final(
                     issues.append(
                         f"doc-governance planning lifecycle is missing {token!r}"
                     )
-            roles = second_level_sections(text).get("Document Roles", "")
+            roles = sections.get("Document Roles", "")
             for name, pattern in GOVERNANCE_ROLE_PATH_RES:
                 if not pattern.search(roles):
                     issues.append(
@@ -2292,7 +2563,7 @@ def validate_final(
             issues.append(f"thin CLAUDE file has {count} lines; limit is 35")
         if len(imports) != 1:
             issues.append("thin CLAUDE file must contain exactly one valid import line")
-        if any(heading in FINAL_HEADINGS for heading in all_heading_titles):
+        if any(heading in (*FINAL_HEADINGS, "Agent skills") for heading in all_heading_titles):
             issues.append("thin CLAUDE file mixes in standalone headings")
         return issues
 
@@ -2302,15 +2573,37 @@ def validate_final(
         issues.append(
             f"{selected_complexity} standalone file has {count} lines; limit is {limit}"
         )
-    if tuple(headings) != FINAL_HEADINGS:
+    nhk_headings = tuple(heading for heading in headings if heading != "Agent skills")
+    if nhk_headings != FINAL_HEADINGS:
         issues.append(
             "standalone final top-level headings must be exactly the seven required "
             "headings in order"
         )
+    sections = second_level_sections(text)
+    if "Agent skills" in headings:
+        if headings.count("Agent skills") != 1:
+            issues.append("standalone file must contain at most one Matt Agent skills section")
+        navigation = sections["Agent skills"]
+        targets = {"Issue tracker": "issue-tracker", "Domain docs": "domain", "Triage labels": "triage-labels"}
+        # Preserve the native subsection-to-guide mapping when Matt supplied headings.
+        parts = re.split(r"^###(?!#)\s+([^\n]+?)\s*$", navigation, flags=re.MULTILINE)
+        named = {title.casefold(): body for title, body in zip(parts[1::2], parts[2::2])}
+        linked = False
+        for section, guide in targets.items():
+            path_pattern = rf"(?:^|[\s`(])(?:\./)?docs/agents/{guide}\.md(?=$|[\s`)]|[.,](?=\s|$))"
+            body = named.get(section.casefold(), parts[0])
+            if re.search(path_pattern, body, re.MULTILINE):
+                linked = True
+            elif section.casefold() in named or re.search(path_pattern, navigation, re.MULTILINE):
+                issues.append(f"Agent skills must point to docs/agents/{guide}.md under {section}")
+        if not linked:
+            issues.append("Agent skills must point to at least one configured Matt guide")
     if imports:
         issues.append("standalone final file mixes in a thin AGENTS import")
-    validate_wait_contract(second_level_sections(text), "standalone final", issues)
-    context = second_level_sections(text).get("Context and Documentation", "")
+    for heading, clauses in INSTRUCTION_BEHAVIOR.items():
+        require_section_text(sections, heading, clauses, "standalone final", issues)
+    validate_wait_contract(sections, "standalone final", issues)
+    context = sections.get("Context and Documentation", "")
     for route in INSTRUCTION_COMPANION_ROUTES:
         if route not in context:
             companion = next(

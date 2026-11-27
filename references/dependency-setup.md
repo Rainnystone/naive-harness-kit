@@ -1,47 +1,37 @@
-# NHK Dependency Setup Reference
+# NHK Workflow Capability Setup
 
-This file is a local reference for dependency readiness decisions in `welcome-to-nhk`.
+Use this reference when the current NHK route or workstream needs a workflow capability that cannot be invoked. Use the workspace default and current workstream ownership established by `welcome-to-nhk`.
 
-Use it when `superpowers` or `planning-with-files` is missing and the user asks what the options mean or wants help proceeding.
+## Workflow Sources
 
-## Dependency Sources
+- Matt Pocock's engineering skills: <https://github.com/mattpocock/skills>
+- Superpowers: <https://github.com/obra/superpowers>
+- Planning with Files: <https://github.com/othmanadi/planning-with-files>
 
-- `superpowers`: <https://github.com/obra/superpowers>
-- `planning-with-files`: <https://github.com/othmanadi/planning-with-files>
+## Which Capability To Check
+
+| Current work | Capability to check |
+| --- | --- |
+| Matt repository setup | `setup-matt-pocock-skills` when the work needs new or incomplete Matt configuration. Reuse verified existing configuration. |
+| Matt domain, spec, ticketing, triage, or engineering work | The specific skill needed and the configured tracker access when the task reads or writes tracker records. |
+| Superpowers spec, plan, or implementation work | The specific Superpowers skills needed to run that workflow. |
+| File-based workstream tracking | `planning-with-files` only when the authoritative plan or tracker cannot meet a genuine tracking or recovery need. Keep one authoritative task state. |
+| NHK-only documentation repair or archive retrieval | The tools needed to inspect and update local artifacts. Require read-only tracker access when identity or completion evidence is missing locally. A confirmed remote link may be recorded with an explicit remote access limit. |
+
+A visible skill is ready when the harness can invoke it in this session. A discovered install, cached skill file, or documented upstream link can help locate it. Confirm invocation through the harness or its supported explicit installed-skill entrypoint.
 
 ## Decision Modes
 
 ### 1. Install
 
-Use this when the dependency is not present and the user wants the actual workflow asset added to the current environment.
-
-- Confirm which dependency is missing.
-- Point to the upstream repository.
-- Follow the repository's documented installation path instead of inventing a custom shortcut.
-- Ask before mutating the environment.
+When the required skill is absent and the user wants a native install, identify the missing skill, use its upstream documentation and the platform's install mechanism, and obtain authorization before environment changes.
 
 ### 2. Enable
 
-Use this when the dependency already exists somewhere in the environment, but it is not active in the current workspace or current tool session.
-
-- Confirm that the dependency is already installed or available.
-- Explain what needs to be enabled for the current workspace or current agent session.
-- Avoid reinstalling something that already exists unless the user asks to replace or repair it.
+When the skill is installed but unavailable in the active environment, explain how to enable it in this workspace or start the session that can invoke it. Verify that it becomes available.
 
 ### 3. Adopt
 
-Use this only when the user explicitly authorizes NHK to follow the missing workflow's conventions manually for the current NHK run.
+When the user explicitly authorizes manual use of a missing skill's conventions, follow the conventions for this NHK run only. Keep adoption in the conversational handoff, with no persistent adoption marker or effect on future runs. Report that the dependency was missing and its conventions were followed manually. The persisted workspace workflow records a default, independent of install or adoption state.
 
-For NHK, `adopt` means:
-
-- follow the relevant `superpowers` or `planning-with-files` conventions manually for this run
-- do not create a persistent adoption marker or treat later runs as pre-authorized
-- report clearly that the dependency was not installed and its conventions were followed manually
-
-## Safety Rules
-
-- Do not auto-install anything.
-- Do not claim a dependency is installed if the environment only adopted the workflow conventions manually.
-- Do not infer adopt from the user's willingness to continue; it must be an explicit choice.
-- If the user declines install, enable, and adopt, stop the NHK bootstrap or upkeep flow and state which capability is missing.
-- Prefer the upstream repository instructions over ad hoc local guesses.
+If the required capability remains unavailable and the user has not chosen or has declined these options, stop the affected route. A separate authorization is still required for any environment change or tracker mutation outside the current task.

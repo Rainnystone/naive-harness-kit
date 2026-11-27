@@ -20,7 +20,8 @@ Marker protocol:
 - Include `OPTIONAL_BY_COMPLEXITY` only for a real medium or complex need.
 - Remove every marker, template instruction, prompt, and placeholder from the final file.
 
-Use these seven top-level headings once each and in order: Project Map; Execution Rules; Context and Documentation; Subagents and Packets; Blockers and Human Approval; Testing and Verification; Git and Delivery.
+Keep one native `## Agent skills` section on the canonical file when Matt is configured, with literal pointers to each configured tracker, domain or triage guide. Preserve its summaries.
+Use these seven NHK top-level headings once each and in order: Project Map; Execution Rules; Context and Documentation; Subagents and Packets; Blockers and Human Approval; Testing and Verification; Git and Delivery.
 
 Standalone line limits:
 - simple: 100 lines
@@ -41,13 +42,13 @@ Omit directory trees, inventories, active status, inferable stack facts, and a s
 [[FINAL_VERBATIM:BEGIN]]
 ## Execution Rules
 
-- Start from the human's requested outcome and define completion before choosing an implementation path.
-- Prefer the smallest direct change that resolves the request and can be verified.
+- Define success from the requested outcome before choosing an implementation.
+- Choose the simplest maintainable solution that meets acceptance without introducing avoidable technical debt.
 - Keep validation, schema, path, reference-integrity, and persistence guarantees deterministic.
 - Preserve declared sources of truth. Change generated artifacts only through the project's required process.
 - Resolve intended behavior when instructions, implementation, tests, and active docs disagree, then restore consistency.
 - Use an installed or explicitly adopted workflow when it fits. Do not claim an unavailable workflow.
-- Use Superpowers `systematic-debugging` for bugs and its required architecture checks.
+- Resolve defects at their cause using the selected workflow’s debugging method.
 [[FINAL_VERBATIM:END]]
 
 [[OPTIONAL_BY_COMPLEXITY:BEGIN]]
@@ -59,12 +60,11 @@ Include only a real safety boundary that cannot fit in Project Map. Route task-s
 [[FINAL_VERBATIM:BEGIN]]
 ## Context and Documentation
 
-- The stable foundation includes `coding-agent-guide.md`, `implementation-planning.md`, `worker-policy.md`, `execution-recovery.md`, `documentation-governance.md`, `archive/`, and `archive/README.md`.
 - Read `coding-agent-guide.md` to route a task or symptom to code and first-pass verification.
-- Read `implementation-planning.md` before writing, approving, or materially revising an implementation plan.
+- Read `implementation-planning.md` before writing, approving or revising a plan or ticket breakdown.
 - Read `worker-policy.md` only when orchestrating, dispatching, or reviewing workers. Load its common sections and the current platform section.
-- Read `execution-recovery.md` after five failed rounds on one task or one acceptance gap, or earlier evidence of architectural stagnation.
-- Treat `documentation-governance.md` as the source of truth for documentation lifecycle rules.
+- Read `execution-recovery.md` for independent consultation, after five failed rounds on one task or acceptance gap, or earlier evidence of architectural stagnation.
+- Treat `documentation-governance.md` as the source for workflow selection, tracking, and document lifecycles.
 - Load the smallest active context that safely routes the task. Prefer implementation, tests, and active docs before history.
 - Keep active plans and tracking aligned with actual status. Create heavier tracking only when the work needs it.
 - Consider archive only for a completed, identifiable workstream. Ask before archiving and never archive automatically.
@@ -89,7 +89,7 @@ Include only a real safety boundary that cannot fit in Project Map. Route task-s
 
 - Exhaust safe, in-scope checks before declaring a blocker.
 - Ask before changing an unauthorized public contract, persistence meaning, data model, user workflow, or architecture boundary.
-- Keep unresolved problems visible. Continue only within the accepted scope, evidence, and authority.
+- During authorized implementation, resolve engineering uncertainty and take the next in-scope action through verification.
 [[FINAL_VERBATIM:END]]
 
 [[FINAL_ADAPT:BEGIN]]
@@ -104,7 +104,7 @@ Replace this block with additional project stop conditions and the smallest safe
 - For production behavior changes, use TDD: establish a meaningful failure, implement the smallest fix, and verify it passes.
 - Follow the existing coverage gate without silently changing or bypassing it.
 - If no gate exists, report that fact and test the changed behavior and important error paths.
-- Run the strongest relevant checks, including representative inputs and direct visual inspection when applicable.
+- Run required gates and checks proportionate to risk, using representative inputs and direct visual inspection when applicable.
 - Claim completion only after required checks pass, or report exactly what could not be verified and why.
 [[FINAL_VERBATIM:END]]
 
@@ -119,7 +119,7 @@ Replace this block with real targeted and final verification commands. Include o
 
 - Preserve unrelated human changes and use destructive Git operations only with explicit authorization.
 - Record only repository policies that exist; omit unknown branch, commit, review, merge, or release conventions.
-- Report the result, verification, remaining uncertainty, and any action still needed from the human.
+- Lead with the outcome in the user’s language. Use plain words for verified results and decisions they must make.
 [[FINAL_VERBATIM:END]]
 
 [[FINAL_ADAPT:BEGIN]]

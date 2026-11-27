@@ -11,10 +11,11 @@ Use this skill only for the active-to-archive transition of one completed workst
 
 Reuse a `welcome-to-nhk` handoff only when it is for the current workspace and current NHK run, and its **Route** selects this skill. If the handoff is absent, unresolved, or stale, run `welcome-to-nhk` first. If it selects another route, hand off and do not continue archive.
 
-Use the handoff's dependency, instruction, topology, and complete-foundation state as the archive input. Do not persist the handoff. A bootstrap route must finish and rerun `welcome-to-nhk` before archive may resume.
+Use the handoff's workspace workflow, workstream owner, capability, instruction, topology, and complete-foundation state as the archive input. Apply the archive transition of the workflow that owns this workstream. Do not persist the handoff. Any preceding bootstrap or upkeep route must finish and rerun `welcome-to-nhk` before archive may resume.
 
 ## Human Archive Gate
 
+- Confirm the named workstream and evidence that it met its required completion and verification gates before proposing the transition.
 - If the current context does not already contain a clear yes for this specific workstream, ask whether to archive it now.
 - Do not move, rename, copy into archive, reset, or clear anything before that yes.
 - If the user declines or remains ambiguous, keep the workstream active and stop.
@@ -25,35 +26,34 @@ Choose one stable identity already supported by the active materials, such as a 
 
 Select related materials in this order:
 
-1. active spec and plan surfaces used by the installed or explicitly adopted planning workflow
-2. active root tracking such as `task_plan.md`, `progress.md`, and `findings.md`
-3. filenames, directories, dates, and topic slugs matching the chosen identity
-4. file content and current context when naming signals are incomplete
+1. the workstream's authoritative spec, plan, or tracker records, including its completion and verification evidence
+2. workstream-specific recovery or progress records, including applicable `task_plan.md`, `progress.md`, and `findings.md`
+3. named supporting materials whose content and identity associate them with the completed workstream
 
-Archive only materials that clearly belong to that identity. Completed implementation plans may move with their workstream, but the stable companions `coding-agent-guide.md`, `implementation-planning.md`, `worker-policy.md`, `execution-recovery.md`, and `documentation-governance.md` never do. Do not archive unrelated live plans, shared instruction or governance docs, or tracking still used by another workstream.
+Archive only materials that clearly belong to that identity. Completed implementation plans may follow their owning workflow's transition. Keep `coding-agent-guide.md`, `implementation-planning.md`, `worker-policy.md`, `execution-recovery.md`, and `documentation-governance.md`, canonical instructions, shared domain docs, and `docs/agents/` as stable active references. Keep unrelated live plans and shared tracking in use.
 
 ## Naming And Index Contract
 
-When creating or repairing the archive index row, read `../references/archive-readme-template.md`. Do not load unrelated instruction or companion templates during archive.
+When creating or repairing the archive index row, read `../references/archive-readme-template.md`. Add or update one row in `archive/README.md` for the confirmed identity, with the date, location, verified materials, and an optional short note. Reuse a matching row on retry. Preserve unrelated entries. In a Matt workspace, create `archive/` and its index when first needed for an explicitly approved archive.
 
-- Prefer one unique archive container such as `archive/<date>-<topic>/`.
-- If files share a flat archive directory, include the workstream identity in every archived plan, spec, and tracking filename.
-- Never accumulate indistinguishable generic tracking filenames in a shared archive.
-- Add or update exactly one resolvable row in `archive/README.md` with identity, date, location, included materials, and an optional short note.
+## Matt Transition
 
-## Transition And Verification Order
+1. Record the confirmed identity, the authoritative source paths or URLs, and the completion and verification evidence to retain.
+2. Prepare the index row with Markdown links to the actual local records (relative to the index) or the canonical tracker URLs. Locate any additional related evidence through this row. Keep local source files and tracking in place. Reference remote items by URL only, with no duplicated issue material or tracker changes.
+3. Verify local references and report any remote access that remains unverified. Verify the row from its staged location and match each local path or confirmed URL to its recorded identity. Use read-only tracker access where available. If permissions or connectivity prevent reading a confirmed remote URL, note that limit in the index and delivery; local verification does not prove remote access. If a reference is ambiguous or points to the wrong material, resolve it before recording the transition.
+4. Save the verified row and recheck its local references from `archive/README.md`. Update active descriptions and governance references for the completion as needed while preserving the evidence, original tracker state, and any tracking still in use.
 
-1. Record the confirmed workstream identity and exact related-material set.
-2. Create the uniquely named archive destination and stage copies of the selected completed materials without removing the active originals.
-3. Update the archive index row.
-4. Verify every expected archived copy exists, is readable, belongs to the workstream, and uses an unambiguous name.
-5. Verify the index row resolves to the real archive location and accurately lists the included materials.
-6. Verify no other live workstream depends on any active original or root tracking file selected for transition.
-7. Only after steps 4-6 pass, complete the governed move by removing active originals when required, then update active documentation and `documentation-governance.md` while keeping historical records intact. Update `coding-agent-guide.md` only when a real Task Routing row points to material that moved.
-8. Only after that verified move may root tracking for this workstream be reset or cleared, and only when workspace governance calls for reuse.
+## Superpowers Transition
 
-If archive copy, naming, content, or index verification fails, preserve every active original and root tracking file, repair the archive result, and rerun verification first. Never remove an active original before the staged archive and index have passed verification.
+1. Record the confirmed identity and exact related material. Prefer a unique container such as `archive/<date>-<topic>/`; in a flat archive include the identity in each archived plan, spec, and tracking filename.
+2. Stage copies without removing the active originals, then update the index row.
+3. Verify each archived copy is readable, belongs to the workstream, and uses an unambiguous name. Verify the index resolves to the real destination and accurately lists the materials.
+4. Confirm no other live workstream depends on any active original or tracking file selected for transition.
+5. After these checks pass, complete the governed move by removing active originals when required. Update active descriptions and `documentation-governance.md` while retaining historical records. Update `coding-agent-guide.md` only if a Task Routing row actually points to moved material.
+6. Reset or clear root tracking only after a verified move and only when it is no longer shared and workspace governance calls for reuse.
+
+If a copy, link, identity, or index fails verification, preserve every active original and tracking file. Repair the staged archive and verify it before marking the transition complete.
 
 ## Delivery
 
-Report the confirmed identity, archived location, included materials, index update, verification performed, current active surface, and whether root tracking was reset. If a dependency was adopted, say it was not installed and was followed manually for this NHK run.
+Report the confirmed identity, index location and referenced or copied materials, verification performed and its limits, and the current active surfaces and tracking state. If a dependency was adopted, name the missing skill and report manual use of its conventions for this NHK run.
