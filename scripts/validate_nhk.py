@@ -2486,6 +2486,8 @@ def validate_final(
                     )
             sections = second_level_sections(text)
             validate_governance_workflow(text, sections, issues)
+            if "implementation-planning.md" not in lower:
+                issues.append("doc-governance planning lifecycle is missing 'implementation-planning.md'")
             if not sections.get("Archive Transition Invariants", "").strip():
                 issues.append("doc-governance requires a nonempty Archive Transition Invariants section")
             roles = sections.get("Document Roles", "")
