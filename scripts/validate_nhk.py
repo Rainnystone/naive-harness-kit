@@ -2349,17 +2349,22 @@ def archive_approval_waived(body: str) -> bool:
     scope_words = r"(?: (?!and\b|or\b|then\b|but\b|even\b|unless\b|except\b)[\w'’/`-]+)*"
     archive_scope = rf"(?: (?:before archiving|to archive|for){scope_words})?"
     # An exception must modify the approval rule, not another action in the sentence.
-    qualified_rule = (
-        rf"{approval_rule}{archive_scope}\s*,?\s*{exception}"
-        rf"|(?:^|[:;])\s*(?:[-+*]|\d+[.)])?\s*{exception}[^,;.!?]*,\s*{approval_rule}"
-    )
+    trailing_exception = rf"{approval_rule}{archive_scope}\s*,?\s*{exception}"
+    leading_exception = rf"^\s*(?:[-+*]|\d+[.)])?\s*{exception}[^,;.!?]*,\s*"
     # Preserve statement boundaries and join soft-wrapped lines inside each Markdown item.
     for item in re.split(r"\n[ \t]*\n|\n(?=[ \t]*(?:[-+*]|\d+[.)])[ \t]+)", body.lower()):
         for rule in re.split(r"(?<=[.!?;])\s+", normalize_space(item)):
             if re.search(waiver, re.sub(protected, "", rule)):
                 return True
-            if re.search(qualified_rule, rule):
+            if re.search(trailing_exception, rule):
                 return True
+            condition = re.match(leading_exception, rule)
+            if condition:
+                consequence = re.split(
+                    r"[,;]|\b(?:then|and|but|while|whereas)\b", rule[condition.end():], maxsplit=1,
+                )[0]
+                if re.search(approval_rule, consequence):
+                    return True
     return False
 
 
