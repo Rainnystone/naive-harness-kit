@@ -341,19 +341,15 @@ For a consequential unresolved engineering question, optionally consult once bef
 
 A completed Matt release uses a closed remote issue. With explicit approval to archive that release, create the local archive index on demand, link the original issue once, and verify its identity. Do not copy ticket bodies, close or mutate remote issues during archive. An unverified remote identity leaves the transition pending. If identity and completion are already confirmed but the verified URL cannot be opened locally, the index and delivery distinguish that access limit from local link checks. In a local tracker keep referenced ticket paths and shared documents in place; do not relocate the glossary, ADRs, tracker configuration or another open release. A second pass retains one resolvable index entry.
 
-An unmarked legacy Superpowers governance document that satisfies the copy-and-verify rules may link remote release evidence. Matt’s reference-only archive requires its workflow marker.
+The optional governance CLI accepts a nonempty archive section in the project’s language. Check a valid workflow marker, an unknown or duplicate marker, and an archive section containing only a subheading and a comment. Legacy files without a marker remain readable; the router resolves their default from workspace evidence.
 
-### F1. User says no
+### F1. Approval is missing or declined
 
-**Prompt:** “No, keep it active.”
+In each workflow, start at the router without a handoff and ask whether the named completed workstream is ready to archive. Expect the archive route for a read-only assessment. Repeat with a missing workflow marker and clear ownership in the records. Use the inferred workflow for the assessment and leave the governance file untouched. With no decision yet, expect a request for approval and unchanged files and tracker state. A decline leaves them unchanged as well. A closed ticket or a passed test supplies completion evidence only.
 
-**Expected:** No move, copy, rename, index edit, reset, or clear occurs. Active tracking stays in place.
+### F2. Approved Superpowers move and retry
 
-### F2. User says yes
-
-**Setup:** Foundation is complete, one workstream is confirmed, and its related materials are clear.
-
-**Expected:** NHK stages only those materials in one unambiguous destination while preserving active originals, adds one resolvable archive-index row, and verifies archived copies, names, contents, and the index location. Only after verification passes does it complete the governed move and update active documentation and governance. It updates the coding guide only when a real Task Routing row points to moved material. A completed implementation plan may move, but the five stable companions, including `implementation-planning.md`, `worker-policy.md`, and `execution-recovery.md`, never do.
+With the foundation complete and explicit approval for one completed workstream, verify that the archived copies match its original spec and plan, the index reaches them, and only the governed originals have moved. The five stable companions and any shared live tracking stay active. Update the coding guide only when a Task Routing row points to moved material. Retry the same transition with the existing approval. Expect the same row, date, destination and materials.
 
 ### F3. Foundation missing
 

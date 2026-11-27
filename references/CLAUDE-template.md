@@ -67,7 +67,7 @@ Include only a real safety boundary that cannot fit in Project Map. Route task-s
 - Treat `documentation-governance.md` as the source for workflow selection, tracking, and document lifecycles.
 - Load the smallest active context that safely routes the task. Prefer implementation, tests, and active docs before history.
 - Keep active plans and tracking aligned with actual status. Create heavier tracking only when the work needs it.
-- Consider archive only for a completed, identifiable workstream. Ask before archiving and never archive automatically.
+- Use `nhk-archive` when archiving a completed workstream.
 [[FINAL_VERBATIM:END]]
 
 [[FINAL_VERBATIM:BEGIN]]

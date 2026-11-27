@@ -634,8 +634,6 @@ class SourceValidationTests(ValidatorTestCase):
             ("welcome-to-nhk/SKILL.md", "Check only capabilities required by the selected route and workstream."),
             ("nhk-bootstrap/SKILL.md", "Create the archive foundation only when the workspace default is Superpowers."),
             ("nhk-upkeep/SKILL.md", "A changed workspace default applies to the next workstream."),
-            ("nhk-archive/SKILL.md", "Verify local references and report any remote access that remains unverified."),
-            ("references/archive-readme-template.md", "Use confirmed tracker URLs as remote references."),
         )
         for file, required in cases:
             with self.subTest(file=file, required=required):
@@ -2657,13 +2655,11 @@ class FinalValidationTests(ValidatorTestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(heading, result.stdout)
 
-        content = doc_governance_text().replace(
-            "Explicit human approval is required before archiving. ", ""
-        )
-        path = self.write_final(content)
+        content = doc_governance_text().split("## Archive Transition Invariants")[0]
+        path = self.write_final(content + "## Archive Transition Invariants\n\n### Approval\n<!-- draft -->\n")
         result = run_cli("--final", path, "--kind", "doc-governance")
         self.assertEqual(result.returncode, 1)
-        self.assertIn("human approval", result.stdout.lower())
+        self.assertIn("Archive Transition Invariants", result.stdout)
 
         content = doc_governance_text().replace(
             "`implementation-planning.md`", "the planning guide"
@@ -2675,51 +2671,31 @@ class FinalValidationTests(ValidatorTestCase):
 
     def test_doc_governance_accepts_legacy_and_explicit_workflows(self) -> None:
         legacy = doc_governance_text()
-        superpowers = legacy.replace(
-            "## Document Roles\n\n",
-            "## Document Roles\n\nWorkflow: Superpowers\n\n",
-        ).replace(
-            "Reset tracking", "The archive foundation is required. Reset tracking"
-        )
-        matt = legacy.replace(
-            "## Document Roles\n\n",
-            "## Document Roles\n\nWorkflow: Matt\n\n",
-        ).replace(
-            "Copy materials and update "
-            "the archive index before verification. If verification fails, preserve every "
-            "active original. Reset tracking only when no other live workstream depends on it.",
-            "Create the archive index on the first explicitly approved archive. "
-            "Use remote links and preserve local sources and tracking.",
-        )
-        for label, content in (
-            ("legacy", legacy),
-            ("legacy with remote evidence", legacy + "\nRetain remote links to the release evidence in the archive index.\n"),
-            ("superpowers", superpowers),
-            ("matt", matt),
-            ("legacy with a quoted example", legacy + "\n> Workflow: Matt\n"),
+        document = legacy.split("## Archive Transition Invariants")[0]
+        document += "## Archive Transition Invariants\n\n归档时使用 `nhk-archive`。\n"
+
+        def with_marker(marker: str) -> str:
+            return document.replace("## Document Roles\n", f"## Document Roles\n\n{marker}\n", 1)
+
+        for content in (
+            legacy,
+            with_marker("Workflow: Matt"),
+            with_marker("Workflow: Superpowers"),
+            legacy + "\n> Workflow: Matt\n",
         ):
-            with self.subTest(label=label):
-                path = self.write_final(content)
-                result = run_cli("--final", path, "--kind", "doc-governance")
+            with self.subTest(content=content):
+                result = run_cli("--final", self.write_final(content), "--kind", "doc-governance")
                 self.assertEqual(result.returncode, 0, result.stdout)
 
-        for label, content in (
-            ("unknown", matt.replace("Workflow: Matt", "Workflow: Other")),
-            ("indented code", matt.replace("Workflow: Matt", "    Workflow: Matt")),
-            ("approval waived", matt.replace("Explicit human approval is required before archiving.",
-                                              "Do not require explicit human approval before archiving.")),
-            ("duplicate", matt.replace("Workflow: Matt", "Workflow: Matt\nWorkflow: Superpowers")),
-            ("outside roles", matt.replace("Workflow: Matt\n\n", "") + "\nWorkflow: Matt\n"),
-            ("unmarked Matt", matt.replace("Workflow: Matt\n\n", "")),
-            ("lazy Superpowers", matt.replace("Workflow: Matt", "Workflow: Superpowers")),
-            ("eager Matt", superpowers.replace("Workflow: Superpowers", "Workflow: Matt")),
+        for content in (
+            with_marker("Workflow: Other"),
+            with_marker("Workflow: Matt\nWorkflow: Superpowers"),
+            document + "\nWorkflow: Matt\n",
         ):
-            with self.subTest(label=label):
-                path = self.write_final(content)
-                result = run_cli("--final", path, "--kind", "doc-governance")
+            with self.subTest(content=content):
+                result = run_cli("--final", self.write_final(content), "--kind", "doc-governance")
                 self.assertEqual(result.returncode, 1, result.stdout)
-                diagnostic = "approval" if label == "approval waived" else "workflow"
-                self.assertIn(diagnostic, result.stdout.lower())
+                self.assertIn("workflow", result.stdout.lower())
 
     def test_doc_governance_requires_worker_and_recovery_paths(self) -> None:
         for token in ("`worker-policy.md`", "`execution-recovery.md`"):

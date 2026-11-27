@@ -65,7 +65,7 @@ python3 -B scripts/validate_nhk.py --install-root <skills-root>
 | `welcome-to-nhk` | 总入口 | 识别主指令、工作流和当前操作所需的能力，再选择下一步。 |
 | `nhk-bootstrap` | 初次设置或缺少必需文件 | 接好主指令、五份配套说明和所选工作流的记录。 |
 | `nhk-upkeep` | 一个开发周期结束后，或者更新 NHK 之后 | 修正文档和当前 NHK 规则之间的漂移。只有某个 workstream 有明确的完成证据时，才会问你要不要归档。 |
-| `nhk-archive` | 你明确同意归档一项已完成的工作 | 索引仍由原处管理的记录，需要移动的本地材料先复制再核验。 |
+| `nhk-archive` | 你想确认能否归档、批准归档，或复核已有归档 | 核对这项工作的记录。你批准后，它才会索引原件，或在核验副本后移动原件。 |
 
 更新了本机的 NHK？在已有项目里从 `welcome-to-nhk` 开始，要求做一次 upkeep。就算文档看起来还挺整齐，它也会对照新模板检查一遍；项目事实和你批准过的例外会保留，缺少基础文件则先走 bootstrap。只更新安装包，不会顺手改写各个项目的文档。
 
@@ -86,7 +86,7 @@ python3 -B scripts/validate_nhk.py --install-root <skills-root>
 有几条主张是故意内置的：
 
 - 根目录 tracking 文件按需出现，不是默认永远存在。
-- active 文档和归档文档分开放，归档一定等你确认。
+- 你只需明确批准一次要归档的那项工作。Matt 在索引中链接原始记录，Superpowers 核对副本后才移动原件。重复归档会沿用同一条索引。
 - 对 NHK 面向的新手项目来说，路由表就是新手需要的浅层 code map。再另做一张 codemap，多半只是让第一次进仓库的人同时迷路在两张地图里。
 - 文档的生命周期要明确写下来，依据是 `references/documentation-governance-template.md`，不靠脑补。
 
@@ -224,5 +224,7 @@ python3 -B scripts/validate_nhk.py --final <worker-policy.md> --kind worker-poli
 python3 -B scripts/validate_nhk.py --final <execution-recovery.md> --kind execution-recovery
 python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance
 ```
+
+对于归档治理，校验器检查文档结构和已声明的工作流标记。缺少标记的旧文档仍可通过检查，NHK 在使用时根据项目记录确定工作流。要验证授权、文件移动和重试行为，实际运行[归档场景](references/validation-scenarios.md#f-archive-transition)。
 
 篇幅测试会用相同的项目事实生成 `AGENTS.md` 和 standalone `CLAUDE.md` 示例，与细则拆到配套文件之前的基线比较。两者每轮加载的英文词数都要至少减少 20%，挪几个换行不算。这是在检查指令有没有真正变短，不是给实际费用打包票；也是维护者的检查，不是安装 NHK 要交的作业。
