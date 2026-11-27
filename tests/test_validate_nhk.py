@@ -2691,6 +2691,12 @@ class FinalValidationTests(ValidatorTestCase):
             ("Except for local archives, never archive without explicit human approval.", False),
             ("Explicit human approval is required unless the tracker item is closed.", False),
             ("Never archive without human approval. Retain the source unless its owner approves removal.", True),
+            ("Never archive without human approval, and never remove the originals unless verification succeeds.", True),
+            ("Obtain explicit human approval before archiving, even if nothing changes except the archive index.", True),
+            ("Never archive without explicit human approval, except for finished workstreams.", False),
+            ("Except for local archives, obtain human approval before archiving.", False),
+            ("Require explicit human approval before archiving a release unless the tracker is closed.", False),
+            ("Obtain explicit human approval before archiving, then copy all materials except temporary outputs.", True),
             ("Do not require explicit human approval before archiving.", False),
             ("Never archive without human approval. For local archives, skip human approval.", False),
         )
