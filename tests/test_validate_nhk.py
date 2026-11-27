@@ -458,12 +458,13 @@ class SourceValidationTests(ValidatorTestCase):
 
     def test_router_handoff_contract_fails(self) -> None:
         cases = (
+            ("**Workflow**", "**Default**"),
             ("**Dependencies**", "**Tools**"),
             ("only in conversation", "available temporarily"),
             ("current workspace", "selected workspace"),
             (
-                "dependency state, instruction topology, foundation state, "
-                "lifecycle intent, or workspace changes",
+                "workflow selection, capability state, instruction topology, "
+                "foundation state, lifecycle intent, or workspace changes",
                 "workspace changes",
             ),
             ("human choice remains unresolved", "a choice is pending"),
@@ -500,6 +501,26 @@ class SourceValidationTests(ValidatorTestCase):
                     result = run_cli("--root", root)
                     self.assertEqual(result.returncode, 1)
                     self.assertIn("handoff", result.stdout.lower())
+
+    def test_source_requires_workflow_specific_lifecycle_contracts(self) -> None:
+        cases = (
+            ("welcome-to-nhk/SKILL.md", "A glossary by itself does not identify the workflow."),
+            ("welcome-to-nhk/SKILL.md", "Check only capabilities required by the selected route and workstream."),
+            ("nhk-bootstrap/SKILL.md", "Create the archive foundation only when the workspace default is Superpowers."),
+            ("nhk-upkeep/SKILL.md", "A changed workspace default applies to the next workstream."),
+            ("nhk-archive/SKILL.md", "Verify local references and report any remote access that remains unverified."),
+            ("references/archive-readme-template.md", "Use confirmed tracker URLs as remote references."),
+        )
+        for file, required in cases:
+            with self.subTest(file=file, required=required):
+                root = self.make_source_fixture()
+                path = root / file
+                path.write_text(
+                    path.read_text().replace(required, "", 1), encoding="utf-8"
+                )
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("workflow lifecycle", result.stdout.lower())
 
     def test_upkeep_requires_installed_contract_reconciliation(self) -> None:
         cases = (
@@ -939,7 +960,7 @@ class SourceValidationTests(ValidatorTestCase):
                     )
                     result = run_cli("--root", root)
                     self.assertEqual(result.returncode, 1)
-                    self.assertIn("seven-surface foundation", result.stdout.lower())
+                    self.assertIn("five-companion foundation", result.stdout.lower())
 
     def test_sdd_check_interval_and_exceptions_are_required(self) -> None:
         for old, new in (
@@ -2409,6 +2430,49 @@ class FinalValidationTests(ValidatorTestCase):
         result = run_cli("--final", path, "--kind", "doc-governance")
         self.assertEqual(result.returncode, 1)
         self.assertIn("implementation-planning.md", result.stdout)
+
+    def test_doc_governance_accepts_legacy_and_explicit_workflows(self) -> None:
+        legacy = doc_governance_text()
+        superpowers = legacy.replace(
+            "## Document Roles\n\n",
+            "## Document Roles\n\nWorkflow: Superpowers\n\n",
+        ).replace(
+            "Reset tracking", "The archive foundation is required. Reset tracking"
+        )
+        matt = legacy.replace(
+            "## Document Roles\n\n",
+            "## Document Roles\n\nWorkflow: Matt\n\n",
+        ).replace(
+            "Copy materials and update "
+            "the archive index before verification. If verification fails, preserve every "
+            "active original. Reset tracking only when no other live workstream depends on it.",
+            "Create the archive index on the first explicitly approved archive. "
+            "Use remote links and preserve local sources and tracking.",
+        )
+        for label, content in (
+            ("legacy", legacy),
+            ("superpowers", superpowers),
+            ("matt", matt),
+            ("legacy with a quoted example", legacy + "\n> Workflow: Matt\n"),
+        ):
+            with self.subTest(label=label):
+                path = self.write_final(content)
+                result = run_cli("--final", path, "--kind", "doc-governance")
+                self.assertEqual(result.returncode, 0, result.stdout)
+
+        for label, content in (
+            ("unknown", matt.replace("Workflow: Matt", "Workflow: Other")),
+            ("duplicate", matt.replace("Workflow: Matt", "Workflow: Matt\nWorkflow: Superpowers")),
+            ("outside roles", matt.replace("Workflow: Matt\n\n", "") + "\nWorkflow: Matt\n"),
+            ("unmarked Matt", matt.replace("Workflow: Matt\n\n", "")),
+            ("lazy Superpowers", matt.replace("Workflow: Matt", "Workflow: Superpowers")),
+            ("eager Matt", superpowers.replace("Workflow: Superpowers", "Workflow: Matt")),
+        ):
+            with self.subTest(label=label):
+                path = self.write_final(content)
+                result = run_cli("--final", path, "--kind", "doc-governance")
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("workflow", result.stdout.lower())
 
     def test_doc_governance_requires_worker_and_recovery_paths(self) -> None:
         for token in ("`worker-policy.md`", "`execution-recovery.md`"):

@@ -29,6 +29,7 @@ SKILL_DESCRIPTION_LEADS = {
 
 ROUTER_HANDOFF_TOKENS = (
     "## Router Handoff",
+    "**Workflow**",
     "**Dependencies**",
     "**Instruction**",
     "**Foundation**",
@@ -36,8 +37,8 @@ ROUTER_HANDOFF_TOKENS = (
     "only in conversation",
     "current workspace",
     "current NHK run",
-    "dependency state, instruction topology, foundation state, lifecycle intent, "
-    "or workspace changes",
+    "workflow selection, capability state, instruction topology, foundation state, "
+    "lifecycle intent, or workspace changes",
     "human choice remains unresolved",
 )
 
@@ -60,6 +61,29 @@ BOOTSTRAP_HANDOFF_TOKENS = (
     "missing and the canonical instruction has no superseded NHK-owned policy or "
     "recovery text.",
 )
+
+SKILL_WORKFLOW_CONTRACTS = {
+    "welcome-to-nhk": (
+        "A glossary by itself does not identify the workflow.",
+        "Check only capabilities required by the selected route and workstream.",
+        "one workflow owns implementation and task tracking",
+    ),
+    "nhk-bootstrap": (
+        "Create the archive foundation only when the workspace default is Superpowers.",
+        "Add `docs/agents/triage-labels.md` only when the triage skill",
+        "merge existing navigation into canonical `AGENTS.md`",
+    ),
+    "nhk-upkeep": (
+        "A changed workspace default applies to the next workstream.",
+        "Reapplying upkeep to unchanged workspace state should cause no further edits.",
+    ),
+    "nhk-archive": (
+        "Apply the archive transition of the workflow that owns this workstream.",
+        "Verify local references and report any remote access that remains unverified.",
+        "Keep local source files and tracking in place.",
+        "Stage copies without removing the active originals",
+    ),
+}
 
 REFERENCES = (
     "AGENTS-template.md",
@@ -1532,6 +1556,9 @@ def validate_skill(root: Path, name: str, issues: list[str]) -> None:
         if token not in text:
             issues.append(f"{name}/SKILL.md: router handoff is missing {token!r}")
 
+    for token in SKILL_WORKFLOW_CONTRACTS[name]:
+        require_text(text, token, f"{name}/SKILL.md workflow lifecycle", issues)
+
     update_contracts = {
         "welcome-to-nhk": ("when the user requests upkeep", "after an NHK update needs workspace reconciliation"),
         "nhk-upkeep": (
@@ -1565,7 +1592,7 @@ def validate_skill(root: Path, name: str, issues: list[str]) -> None:
     ):
         if f"`{companion}`" not in text:
             issues.append(
-                f"{name}/SKILL.md: seven-surface foundation must name "
+                f"{name}/SKILL.md: five-companion foundation must name "
                 f"`{companion}`"
             )
 
@@ -2045,6 +2072,20 @@ def validate_source(root: Path) -> list[str]:
                 issues,
             )
         _, shape_sections = final_shape_sections(governance_template)
+        require_section_text(
+            shape_sections,
+            "Document Roles",
+            ("`Workflow: Matt`", "`Workflow: Superpowers`"),
+            "documentation-governance-template.md workflow lifecycle",
+            issues,
+        )
+        require_section_text(
+            shape_sections,
+            "Archive Transition Invariants",
+            ("first explicitly approved archive", "The archive foundation is required."),
+            "documentation-governance-template.md workflow lifecycle",
+            issues,
+        )
         roles = shape_sections.get("Document Roles", "")
         for name, pattern in GOVERNANCE_ROLE_PATH_RES:
             if not pattern.search(roles):
@@ -2052,6 +2093,16 @@ def validate_source(root: Path) -> list[str]:
                     "documentation-governance-template.md Required Final Shape "
                     f"Document Roles is missing `{name}`"
                 )
+
+    archive_label = "references/archive-readme-template.md"
+    archive_template = read_text(root / archive_label, issues, archive_label)
+    if archive_template is not None:
+        for token in (
+            "first explicitly approved archive",
+            "Use confirmed tracker URLs as remote references.",
+            "Keep referenced local files in place.",
+        ):
+            require_text(archive_template, token, f"{archive_label} workflow lifecycle", issues)
 
     validate_readmes(root, issues)
     validate_repo_split(root, issues)
@@ -2093,6 +2144,54 @@ def validate_install(install_root: Path, source_root: Path) -> list[str]:
     for skill in SKILLS:
         validate_skill(install_root, skill, issues)
     return issues
+
+
+def validate_governance_workflow(
+    text: str, sections: dict[str, str], issues: list[str]
+) -> None:
+    def workflow_lines(lines: Iterable[str]) -> list[str]:
+        return [
+            line.strip()
+            for line in lines
+            if re.match(r"^workflow[ \t]*:", line.strip(), re.IGNORECASE)
+        ]
+
+    markers = workflow_lines(line for _, line in active_markdown_lines(text))
+    role_markers = workflow_lines(sections.get("Document Roles", "").splitlines())
+    accepted = {"Workflow: Matt", "Workflow: Superpowers"}
+    if markers and (len(markers) != 1 or markers != role_markers or markers[0] not in accepted):
+        issues.append(
+            "doc-governance workflow requires one 'Workflow: Matt' or "
+            "'Workflow: Superpowers' line under Document Roles"
+        )
+        return
+
+    invariants = normalize_space(sections.get("Archive Transition Invariants", "").lower())
+    matt_invariants = (
+        "first explicitly approved archive",
+        "remote links",
+        "preserve local sources and tracking",
+    )
+    if not markers and any(token in invariants for token in matt_invariants):
+        issues.append("doc-governance Matt archive rules require a 'Workflow: Matt' marker")
+        return
+
+    required = ("human approval", "archive index")
+    if markers == ["Workflow: Matt"]:
+        required += matt_invariants
+    else:
+        required += (
+            "copy",
+            "verification fails",
+            "preserve every active original",
+            "no other live workstream",
+            "reset",
+        )
+        if markers:
+            required += ("archive foundation is required",)
+    for token in required:
+        if token not in invariants:
+            issues.append(f"doc-governance workflow archive invariants are missing {token!r}")
 
 
 def validate_final(
@@ -2270,20 +2369,8 @@ def validate_final(
                     issues.append(
                         f"doc-governance final file contains unexpected section {heading!r}"
                     )
-            invariant_tokens = (
-                "human approval",
-                "copy",
-                "archive index",
-                "verification fails",
-                "preserve every active original",
-                "no other live workstream",
-                "reset",
-            )
-            for token in invariant_tokens:
-                if token not in lower:
-                    issues.append(
-                        f"doc-governance archive invariants are missing {token!r}"
-                    )
+            sections = second_level_sections(text)
+            validate_governance_workflow(text, sections, issues)
             for token in (
                 "implementation-planning.md",
                 "completed implementation plans",
@@ -2292,7 +2379,7 @@ def validate_final(
                     issues.append(
                         f"doc-governance planning lifecycle is missing {token!r}"
                     )
-            roles = second_level_sections(text).get("Document Roles", "")
+            roles = sections.get("Document Roles", "")
             for name, pattern in GOVERNANCE_ROLE_PATH_RES:
                 if not pattern.search(roles):
                     issues.append(
