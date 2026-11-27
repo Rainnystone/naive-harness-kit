@@ -2488,7 +2488,8 @@ def validate_final(
             validate_governance_workflow(text, sections, issues)
             if "implementation-planning.md" not in lower:
                 issues.append("doc-governance planning lifecycle is missing 'implementation-planning.md'")
-            if not sections.get("Archive Transition Invariants", "").strip():
+            archive_lines = sections.get("Archive Transition Invariants", "").splitlines()
+            if not any(line.strip() and not heading_title(line.strip()) for line in archive_lines):
                 issues.append("doc-governance requires a nonempty Archive Transition Invariants section")
             roles = sections.get("Document Roles", "")
             for name, pattern in GOVERNANCE_ROLE_PATH_RES:

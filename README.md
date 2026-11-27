@@ -65,7 +65,7 @@ It confirms files and versions; it cannot confirm that your agent actually disco
 | `welcome-to-nhk` | Always first | Finds the canonical instructions and project workflow, checks what this operation needs, and picks the next skill. |
 | `nhk-bootstrap` | First setup, or when a required piece is missing | Connects the instruction file, five guides, and the selected workflow’s records. |
 | `nhk-upkeep` | After a delivery cycle, or after updating NHK | Repairs drift between your documents and the current NHK rules. It asks about archive only when one workstream has clear completion evidence. |
-| `nhk-archive` | You approve archiving one completed workstream | Indexes records at their authoritative location or verifies local copies before moving them. |
+| `nhk-archive` | You ask about readiness, approve an archive, or check a previous archive | Checks the records. With your approval, it indexes originals or verifies local copies before moving them. |
 
 Updated your installed copy of NHK? Run `welcome-to-nhk` in an existing project and ask for upkeep. It compares the project against the new templates even when everything still looks tidy, keeps your project facts and approved exceptions, and sends any missing foundation piece through bootstrap first. Updating the bundle by itself never rewrites project documents.
 

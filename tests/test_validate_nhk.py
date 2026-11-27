@@ -2656,7 +2656,7 @@ class FinalValidationTests(ValidatorTestCase):
                 self.assertIn(heading, result.stdout)
 
         content = doc_governance_text().split("## Archive Transition Invariants")[0]
-        path = self.write_final(content + "## Archive Transition Invariants\n\n<!-- draft -->\n")
+        path = self.write_final(content + "## Archive Transition Invariants\n\n### Approval\n<!-- draft -->\n")
         result = run_cli("--final", path, "--kind", "doc-governance")
         self.assertEqual(result.returncode, 1)
         self.assertIn("Archive Transition Invariants", result.stdout)

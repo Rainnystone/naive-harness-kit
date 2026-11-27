@@ -1,19 +1,19 @@
 ---
 name: nhk-archive
-description: Archive one completed NHK workstream with the human’s approval, or verify its existing archive on retry.
+description: Archive an approved workstream, assess its readiness, or verify its existing archive.
 ---
 
 # NHK Archive
 
 ## Router Handoff
 
-Reuse a `welcome-to-nhk` handoff only for the current workspace and current NHK run when its **Route** selects this skill. If the handoff is absent, unresolved, or stale, run `welcome-to-nhk` first. If it selects another route, do not continue archive. Complete that route and rerun the router.
+Reuse a `welcome-to-nhk` handoff only for the current workspace and current NHK run when its **Route** selects this skill. If the handoff is absent, unresolved, or stale, run `welcome-to-nhk` first. If it selects another route, do not continue archive. A `ready` handoff ends the run. After prerequisite bootstrap or upkeep, rerun the router.
 
 ## Before writing
 
 Identify the workstream, its owning workflow, its records, and the evidence that its required checks passed. On a retry, consult its existing row in `archive/README.md` for materials already moved.
 
-Archive only with the human’s explicit approval for this workstream. Reuse approval already given for the same transition. If the work is complete and consent is unclear, ask once and leave the files and tracker as they are. A decline leaves the work active.
+For a readiness or verification question, inspect the records and report what you find without writing. Archive only with the human’s explicit approval for this workstream. Reuse approval already given for the same transition. If the work is complete and consent is unclear, ask once and leave the files and tracker as they are. A decline leaves the work active.
 
 Select only records belonging to that workstream. Keep the canonical instructions, domain docs, `docs/agents/`, and the five companions active: `coding-agent-guide.md`, `implementation-planning.md`, `worker-policy.md`, `execution-recovery.md`, and `documentation-governance.md`.
 

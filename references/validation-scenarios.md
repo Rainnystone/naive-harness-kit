@@ -341,11 +341,11 @@ For a consequential unresolved engineering question, optionally consult once bef
 
 A completed Matt release uses a closed remote issue. With explicit approval to archive that release, create the local archive index on demand, link the original issue once, and verify its identity. Do not copy ticket bodies, close or mutate remote issues during archive. An unverified remote identity leaves the transition pending. If identity and completion are already confirmed but the verified URL cannot be opened locally, the index and delivery distinguish that access limit from local link checks. In a local tracker keep referenced ticket paths and shared documents in place; do not relocate the glossary, ADRs, tracker configuration or another open release. A second pass retains one resolvable index entry.
 
-The optional governance CLI accepts a nonempty archive section in the project’s language. Check a valid workflow marker, an unknown or duplicate marker, and an empty archive section. Legacy files without a marker remain readable; the router resolves their default from workspace evidence.
+The optional governance CLI accepts a nonempty archive section in the project’s language. Check a valid workflow marker, an unknown or duplicate marker, and an archive section containing only a subheading and a comment. Legacy files without a marker remain readable; the router resolves their default from workspace evidence.
 
 ### F1. Approval is missing or declined
 
-In each workflow, ask whether the named completed workstream is ready to archive. With no decision yet, expect a request for approval and unchanged files and tracker state. A decline leaves them unchanged as well. A closed ticket or a passed test supplies completion evidence only.
+In each workflow, start at the router without a handoff and ask whether the named completed workstream is ready to archive. Expect the archive route for a read-only assessment. With no decision yet, expect a request for approval and unchanged files and tracker state. A decline leaves them unchanged as well. A closed ticket or a passed test supplies completion evidence only.
 
 ### F2. Approved Superpowers move and retry
 
