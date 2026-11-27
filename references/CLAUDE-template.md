@@ -20,7 +20,7 @@ Marker protocol:
 - Include `OPTIONAL_BY_COMPLEXITY` only for a real medium or complex need.
 - Remove every marker, template instruction, prompt, and placeholder from the final file.
 
-Keep one native `## Agent skills` section on the canonical file when Matt is configured, with literal pointers to its tracker and domain guides and the triage guide if configured. Preserve its summaries.
+Keep one native `## Agent skills` section on the canonical file when Matt is configured, with literal pointers to each configured tracker, domain or triage guide. Preserve its summaries.
 Use these seven NHK top-level headings once each and in order: Project Map; Execution Rules; Context and Documentation; Subagents and Packets; Blockers and Human Approval; Testing and Verification; Git and Delivery.
 
 Standalone line limits:
@@ -42,8 +42,8 @@ Omit directory trees, inventories, active status, inferable stack facts, and a s
 [[FINAL_VERBATIM:BEGIN]]
 ## Execution Rules
 
-- Start from the human's requested outcome and define completion before choosing an implementation path.
-- Choose the simplest maintainable solution that fully meets the acceptance criteria.
+- Define success from the requested outcome before choosing an implementation.
+- Choose the simplest maintainable solution that meets acceptance without introducing avoidable technical debt.
 - Keep validation, schema, path, reference-integrity, and persistence guarantees deterministic.
 - Preserve declared sources of truth. Change generated artifacts only through the project's required process.
 - Resolve intended behavior when instructions, implementation, tests, and active docs disagree, then restore consistency.
@@ -119,7 +119,7 @@ Replace this block with real targeted and final verification commands. Include o
 
 - Preserve unrelated human changes and use destructive Git operations only with explicit authorization.
 - Record only repository policies that exist; omit unknown branch, commit, review, merge, or release conventions.
-- Lead with the outcome in the user’s language. State what you verified and what still needs their decision.
+- Lead with the outcome in the user’s language. Use plain words for verified results and decisions they must make.
 [[FINAL_VERBATIM:END]]
 
 [[FINAL_ADAPT:BEGIN]]

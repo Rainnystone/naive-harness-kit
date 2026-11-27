@@ -361,6 +361,7 @@ class RecoveryConsultationTests(ValidatorTestCase):
             "Diagnostic workers must authenticate to read production logs.",
             "Consultants must sign the data-access agreement before reading dashboards.",
             "Diagnostic workers can read production logs through the read-only replica.",
+            "Request human confirmation before making an out-of-scope permission change.",
         )
         for source in (False, True):
             for addition in additions:
@@ -384,6 +385,20 @@ class RecoveryConsultationTests(ValidatorTestCase):
                     self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                     self.assertIn("consultation", result.stdout)
 
+    def test_recovery_rejects_routing_routine_decisions_to_the_human(self) -> None:
+        for source in (False, True):
+            content = self.recovery_input(source)
+            heading = "### Main-thread Reassessment" if source else "## Main-thread Reassessment"
+            for rule in (
+                "The main thread must hand every decision to the human when consultation is unavailable.",
+                "The main thread is required to request human confirmation for all routine engineering choices.",
+            ):
+                with self.subTest(source=source, rule=rule):
+                    invalid = content.replace(heading, f"{heading}\n\n- {rule}", 1)
+                    result = self.check_recovery(invalid, source)
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn("human decision", result.stdout)
+
     def test_consultation_required_clauses_must_be_active_and_in_owning_section(self) -> None:
         clause = "at most one targeted clarification with the same diagnostic worker"
         for source in (False, True):
@@ -402,6 +417,60 @@ class RecoveryConsultationTests(ValidatorTestCase):
 
 
 class SourceValidationTests(ValidatorTestCase):
+    def check_worker_policy(self, content: str, source: bool) -> subprocess.CompletedProcess[str]:
+        if source:
+            root = self.make_source_fixture()
+            (root / "references" / "worker-policy-template.md").write_text(content, encoding="utf-8")
+            return run_cli("--root", root)
+        return run_cli("--final", self.write_final(content), "--kind", "worker-policy")
+
+    def worker_policy_input(self, source: bool) -> str:
+        if source:
+            return (ROOT / "references" / "worker-policy-template.md").read_text(encoding="utf-8")
+        return worker_policy_text()
+
+    def test_worker_policy_rejects_parallel_sdd_and_globally_serial_implementation(self) -> None:
+        for source in (False, True):
+            content = self.worker_policy_input(source)
+            heading = "### Dispatch Contract" if source else "## Dispatch Contract"
+            for rule in (
+                "In SDD, implementers may run in parallel.",
+                "Parallel implementation is allowed in SDD.",
+                "All implementation is sequential.",
+            ):
+                with self.subTest(source=source, rule=rule):
+                    invalid = content.replace(heading, f"{heading}\n\n- {rule}", 1)
+                    result = self.check_worker_policy(invalid, source)
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn("additional routing", result.stdout)
+
+    def test_worker_policy_limits_luna_to_an_explicit_current_run_batch(self) -> None:
+        permission = (
+            "A qualifying mechanical batch may use runtime-supported Luna only if the human "
+            "explicitly names Luna for that batch in the current run. Never use Luna for automatic "
+            "dispatch, review, recovery, or fallback. Keep that permission out of persistent routing records."
+        )
+        for source in (False, True):
+            content = self.worker_policy_input(source)
+            heading = "### Codex Routing" if source else "## Codex Routing"
+            for replacement in ("", f"<!-- {permission} -->\n"):
+                with self.subTest(source=source, inactive=bool(replacement)):
+                    invalid = content.replace(f"- {permission}\n", replacement, 1)
+                    result = self.check_worker_policy(invalid, source)
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn("Codex Routing is missing", result.stdout)
+            for grant in (
+                "Automatically dispatch Luna for mechanical batches.",
+                "Use Luna when Sol is unavailable.",
+                "Use Luna for final review.",
+                "Use Luna for recovery.",
+            ):
+                with self.subTest(source=source, grant=grant):
+                    invalid = content.replace(heading, f"{heading}\n\n- {grant}", 1)
+                    result = self.check_worker_policy(invalid, source)
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn("additional routing", result.stdout)
+
     def test_active_source_and_final_reject_extra_astra_permissions(self) -> None:
         for grant in (
             "Use GPT-6.2 Astra xhigh for implementation.",
@@ -1122,7 +1191,7 @@ class SourceValidationTests(ValidatorTestCase):
         cases = (
             ("README.md", "we suggest GPT-6.2 Astra xhigh", "we suggest another available model"),
             ("README.md", "human-facing suggestion only", "mandatory main-thread policy"),
-            ("README.md", "you choose the main-thread model and effort", "NHK chooses the main-thread model and effort"),
+            ("README.md", "You choose the main-thread model and effort", "NHK chooses the main-thread model and effort"),
             ("README.md", "NHK worker permissions do not depend on that choice", "NHK worker permissions depend on that choice"),
             ("README_CN.md", "建议使用 GPT-6.2 Astra xhigh", "建议考虑其他可用型号"),
             ("README_CN.md", "这只是给使用者的建议", "这是强制的主线程规则"),
@@ -1162,7 +1231,7 @@ class SourceValidationTests(ValidatorTestCase):
             ("README.md", "Claude's light helper runs Haiku", "Claude helpers use a model"),
             ("README.md", "every other Claude helper runs Opus", "every other Claude helper runs Sonnet"),
             ("README.md", "Claude Code main thread, we suggest Opus high", "Claude Code main thread, pick anything"),
-            ("README.md", "seven required pieces", "the foundation"),
+            ("README.md", "five stable guides", "several guides"),
             ("README.md", "Superpowers overlay", "planning helper"),
             ("README.md", "sorts helper work into four capability tiers", "picks helpers"),
             ("README_CN.md", "十一个受控 reference", "几份 reference"),
@@ -1170,16 +1239,17 @@ class SourceValidationTests(ValidatorTestCase):
             ("README_CN.md", "其余帮手全部使用 Opus", "其余帮手全部使用 Sonnet"),
             ("README_CN.md", "Claude Code 主线程，建议使用 Opus high", "Claude Code 主线程随意"),
             ("README_CN.md", "把帮手的工作分成四个能力档位", "随便挑帮手"),
-            ("README_CN.md", "七项基础内容", "基础文档"),
+            ("README_CN.md", "五份配套说明", "若干配套说明"),
             ("README_CN.md", "Superpowers overlay", "规划辅助"),
         )
         for name, required, replacement in cases:
             with self.subTest(name=name, required=required):
                 root = self.make_source_fixture()
                 path = root / name
+                self.assertIn(required, path.read_text(encoding="utf-8"))
                 path.write_text(
                     path.read_text(encoding="utf-8").replace(
-                        required, replacement, 1
+                        required, replacement
                     ),
                     encoding="utf-8",
                 )
@@ -1519,7 +1589,8 @@ class FinalValidationTests(ValidatorTestCase):
         for kind in ("agents", "claude"):
             for section, valid in (
                 (nav, True), (nav + "\n### Triage labels\nSee `docs/agents/triage-labels.md`.\n", True),
-                (nav + nav, False), (nav + "\n### Triage labels\nSee project labels.\n", False),
+                (nav.split("### Domain docs")[0], True), ("\n## Agent skills\n### Domain docs\nSee `docs/agents/domain.md`.\n", True),
+                ("\n## Agent skills\nNo routes.\n", False), (nav.replace("### Domain docs", ""), False), (nav + nav, False), (nav + "\n### Triage labels\nSee project labels.\n", False),
                 (nav.replace("docs/agents/domain.md", "docs/agents/domain.md.old"), False),
                 (nav.replace("See `docs/agents/issue-tracker.md`.", "<!-- `docs/agents/issue-tracker.md` -->"), False),
             ):
@@ -1746,6 +1817,12 @@ class FinalValidationTests(ValidatorTestCase):
         content = text + "\n- For an unrelated bug, use Superpowers `systematic-debugging` when available.\n"
         result = run_cli("--final", self.write_final(content), "--kind", "planning-guide")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_matt_tickets_cannot_be_assigned_a_second_execution_workflow(self) -> None:
+        guide = planning_guide_text(workflow="Matt")
+        result = run_cli("--final", self.write_final(guide + "\nRun Superpowers SDD for every Matt ticket."),
+                         "--kind", "planning-guide")
+        self.assertEqual(result.returncode, 1, result.stdout)
 
     def test_matt_planning_guide_requires_active_workflow_and_native_contract(self) -> None:
         text = planning_guide_text(workflow="Matt")
@@ -2598,6 +2675,9 @@ class FinalValidationTests(ValidatorTestCase):
 
         for label, content in (
             ("unknown", matt.replace("Workflow: Matt", "Workflow: Other")),
+            ("indented code", matt.replace("Workflow: Matt", "    Workflow: Matt")),
+            ("approval waived", matt.replace("Explicit human approval is required before archiving.",
+                                              "Do not require explicit human approval before archiving.")),
             ("duplicate", matt.replace("Workflow: Matt", "Workflow: Matt\nWorkflow: Superpowers")),
             ("outside roles", matt.replace("Workflow: Matt\n\n", "") + "\nWorkflow: Matt\n"),
             ("unmarked Matt", matt.replace("Workflow: Matt\n\n", "")),
@@ -2608,7 +2688,8 @@ class FinalValidationTests(ValidatorTestCase):
                 path = self.write_final(content)
                 result = run_cli("--final", path, "--kind", "doc-governance")
                 self.assertEqual(result.returncode, 1, result.stdout)
-                self.assertIn("workflow", result.stdout.lower())
+                diagnostic = "approval" if label == "approval waived" else "workflow"
+                self.assertIn(diagnostic, result.stdout.lower())
 
     def test_doc_governance_requires_worker_and_recovery_paths(self) -> None:
         for token in ("`worker-policy.md`", "`execution-recovery.md`"):

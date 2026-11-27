@@ -6,12 +6,10 @@ Use this template to create `implementation-planning.md`, the on-demand contract
 
 ## Template Contract
 
-- Keep the final file within 80 lines. Replace explanatory examples with concise workspace facts and remove all template guidance.
 - Select one final shape and keep its `Workflow: Superpowers` or `Workflow: Matt` line active under `Workflow Compatibility`. Start with `# Implementation Planning` and promote the six selected headings to second level.
 - For Superpowers, keep the three Task Contract field declarations active and adapt only their right-hand placeholders.
 - Keep stable planning rules here; keep project routes in `coding-agent-guide.md` and document lifecycle in `documentation-governance.md`.
-- Name this file from canonical instructions with a backticked literal path. Never use a Claude `@` import for it.
-- Load it only before writing, approving, or materially revising an implementation plan.
+- Load it before writing, approving or revising a plan or ticket breakdown. Generate the workspace default from the governance marker. Link the guide by literal path and load it on demand.
 
 ## Required Final Shape
 
@@ -19,6 +17,7 @@ Use this template to create `implementation-planning.md`, the on-demand contract
 
 Workflow: Superpowers
 
+- If the current workstream has a different owner, use its original spec, tickets or plan and the matching workflow section in the installed NHK package’s `references/implementation-planning-template.md`. Keep the workspace guide on its default.
 - Choose one primary workflow per workstream. Other skills may contribute without replacing the primary workflow or duplicating its artifacts.
 - The installed or explicitly adopted Superpowers workflow supplies plan shape, test workflow, and review prompts; NHK atomic task sizing, planning detail, role routing, reuse, and waiting rules override conflicting generic defaults.
 - Preserve its `Files`, `Interfaces`, concrete TDD steps, commands, expected results, and necessary code examples. Specify behavior, boundaries, and verification; workers own local implementation without a mandatory complete code listing in the plan.
@@ -85,6 +84,7 @@ Before approval or dispatch, verify:
 
 Workflow: Matt
 
+- If the current workstream has a different owner, use its original spec, tickets or plan and the matching workflow section in the installed NHK package’s `references/implementation-planning-template.md`. Keep the workspace guide on its default.
 - Choose one primary workflow per workstream. Other skills may contribute without replacing the primary workflow or duplicating its artifacts.
 - Use `to-spec` for the shared spec and `to-tickets` for implementation tickets in Matt's configured tracker. Use native blocking edges where available or one Markdown file per ticket with the local tracker.
 
@@ -98,6 +98,7 @@ Workflow: Matt
 
 ### Dependencies and Execution
 
+- For a local tracker, give each helper read access to the spec and ticket in their authoritative checkout, including untracked files. The primary thread owns tracker updates.
 - Give `implement-spec` the spec and ticket references. Use separate branches and isolated worktrees, one of each per ticket. Independent tickets with resolved blockers may run concurrently when write boundaries are safe. Use Matt's `tdd` for each ticket, then merge its result into the integration branch before unblocking dependent tickets.
 - Keep ticket state in the configured tracker and link to it from NHK workstream records. Apply `worker-policy.md` for dispatch and review choices and `execution-recovery.md` when its triggers fire.
 

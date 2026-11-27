@@ -88,6 +88,7 @@ Start with `# Worker Policy`, then use exactly these second-level headings in or
 - `audit`: GPT-6.2 Sol xhigh.
 - Use GPT-6.2 Astra xhigh (`gpt-6.2-astra`) only for the read-only independent consultation defined in `execution-recovery.md`. Its trigger and existing authorization cover one fresh-context dispatch, shared with recovery diagnosis.
 - The independent consultation grants no authority to implement, fix, review, substitute for an unavailable worker, or delegate recursively.
+- A qualifying mechanical batch may use runtime-supported Luna only if the human explicitly names Luna for that batch in the current run. Never use Luna for automatic dispatch, review, recovery, or fallback. Keep that permission out of persistent routing records.
 
 - Preserve an existing human routing exception only as an active `Human routing exception:` JSON bullet in Codex Routing with exactly `target`, `scope`, `role`, `preset`, and `approval` string fields.
 - The target names one task or qualifying mechanical batch; scope is a non-root repository-relative path without wildcards or traversal. Role is `task-implementation`, `initial-task-review`, `local-fix`, or `scoped-re-review`.

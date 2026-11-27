@@ -40,6 +40,7 @@ Start with `# Execution Recovery`, then use exactly these second-level headings 
 - Reassess the original intent, approved spec and public contracts, verification signal, prior attempts, and cross-task consequences.
 - Classify the failure as implementation, design or ownership, spec conflict, invalid oracle, reviewer error, or external conditions.
 - Before consultation, prepare the original contract, unmet acceptance, fixed revisions and relevant diff, prior attempts and observed results, counterevidence, open questions, and authoritative execution record.
+- For early consultation, identify any evidence that does not exist yet, such as a diff before implementation. Use the available observations to frame the question.
 - Include a provisional explanation and recovery direction if available; explicitly state when no credible hypothesis exists. A complete solution is not a prerequisite for consultation.
 - Before recovery, record why prior attempts failed, how the new explanation differs from old hypotheses, and the discriminating observation.
 - Name the concrete command or input, observed result, and expected before-and-after result.
@@ -66,7 +67,7 @@ Start with `# Execution Recovery`, then use exactly these second-level headings 
 
 - With sufficient causal evidence, allow at most one recovery fix wave and one independent re-review for the exhausted task or gap.
 - This recovery wave may be the sixth modification and supersedes an old absolute “No sixth patch” rule.
-- If recovery fails, stop automatic fixes and ask the human. Changing model, plan, or task never renews recovery.
+- If recovery fails, stop automatic fixes and ask the human about the exhausted gap. Continue other independent authorized work. Changing model, plan, or task never renews recovery.
 - Superpowers final review retains one concentrated fix wave and one scoped re-review. Matt Pocock uses its native review process.
 - An exhausted earlier gap cannot use final review as another repair allowance. Final residual blockers go to the human and never return to the ordinary loop.
 

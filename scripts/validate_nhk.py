@@ -360,11 +360,11 @@ GOVERNANCE_ROLE_PATH_RES = (
 )
 
 INSTRUCTION_BEHAVIOR = {
-    "Execution Rules": ("Choose the simplest maintainable solution that fully meets the acceptance criteria.",),
+    "Execution Rules": ("Choose the simplest maintainable solution that meets acceptance without introducing avoidable technical debt.",),
     "Blockers and Human Approval": (
         "During authorized implementation, resolve engineering uncertainty and take the next in-scope action through verification.",
     ),
-    "Git and Delivery": ("Lead with the outcome in the user’s language. State what you verified and what still needs their decision.",),
+    "Git and Delivery": ("Lead with the outcome in the user’s language. Use plain words for verified results and decisions they must make.",),
 }
 
 INSTRUCTION_COMPANION_ROUTES = (
@@ -754,6 +754,9 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                    'authorization cover one fresh-context dispatch, shared with recovery diagnosis.',
                    'The independent consultation grants no authority to implement, fix, review, substitute '
                    'for an unavailable worker, or delegate recursively.',
+                   'A qualifying mechanical batch may use runtime-supported Luna only if the human '
+                   'explicitly names Luna for that batch in the current run. Never use Luna for automatic '
+                   'dispatch, review, recovery, or fallback. Keep that permission out of persistent routing records.',
                    'Preserve an existing human routing exception only as an active `Human routing '
                    'exception:` JSON bullet in Codex Routing with exactly `target`, `scope`, '
                    '`role`, `preset`, and `approval` string fields.',
@@ -1047,11 +1050,11 @@ def validate_planning_contract(
             return
 
     if workflow == "Matt":
-        normalized = {heading: normalized_contract(body) for heading, body in sections.items()}
-        for heading, clauses in MATT_PLANNING_DECLARATIONS.items():
-            require_section_text(
-                normalized, heading, (normalized_contract(clause) for clause in clauses), label, issues,
-            )
+        validate_declared_clauses(
+            sections, MATT_PLANNING_DECLARATIONS, label, issues,
+            r"\b(?:run|require|use) Superpowers SDD for (?:each|every|all) (?:Matt )?tickets?\b"
+            r"|\b(?:track|record|maintain) (?:progress|state) (?:separately )?in both ledgers\b",
+        )
         return
 
     validate_planning_tasks(sections, label, issues)
@@ -1207,6 +1210,10 @@ def validate_worker_policy_contract(
         r"\b(?:Band\s*\d|GPT[- ]|gpt-|Astra|Luna|Sol|modules?|tasks?|mechanical|standard|judgment|"
         r"reviews?|consolidat\w*|repair|fix(?:es)?|Sonnet|Opus|Fable|Ultra|consult(?:s|ing|ed|ations?|ants?)?)\b|"
         r"\bimplementers?\s+(?:must\s+be\s+)?sequential\b|"
+        r"(?=[^.;]*\b(?:SDD|subagent-driven development)\b)(?=[^.;]*\bimplement(?:ation|ers?)\b)"
+        r"[^.;]*\b(?:parallel\w*|concurrent\w*)\b|"
+        r"\bimplementation\s+(?:is|remains|runs|must (?:be|remain|run))\s+(?:always\s+)?"
+        r"(?:sequential\w*|serial\w*)\b|"
         + TIER_ROUTE_PATTERN + "|" + TERRA_ROUTE_PATTERN,
     )
     validate_ui_alias_routes(declared_sections, label, issues)
@@ -1283,6 +1290,18 @@ def validate_execution_recovery_contract(
         r"\b(?:always|must)\s+consult\s+(?:another|an?|the)\s+(?:agent|worker|model)\b",
         re.IGNORECASE,
     )
+    routine_decision = (
+        r"(?:(?:every|all|each)\s+)?(?:ordinary|routine|reversible|in-scope)\s+"
+        r"(?:(?:engineering|implementation|technical)\s+)?(?:decisions?|choices?)"
+    )
+    human_decision_gate = re.compile(
+        r"\b(?:hand|defer|refer|leave|escalate)\w*\s+"
+        rf"(?:(?:every|all|each)\s+(?:decisions?|choices?)|{routine_decision})\s+"
+        r"to\s+(?:the\s+)?(?:human|user)\b|"
+        r"\b(?:request|require|obtain|await)\w*\s+(?:human|user)\s+"
+        rf"(?:approval|confirmation|permission|consent)\s+(?:for|on|before)\s+{routine_decision}\b",
+        re.IGNORECASE,
+    )
     prohibition = re.compile(
         r"\b(?:do not|never)\s+(?:dispatch|request)\s+(?:a second|another)\s+diagnostic worker[.;]|"
         r"\bdo not allow a second clarification[.;]|"
@@ -1296,6 +1315,8 @@ def validate_execution_recovery_contract(
         clause = prohibition.sub("", clause)
         if consultation_grant.search(clause) or consultation_gate.search(clause):
             issues.append(f"{label} contains additional consultation permissions; use the declared contract only")
+        if human_decision_gate.search(clause):
+            issues.append(f"{label} adds a human decision gate for routine engineering choices")
 
     if headings != EXECUTION_RECOVERY_HEADINGS:
         issues.append(
@@ -2281,7 +2302,7 @@ def validate_governance_workflow(
         return [
             line.strip()
             for line in lines
-            if re.match(r"^workflow[ \t]*:", line.strip(), re.IGNORECASE)
+            if re.match(r"^ {0,3}workflow[ \t]*:", line, re.IGNORECASE)
         ]
 
     markers = workflow_lines(line for _, line in active_markdown_lines(text))
@@ -2304,6 +2325,9 @@ def validate_governance_workflow(
         issues.append("doc-governance Matt archive rules require a 'Workflow: Matt' marker")
         return
 
+    if re.search(r"\b(?:do not require|without|skip|bypass) (?:explicit )?human approval\b"
+                 r"|\bhuman approval is (?:optional|not required)\b", invariants):
+        issues.append("doc-governance archive requires explicit human approval")
     required = ("human approval", "archive index")
     if markers == ["Workflow: Matt"]:
         required += matt_invariants
@@ -2524,12 +2548,20 @@ def validate_final(
         if headings.count("Agent skills") != 1:
             issues.append("standalone file must contain at most one Matt Agent skills section")
         navigation = sections["Agent skills"]
-        for guide in ("issue-tracker", "domain", "triage-labels"):
-            if guide == "triage-labels" and "### Triage labels" not in navigation:
-                continue
+        targets = {"Issue tracker": "issue-tracker", "Domain docs": "domain", "Triage labels": "triage-labels"}
+        # Preserve the native subsection-to-guide mapping when Matt supplied headings.
+        parts = re.split(r"^###(?!#)\s+([^\n]+?)\s*$", navigation, flags=re.MULTILINE)
+        named = {title.casefold(): body for title, body in zip(parts[1::2], parts[2::2])}
+        linked = False
+        for section, guide in targets.items():
             path_pattern = rf"(?:^|[\s`(])(?:\./)?docs/agents/{guide}\.md(?=$|[\s`)]|[.,](?=\s|$))"
-            if not re.search(path_pattern, navigation, re.MULTILINE):
-                issues.append(f"Agent skills must point to docs/agents/{guide}.md")
+            body = named.get(section.casefold(), parts[0])
+            if re.search(path_pattern, body, re.MULTILINE):
+                linked = True
+            elif section.casefold() in named or re.search(path_pattern, navigation, re.MULTILINE):
+                issues.append(f"Agent skills must point to docs/agents/{guide}.md under {section}")
+        if not linked:
+            issues.append("Agent skills must point to at least one configured Matt guide")
     if imports:
         issues.append("standalone final file mixes in a thin AGENTS import")
     for heading, clauses in INSTRUCTION_BEHAVIOR.items():

@@ -325,7 +325,8 @@ class InstructionExampleTests(unittest.TestCase):
                     self.assertEqual(lines[0], f"# {h1}")
                     self.assertEqual(headings, h2s)
                     self.assertLessEqual(len(lines), limit)
-                    self.assertNotRegex(example, r"(?i)template|placeholder|replace this")
+                    content = example.replace("`references/implementation-planning-template.md`", "")
+                    self.assertNotRegex(content, r"(?i)template|placeholder|replace this")
 
     def test_generated_worker_common_sections_are_platform_neutral(self) -> None:
         example = assemble_companion(

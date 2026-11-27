@@ -34,7 +34,7 @@ Once the canonical source is known:
 - adapt the matching instruction template only when the canonical file is missing, materially incomplete, or retains superseded NHK-owned inline policy or recovery rules alongside the new companions
 - preserve a valid thin adapter, or create one only when the decision above calls for it
 - add or repair `coding-agent-guide.md` from `../references/coding-agent-guide-template.md`
-- add or repair `implementation-planning.md` from `../references/implementation-planning-template.md`
+- add or repair `implementation-planning.md` from the workspace default's shape in `../references/implementation-planning-template.md`; the guide points differently owned workstreams to their original records and the matching installed shape
 - add or repair `worker-policy.md` from `../references/worker-policy-template.md`
 - add or repair `execution-recovery.md` from `../references/execution-recovery-template.md`
 - add or repair `documentation-governance.md` from `../references/documentation-governance-template.md`; record exactly one active `Workflow: Matt` or `Workflow: Superpowers` line under Document Roles
@@ -54,11 +54,13 @@ Preserve an ordinary Codex routing exception using the bounded JSON record in `.
 
 ## Configure Matt Only When Needed
 
-When current Matt work needs repository configuration, inspect existing routes and invoke `setup-matt-pocock-skills` using the router's confirmed capability state. Reuse an existing tracker and prior user choices. Apply new tracker or domain-layout choices only when the work needs them. Before a remote mutation, establish authority for that specific operation.
+When current Matt work needs repository configuration, inspect existing routes. Invoke `setup-matt-pocock-skills` when available; with explicit current-run adoption, follow its setup conventions manually. Reuse an existing tracker and prior user choices. Apply new tracker or domain-layout choices only when the work needs them. Before a remote mutation, establish authority for that specific operation.
 
 - Record tracker navigation in `docs/agents/issue-tracker.md` and domain loading rules in `docs/agents/domain.md` when those capabilities are configured. Add `docs/agents/triage-labels.md` only when the triage skill and configured triage actually use it. Use the native setup templates where applicable.
-- Put the shallow `## Agent skills` navigation in canonical `AGENTS.md` or standalone `CLAUDE.md`. With a thin adapter, override the native setup's preference to edit `CLAUDE.md` and merge existing navigation into canonical `AGENTS.md`. Keep a single block and link only configured routes.
+- Also reconcile existing navigation when setup configuration is already complete. Put the shallow `## Agent skills` navigation in canonical `AGENTS.md` or standalone `CLAUDE.md`. With a thin adapter, override the native setup's preference to edit `CLAUDE.md` and merge existing navigation into canonical `AGENTS.md`. Keep a single block and link only configured routes.
 - Create `GLOSSARY.md`, a multi-context `GLOSSARY-MAP.md` only where warranted, and ADR files only when actual terms or decisions call for them. Recognize `CONTEXT.md` or `CONTEXT-MAP.md` as legacy domain docs only when their content confirms that role. Preserve their existing paths absent a separate approved migration.
+
+When a Matt publishing skill needs a ready state but triage is unused, pass the tracker's existing agent-ready mapping, or Matt's default `ready-for-agent`, with its tracker instructions. Keep the triage guide conditional. Create or change a remote label only with authority for that operation.
 
 ## Root Tracking Is Conditional
 
