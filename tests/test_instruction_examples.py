@@ -176,11 +176,14 @@ def assemble_thin_claude() -> str:
 """
 
 
-def assemble_companion(template: Path, h1: str) -> str:
+def assemble_companion(
+    template: Path, h1: str, *,
+    start_heading: str = "## Required Final Shape", end_heading: str = "## Final Check",
+) -> str:
     lines = template.read_text(encoding="utf-8").splitlines()
     try:
-        start = lines.index("## Required Final Shape")
-        end = lines.index("## Final Check", start + 1)
+        start = lines.index(start_heading)
+        end = lines.index(end_heading, start + 1)
     except ValueError as error:
         raise AssertionError(f"{template.name} lacks its final-shape boundary") from error
 
@@ -193,6 +196,20 @@ def assemble_companion(template: Path, h1: str) -> str:
         elif in_final_section:
             output.append(line)
     return "\n".join(output).strip() + "\n"
+
+
+def assemble_planning_guide(workflow: str) -> str:
+    template = REFERENCES / "implementation-planning-template.md"
+    if workflow == "Matt":
+        return assemble_companion(template, "Implementation Planning", start_heading="## Matt Final Shape")
+    text = assemble_companion(template, "Implementation Planning", end_heading="## Matt Final Shape")
+    for placeholder in (
+        "one observable, independently acceptable result",
+        "task identifiers, or None",
+        "mechanical | standard | judgment",
+    ):
+        text = text.replace(f"<{placeholder}>", placeholder)
+    return text
 
 
 def section_text(document: str, heading: str) -> str:
@@ -293,17 +310,22 @@ class InstructionExampleTests(unittest.TestCase):
                 template = REFERENCES / name
                 source_lines = template.read_text(encoding="utf-8").splitlines()
                 self.assertLessEqual(len(source_lines), 140)
-                example = assemble_companion(template, h1)
-                lines = example.splitlines()
-                headings = tuple(
-                    line.removeprefix("## ")
-                    for line in lines
-                    if line.startswith("## ")
+                examples = (
+                    tuple(assemble_planning_guide(workflow) for workflow in ("Matt", "Superpowers"))
+                    if name == "implementation-planning-template.md"
+                    else (assemble_companion(template, h1),)
                 )
-                self.assertEqual(lines[0], f"# {h1}")
-                self.assertEqual(headings, h2s)
-                self.assertLessEqual(len(lines), limit)
-                self.assertNotRegex(example, r"(?i)template|placeholder|replace this")
+                for example in examples:
+                    lines = example.splitlines()
+                    headings = tuple(
+                        line.removeprefix("## ")
+                        for line in lines
+                        if line.startswith("## ")
+                    )
+                    self.assertEqual(lines[0], f"# {h1}")
+                    self.assertEqual(headings, h2s)
+                    self.assertLessEqual(len(lines), limit)
+                    self.assertNotRegex(example, r"(?i)template|placeholder|replace this")
 
     def test_generated_worker_common_sections_are_platform_neutral(self) -> None:
         example = assemble_companion(

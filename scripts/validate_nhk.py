@@ -203,7 +203,7 @@ EXECUTION_RECOVERY_HEADINGS = (
     "Recovery and Stop",
 )
 
-PLANNING_WORKFLOW_TOKENS = (
+SUPERPOWERS_PLANNING_WORKFLOW_TOKENS = (
     "Superpowers",
     "Files",
     "Interfaces",
@@ -234,6 +234,11 @@ PLANNING_FIELD_PATTERNS = {
     )
     for field in ("Delivers", "Blocked by", "Worker class")
 }
+
+PLANNING_PRIMARY_WORKFLOW = (
+    "Choose one primary workflow per workstream. Other skills may contribute "
+    "without replacing the primary workflow or duplicating its artifacts."
+)
 
 LEGACY_CODING_GUIDE_HEADINGS = {
     "Current Execution State",
@@ -464,11 +469,14 @@ def second_level_sections(text: str) -> dict[str, str]:
     return sections
 
 
-def final_shape_sections(text: str) -> tuple[tuple[str, ...], dict[str, str]]:
+def final_shape_sections(
+    text: str, *,
+    start_heading: str = "## Required Final Shape", end_heading: str = "## Final Check",
+) -> tuple[tuple[str, ...], dict[str, str]]:
     lines = text.splitlines()
     try:
-        start = lines.index("## Required Final Shape") + 1
-        end = lines.index("## Final Check", start)
+        start = lines.index(start_heading) + 1
+        end = lines.index(end_heading, start)
     except ValueError:
         return (), {}
 
@@ -852,6 +860,44 @@ PLANNING_ATOMIC_DECLARATIONS = {'Workflow Compatibility': ['The installed or exp
  'Plan Review': ['When many tasks need higher capability, recheck boundaries and shared constraints; '
                  'use no fixed quota and preserve irreducible difficult tasks.']}
 
+MATT_PLANNING_DECLARATIONS = {
+    "Workflow Compatibility": (
+        PLANNING_PRIMARY_WORKFLOW,
+        "Use `to-spec` for the shared spec and `to-tickets` for implementation tickets in Matt's "
+        "configured tracker. Use native blocking edges where available or one Markdown file per "
+        "ticket with the local tracker.",
+    ),
+    "Plan Layers": (
+        "Keep shared outcomes, constraints, decisions, and testing seams in the spec. Make each "
+        "vertical slice independently testable through the affected layers and small enough for "
+        "one fresh context.",
+    ),
+    "Task Contract": (
+        "State end-to-end behavior, observable acceptance criteria, and blocking edges on each "
+        "ticket. Carry binding constraints and decisions through pointers to the spec and ticket.",
+    ),
+    "Dependencies and Execution": (
+        "Give `implement-spec` the spec and ticket references. Use separate branches and isolated "
+        "worktrees, one of each per ticket. Independent tickets with resolved blockers may run "
+        "concurrently when write boundaries are safe. Use Matt's `tdd` for each ticket, then merge "
+        "its result into the integration branch before unblocking dependent tickets.",
+        "Keep ticket state in the configured tracker and link to it from NHK workstream records. "
+        "Apply `worker-policy.md` for dispatch and review choices and `execution-recovery.md` "
+        "when its triggers fire.",
+    ),
+    "Wide Changes": (
+        "For a wide refactor that cannot land green as vertical slices, expand, migrate in "
+        "verifiable batches, then contract. If batches cannot stay green alone, keep the sequence "
+        "on an integration branch and finish with an integrate-and-verify ticket.",
+    ),
+    "Plan Review": (
+        "Check spec coverage, slice size, acceptance criteria, and blocking edges before execution. "
+        "Run Matt's `code-review` on the integration branch for Standards and Spec, then verify "
+        "integrated acceptance before closing tickets.",
+    ),
+}
+
+
 def normalized_contract(text: str) -> str:
     return " ".join(text.replace("`", "").split())
 
@@ -967,6 +1013,58 @@ def validate_planning_fields(sections: dict[str, str], label: str, issues: list[
     for token in PLANNING_TASK_CONTRACT_TOKENS:
         if token.lower() not in task_contract.lower():
             issues.append(f"{label} Task Contract is missing {token!r}")
+
+
+def validate_planning_contract(
+    headings: Iterable[str], sections: dict[str, str], label: str, issues: list[str],
+    *, expected_workflow: str | None = None,
+) -> None:
+    if tuple(headings) != PLANNING_GUIDE_HEADINGS:
+        issues.append(f"{label} headings must be exactly: " + ", ".join(PLANNING_GUIDE_HEADINGS))
+
+    declarations = [
+        (heading, line.strip())
+        for heading, body in sections.items()
+        for line in body.splitlines()
+        if re.match(r"^ {0,3}Workflow[ \t]*:", line, re.IGNORECASE)
+    ]
+    # An unlabeled guide can still pass through the original Superpowers contract.
+    workflow = "Superpowers"
+    if declarations or expected_workflow is not None:
+        choices = (expected_workflow,) if expected_workflow is not None else ("Matt", "Superpowers")
+        workflow = next(
+            (
+                choice for choice in choices
+                if declarations == [("Workflow Compatibility", f"Workflow: {choice}")]
+            ),
+            "",
+        )
+        if not workflow:
+            permitted = " or ".join(repr(f"Workflow: {choice}") for choice in choices)
+            issues.append(
+                f"{label} Workflow Compatibility must contain exactly one active {permitted} declaration"
+            )
+            return
+
+    if workflow == "Matt":
+        normalized = {heading: normalized_contract(body) for heading, body in sections.items()}
+        for heading, clauses in MATT_PLANNING_DECLARATIONS.items():
+            require_section_text(
+                normalized, heading, (normalized_contract(clause) for clause in clauses), label, issues,
+            )
+        return
+
+    validate_planning_tasks(sections, label, issues)
+    compatibility = sections.get("Workflow Compatibility", "")
+    if declarations and PLANNING_PRIMARY_WORKFLOW not in normalized_contract(compatibility):
+        issues.append(f"{label} Workflow Compatibility is missing {PLANNING_PRIMARY_WORKFLOW!r}")
+    for token in SUPERPOWERS_PLANNING_WORKFLOW_TOKENS:
+        if token.lower() not in compatibility.lower():
+            issues.append(f"{label} Workflow Compatibility is missing {token!r}")
+    wide_changes = sections.get("Wide Changes", "")
+    for token in PLANNING_WIDE_CHANGE_TOKENS:
+        if token.lower() not in wide_changes.lower():
+            issues.append(f"{label} Wide Changes is missing {token!r}")
 
 
 def without_valid_codex_catalogs(codex: str) -> str:
@@ -2009,22 +2107,18 @@ def validate_source(root: Path) -> list[str]:
         "references/implementation-planning-template.md",
     )
     if planning_template is not None:
-        _, sections = final_shape_sections(planning_template)
-        validate_planning_tasks(sections, "implementation-planning-template.md", issues)
-        for token in (
-            *PLANNING_GUIDE_HEADINGS,
-            *PLANNING_WORKFLOW_TOKENS,
-            *PLANNING_FIELD_PATTERNS,
-            *PLANNING_TASK_CONTRACT_TOKENS,
-            *PLANNING_WIDE_CHANGE_TOKENS,
-            "80 lines",
+        for workflow, start_heading, end_heading in (
+            ("Superpowers", "## Required Final Shape", "## Matt Final Shape"),
+            ("Matt", "## Matt Final Shape", "## Final Check"),
         ):
-            require_text(
-                planning_template,
-                token,
-                "implementation-planning-template.md",
-                issues,
+            headings, sections = final_shape_sections(
+                planning_template, start_heading=start_heading, end_heading=end_heading,
             )
+            validate_planning_contract(
+                headings, sections, f"implementation-planning-template.md ({workflow})",
+                issues, expected_workflow=workflow,
+            )
+        require_text(planning_template, "80 lines", "implementation-planning-template.md", issues)
 
     worker_template = read_text(
         root / "references" / "worker-policy-template.md",
@@ -2354,26 +2448,7 @@ def validate_final(
                         f"coding-guide final file contains legacy section {heading!r}"
                     )
         elif kind == "planning-guide":
-            if tuple(headings) != PLANNING_GUIDE_HEADINGS:
-                issues.append(
-                    "planning-guide final headings must be exactly: "
-                    + ", ".join(PLANNING_GUIDE_HEADINGS)
-                )
-            sections = second_level_sections(text)
-            validate_planning_tasks(sections, "planning-guide", issues)
-            workflow = sections.get("Workflow Compatibility", "")
-            for token in PLANNING_WORKFLOW_TOKENS:
-                if token.lower() not in workflow.lower():
-                    issues.append(
-                        "planning-guide Workflow Compatibility is missing "
-                        + repr(token)
-                    )
-            wide_changes = sections.get("Wide Changes", "")
-            for token in PLANNING_WIDE_CHANGE_TOKENS:
-                if token.lower() not in wide_changes.lower():
-                    issues.append(
-                        f"planning-guide Wide Changes is missing {token!r}"
-                    )
+            validate_planning_contract(headings, second_level_sections(text), "planning-guide", issues)
         elif kind == "worker-policy":
             validate_worker_policy_contract(
                 text,

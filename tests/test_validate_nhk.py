@@ -8,7 +8,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tests.test_instruction_examples import assemble_companion, assemble_standalone
+from tests.test_instruction_examples import (
+    assemble_companion,
+    assemble_planning_guide,
+    assemble_standalone,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -175,17 +179,8 @@ def doc_governance_text(extra_lines: int = 0) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def planning_guide_text(extra_lines: int = 0) -> str:
-    text = assemble_companion(
-        ROOT / "references" / "implementation-planning-template.md", "Implementation Planning"
-    )
-    for placeholder in (
-        "one observable, independently acceptable result",
-        "task identifiers, or None",
-        "mechanical | standard | judgment",
-    ):
-        text = text.replace(f"<{placeholder}>", placeholder)
-    return text + "extra\n" * extra_lines
+def planning_guide_text(extra_lines: int = 0, *, workflow: str = "Superpowers") -> str:
+    return assemble_planning_guide(workflow) + "extra\n" * extra_lines
 
 
 def human_routing_exception(**overrides: str) -> str:
@@ -748,13 +743,31 @@ class SourceValidationTests(ValidatorTestCase):
                 mutated_path = (
                     mutated / "references" / "implementation-planning-template.md"
                 )
+                text = mutated_path.read_text(encoding="utf-8")
+                original = f"### {token}" if token in PLANNING_GUIDE_HEADINGS else token
                 mutated_path.write_text(
-                    planning_guide_text().replace(token, "missing contract", 1),
+                    text.replace(original, "missing contract"),
                     encoding="utf-8",
                 )
                 result = run_cli("--root", mutated)
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(token, result.stdout)
+
+    def test_planning_template_requires_both_workflow_contracts(self) -> None:
+        for token, workflow in (
+            ("\nWorkflow: Superpowers\n", "Superpowers"),
+            ("\nWorkflow: Matt\n", "Matt"),
+            ("isolated worktrees", "Matt"),
+        ):
+            with self.subTest(token=token):
+                root = self.make_source_fixture()
+                path = root / "references" / "implementation-planning-template.md"
+                text = path.read_text(encoding="utf-8")
+                self.assertIn(token, text)
+                path.write_text(text.replace(token, "", 1), encoding="utf-8")
+                result = run_cli("--root", root)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn(f"implementation-planning-template.md ({workflow})", result.stdout)
 
     def test_governance_template_requires_new_companion_paths(self) -> None:
         root = self.make_source_fixture()
@@ -1718,11 +1731,41 @@ class FinalValidationTests(ValidatorTestCase):
                     self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
 
     def test_review_planning_template_assembles_without_hidden_repairs(self) -> None:
-        text = assemble_companion(ROOT / "references" / "implementation-planning-template.md", "Implementation Planning")
-        for value in ("one observable, independently acceptable result", "task identifiers, or None", "mechanical | standard | judgment"):
-            text = text.replace("<" + value + ">", value)
-        result = run_cli("--final", self.write_final(text), "--kind", "planning-guide")
+        for workflow in ("Matt", "Superpowers"):
+            with self.subTest(workflow=workflow):
+                text = planning_guide_text(workflow=workflow)
+                result = run_cli("--final", self.write_final(text), "--kind", "planning-guide")
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_matt_planning_guide_uses_native_artifacts_and_allows_other_skill_references(self) -> None:
+        text = planning_guide_text(workflow="Matt")
+        for token in ("`to-spec`", "`to-tickets`", "`implement-spec`", "`code-review`", "isolated worktrees"):
+            self.assertIn(token, text)
+        for token in ("Superpowers", "Task N", "**Files:**", "concrete TDD steps", "**Worker class:**"):
+            self.assertNotIn(token, text)
+        content = text + "\n- For an unrelated bug, use Superpowers `systematic-debugging` when available.\n"
+        result = run_cli("--final", self.write_final(content), "--kind", "planning-guide")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_matt_planning_guide_requires_active_workflow_and_native_contract(self) -> None:
+        text = planning_guide_text(workflow="Matt")
+        for original, replacement, diagnostic in (
+            ("Workflow: Matt", "<!-- Workflow: Matt -->", "Workflow Compatibility"),
+            ("Workflow: Matt", "```md\nWorkflow: Matt\n```", "Workflow Compatibility"),
+            ("Workflow: Matt", "Workflow: Superpowers", "Workflow Compatibility"),
+            ("vertical slice", "component", "Plan Layers"),
+            ("observable acceptance criteria", "completion", "Task Contract"),
+            ("isolated worktrees", "one shared checkout", "Dependencies and Execution"),
+            ("Keep ticket state in the configured tracker", "Duplicate ticket state in a separate ledger", "Dependencies and Execution"),
+            ("verifiable batches", "one step", "Wide Changes"),
+            ("Standards and Spec", "Standards alone", "Plan Review"),
+        ):
+            with self.subTest(original=original, replacement=replacement):
+                self.assertIn(original, text)
+                content = text.replace(original, replacement, 1)
+                result = run_cli("--final", self.write_final(content), "--kind", "planning-guide")
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn(diagnostic, result.stdout)
 
     def test_review_final_fields_must_remain_active(self) -> None:
         text = planning_guide_text()
@@ -2430,6 +2473,33 @@ class FinalValidationTests(ValidatorTestCase):
         result = run_cli("--final", path, "--kind", "planning-guide")
         self.assertEqual(result.returncode, 1)
         self.assertIn("Workflow Compatibility", result.stdout)
+
+    def test_planning_guide_rejects_invalid_workflow_declarations(self) -> None:
+        text = planning_guide_text().replace("Workflow: Superpowers\n", "", 1)
+        for declaration, heading in (
+            ("Workflow: Unknown", "Workflow Compatibility"),
+            ("Workflow: Matt\nWorkflow: Superpowers", "Workflow Compatibility"),
+            ("Workflow: Superpowers\nWorkflow: Superpowers", "Workflow Compatibility"),
+            ("Workflow: Superpowers", "Plan Review"),
+        ):
+            with self.subTest(declaration=declaration, heading=heading):
+                content = text.replace(f"## {heading}\n", f"## {heading}\n\n{declaration}\n", 1)
+                result = run_cli("--final", self.write_final(content), "--kind", "planning-guide")
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("Workflow Compatibility", result.stdout)
+
+    def test_planning_guide_preserves_legacy_superpowers_contract(self) -> None:
+        text = "\n".join(
+            line for line in planning_guide_text().splitlines()
+            if not line.startswith(("Workflow: ", "- Choose one primary workflow"))
+        )
+        result = run_cli("--final", self.write_final(text), "--kind", "planning-guide")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+        content = text.replace("**Delivers:**", "Delivery:", 1)
+        result = run_cli("--final", self.write_final(content), "--kind", "planning-guide")
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("field syntax", result.stdout)
 
     def test_planning_guide_rejects_generation_prompts_and_placeholders(self) -> None:
         cases = (

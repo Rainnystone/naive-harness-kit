@@ -2,25 +2,24 @@
 
 ## Purpose
 
-Use this template to create `implementation-planning.md`, the on-demand packet contract for implementation plans executed through Superpowers.
-
-This companion tightens task sizing and dependency edges. It does not replace Superpowers, create another plan format, or govern ordinary coding, review, or debugging.
+Use this template to create `implementation-planning.md`, the on-demand contract for work planned through Superpowers or Matt. Keep the chosen workflow's own planning artifacts and execution method.
 
 ## Template Contract
 
-- Final file hard limit: 80 lines. There is no minimum.
-- Replace explanatory examples with concise workspace facts and remove all template guidance.
-- Keep the three Task Contract field declarations active; adapt their right-hand placeholders only. Fenced or commented examples cannot supply required fields.
+- Keep the final file within 80 lines. Replace explanatory examples with concise workspace facts and remove all template guidance.
+- Select one final shape and keep its `Workflow: Superpowers` or `Workflow: Matt` line active under `Workflow Compatibility`. Start with `# Implementation Planning` and promote the six selected headings to second level.
+- For Superpowers, keep the three Task Contract field declarations active and adapt only their right-hand placeholders.
 - Keep stable planning rules here; keep project routes in `coding-agent-guide.md` and document lifecycle in `documentation-governance.md`.
 - Name this file from canonical instructions with a backticked literal path. Never use a Claude `@` import for it.
 - Load it only before writing, approving, or materially revising an implementation plan.
 
 ## Required Final Shape
 
-Start with `# Implementation Planning`, then use exactly the following second-level headings in order.
-
 ### Workflow Compatibility
 
+Workflow: Superpowers
+
+- Choose one primary workflow per workstream. Other skills may contribute without replacing the primary workflow or duplicating its artifacts.
 - The installed or explicitly adopted Superpowers workflow supplies plan shape, test workflow, and review prompts; NHK atomic task sizing, planning detail, role routing, reuse, and waiting rules override conflicting generic defaults.
 - Preserve its `Files`, `Interfaces`, concrete TDD steps, commands, expected results, and necessary code examples. Specify behavior, boundaries, and verification; workers own local implementation without a mandatory complete code listing in the plan.
 - This document is an atomic task-sizing overlay for both Codex and Claude Code; preserve the user's chosen SDD or native execution method.
@@ -79,6 +78,36 @@ Before approval or dispatch, verify:
 - the plan preserves the active Superpowers details and introduces no competing workflow
 - every extracted brief carries or attaches binding plan-level constraints and interfaces
 - dispatch and recovery procedures route to their companions instead of being copied into the plan
+
+## Matt Final Shape
+
+### Workflow Compatibility
+
+Workflow: Matt
+
+- Choose one primary workflow per workstream. Other skills may contribute without replacing the primary workflow or duplicating its artifacts.
+- Use `to-spec` for the shared spec and `to-tickets` for implementation tickets in Matt's configured tracker. Use native blocking edges where available or one Markdown file per ticket with the local tracker.
+
+### Plan Layers
+
+- Keep shared outcomes, constraints, decisions, and testing seams in the spec. Make each vertical slice independently testable through the affected layers and small enough for one fresh context.
+
+### Task Contract
+
+- State end-to-end behavior, observable acceptance criteria, and blocking edges on each ticket. Carry binding constraints and decisions through pointers to the spec and ticket.
+
+### Dependencies and Execution
+
+- Give `implement-spec` the spec and ticket references. Use separate branches and isolated worktrees, one of each per ticket. Independent tickets with resolved blockers may run concurrently when write boundaries are safe. Use Matt's `tdd` for each ticket, then merge its result into the integration branch before unblocking dependent tickets.
+- Keep ticket state in the configured tracker and link to it from NHK workstream records. Apply `worker-policy.md` for dispatch and review choices and `execution-recovery.md` when its triggers fire.
+
+### Wide Changes
+
+- For a wide refactor that cannot land green as vertical slices, expand, migrate in verifiable batches, then contract. If batches cannot stay green alone, keep the sequence on an integration branch and finish with an integrate-and-verify ticket.
+
+### Plan Review
+
+- Check spec coverage, slice size, acceptance criteria, and blocking edges before execution. Run Matt's `code-review` on the integration branch for Standards and Spec, then verify integrated acceptance before closing tickets.
 
 ## Final Check
 
