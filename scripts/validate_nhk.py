@@ -328,12 +328,20 @@ GOVERNANCE_ROLE_PATH_RES = (
     ("execution-recovery.md", re.compile(r"`(?:\./)?execution-recovery\.md`")),
 )
 
+INSTRUCTION_BEHAVIOR = {
+    "Execution Rules": ("Choose the simplest maintainable solution that fully meets the acceptance criteria.",),
+    "Blockers and Human Approval": (
+        "During authorized implementation, resolve engineering uncertainty and take the next in-scope action through verification.",
+    ),
+    "Git and Delivery": ("Lead with the outcome in the user’s language. State what you verified and what still needs their decision.",),
+}
+
 INSTRUCTION_COMPANION_ROUTES = (
     "Read `coding-agent-guide.md` to route a task or symptom to code and first-pass verification.",
-    "Read `implementation-planning.md` before writing, approving, or materially revising an implementation plan.",
+    "Read `implementation-planning.md` before writing, approving or revising a plan or ticket breakdown.",
     "Read `worker-policy.md` only when orchestrating, dispatching, or reviewing workers. Load its common sections and the current platform section.",
-    "Read `execution-recovery.md` after five failed rounds on one task or one acceptance gap, or earlier evidence of architectural stagnation.",
-    "Treat `documentation-governance.md` as the source of truth for documentation lifecycle rules.",
+    "Read `execution-recovery.md` for independent consultation, after five failed rounds on one task or acceptance gap, or earlier evidence of architectural stagnation.",
+    "Treat `documentation-governance.md` as the source for workflow selection, tracking, and document lifecycles.",
 )
 
 INSTALL_COMMAND = (
@@ -1451,6 +1459,8 @@ def validate_shared_templates(
             issues.append(f"templates: shared worker contract is missing {token!r}")
 
     validate_wait_contract(agents, "templates: shared worker contract", issues)
+    for heading, clauses in INSTRUCTION_BEHAVIOR.items():
+        require_section_text(agents, heading, clauses, "shared instruction template", issues)
 
     for template_name, blocks in (
         ("AGENTS-template.md", agents),
@@ -1611,6 +1621,11 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         require_text(english, name, "README.md", issues)
         require_text(chinese, name, "README_CN.md", issues)
 
+    for label, content in (("README.md", english), ("README_CN.md", chinese)):
+        for token in ("Workflow: Matt", "Workflow: Superpowers", "docs/agents/issue-tracker.md",
+                      "GLOSSARY.md", ".scratch/<feature>/spec.md", "Astra xhigh"):
+            require_text(content, token, label, issues)
+
     normalized_install = normalize_space(INSTALL_COMMAND)
     if normalized_install not in normalize_space(english):
         issues.append("README.md: sibling install command is missing or inconsistent")
@@ -1640,13 +1655,13 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         "Claude's light helper runs Haiku",
         "every other Claude helper runs Opus",
         "Claude Code main thread, we suggest Opus high",
-        "seven required pieces",
+        "five stable guides",
         "Superpowers overlay",
         "permissions tied to the role",
         "sorts helper work into four capability tiers",
         "both must pass",
         "one recovery fix and one independent re-review",
-        "Codex main thread, we suggest GPT-6.1 Sol xhigh",
+        "Codex main thread, we suggest GPT-6.2 Astra xhigh",
         "human-facing suggestion only",
         "you choose the main-thread model and effort",
         "NHK worker permissions do not depend on that choice",
@@ -1659,13 +1674,13 @@ def validate_readmes(root: Path, issues: list[str]) -> None:
         "Claude 的 light 帮手使用 Haiku",
         "其余帮手全部使用 Opus",
         "Claude Code 主线程，建议使用 Opus high",
-        "七项基础内容",
+        "五份配套说明",
         "Superpowers overlay",
         "权限按工作角色确定",
         "把帮手的工作分成四个能力档位",
         "需求符合度与实现质量结论，两项都要通过",
         "一轮恢复修正和一次复审",
-        "Codex 主线程，建议使用 GPT-6.1 Sol xhigh",
+        "Codex 主线程，建议使用 GPT-6.2 Astra xhigh",
         "这只是给使用者的建议",
         "主线程型号和 effort 由你选择",
         "NHK 的 worker 权限不依赖该选择",
@@ -1792,7 +1807,7 @@ def validate_forbidden_legacy(root: Path, issues: list[str]) -> None:
             issues.append(f"{relative}: human routing exception belongs only in the worker-policy Codex Routing contract")
         model_text = text
         if relative in {Path("README.md"), Path("README_CN.md")}:
-            model_text = model_text.replace("GPT-6.1 Sol", "")
+            model_text = model_text.replace("GPT-6.2 Astra", "")
         model_matches = list(versioned_model.finditer(model_text))
         if relative not in allowed_versioned_model_surfaces and model_matches:
             issues.append(
@@ -2292,7 +2307,7 @@ def validate_final(
             issues.append(f"thin CLAUDE file has {count} lines; limit is 35")
         if len(imports) != 1:
             issues.append("thin CLAUDE file must contain exactly one valid import line")
-        if any(heading in FINAL_HEADINGS for heading in all_heading_titles):
+        if any(heading in (*FINAL_HEADINGS, "Agent skills") for heading in all_heading_titles):
             issues.append("thin CLAUDE file mixes in standalone headings")
         return issues
 
@@ -2302,15 +2317,29 @@ def validate_final(
         issues.append(
             f"{selected_complexity} standalone file has {count} lines; limit is {limit}"
         )
-    if tuple(headings) != FINAL_HEADINGS:
+    nhk_headings = tuple(heading for heading in headings if heading != "Agent skills")
+    if nhk_headings != FINAL_HEADINGS:
         issues.append(
             "standalone final top-level headings must be exactly the seven required "
             "headings in order"
         )
+    sections = second_level_sections(text)
+    if "Agent skills" in headings:
+        if headings.count("Agent skills") != 1:
+            issues.append("standalone file must contain at most one Matt Agent skills section")
+        navigation = sections["Agent skills"]
+        for guide in ("issue-tracker", "domain", "triage-labels"):
+            if guide == "triage-labels" and "### Triage labels" not in navigation:
+                continue
+            path_pattern = rf"(?:^|[\s`(])(?:\./)?docs/agents/{guide}\.md(?=$|[\s`)]|[.,](?=\s|$))"
+            if not re.search(path_pattern, navigation, re.MULTILINE):
+                issues.append(f"Agent skills must point to docs/agents/{guide}.md")
     if imports:
         issues.append("standalone final file mixes in a thin AGENTS import")
-    validate_wait_contract(second_level_sections(text), "standalone final", issues)
-    context = second_level_sections(text).get("Context and Documentation", "")
+    for heading, clauses in INSTRUCTION_BEHAVIOR.items():
+        require_section_text(sections, heading, clauses, "standalone final", issues)
+    validate_wait_contract(sections, "standalone final", issues)
+    context = sections.get("Context and Documentation", "")
     for route in INSTRUCTION_COMPANION_ROUTES:
         if route not in context:
             companion = next(

@@ -8,9 +8,9 @@ This is the semantic pressure-test set for the four NHK skills. Use it for promp
 
 ### A1. Missing dependency, no decision
 
-**Prompt:** “Set up NHK. `planning-with-files` may be missing; continue if you can.”
+**Prompt:** “Use Superpowers to write my implementation plan; continue if you can.”
 
-**Setup:** `superpowers` is available and `planning-with-files` is not. The user has not selected install, enable, or adopt.
+**Setup:** The project selected Superpowers and its required planning skill is unavailable. The user has not selected install, enable, or adopt.
 
 **Expected:** `welcome-to-nhk` names the missing dependency, explains the three choices when useful, and stops for a choice. It must not write workspace files, silently emulate the workflow, or treat willingness to continue as adopt.
 
@@ -19,6 +19,10 @@ This is the semantic pressure-test set for the four NHK skills. Use it for promp
 **Prompt:** “Do not install it. Adopt its conventions for this run.”
 
 **Expected:** NHK follows the missing workflow conventions manually for the current NHK run only. It writes no persistent adoption marker, does not claim installation, and reports that the dependency was not installed and its conventions were followed manually.
+
+### A3. Native Matt, mixed tools and optional tracking
+
+Select Matt for a new repo with a configured local tracker and no Superpowers or planning-with-files. Setup proceeds, writes `Workflow: Matt` in governance and reuses the tracker. Do not create empty glossary, ADR, archive, or root progress files. With both plugins installed but no project choice, recommend Matt and confirm once. A glossary alone does not select a workflow. A Superpowers plan can consult Matt domain docs while retaining its original plan and ledger. An installed skill that requires explicit invocation is not automatically callable.
 
 ## B. Six Instruction Topologies
 
@@ -60,23 +64,27 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Expected:** Only now may NHK use environment and workspace signals. If they are inconclusive, it asks which format to create.
 
+### B7. Matt navigation survives repeated setup
+
+Start with Matt’s native `## Agent skills` in canonical AGENTS or standalone CLAUDE. Keep the existing summaries, native tracker/domain pointers and triage pointer when configured. Run bootstrap and upkeep twice. There is exactly one navigation section, user content survives, and the thin Claude adapter contains only its import and Claude-specific notes. If Matt previously wrote navigation into that adapter, reconcile it into the canonical file. Conflicting tracker choices need a decision; identical pointers do not.
+
 ## C. Bootstrap, Template, And Planning Output
 
 ### C1. Simple prompt-first workspace
 
-**Prompt:** “Bootstrap this small prompt-first repo; keep it minimal.”
+**Prompt:** “Bootstrap this small Superpowers repo; keep it minimal.”
 
 **Expected:** Bootstrap creates or repairs one canonical source, all five companion docs, `archive/`, and a stub `archive/README.md`. The coding and implementation-planning guides stay within 80 lines, worker policy within 100, execution recovery within 80, governance within 100, and no codemap is created. Bootstrap does not create root `task_plan.md`, `findings.md`, or `progress.md` unless the current work actually needs tracking.
 
 ### C2. Preserve healthy surfaces
 
-**Setup:** The canonical instruction and one companion doc are already correct; the archive index is missing.
+**Setup:** The canonical instruction and one companion doc are already correct; the required Superpowers archive index is missing.
 
 **Expected:** Bootstrap creates or repairs only the missing archive surface and required links. It does not regenerate healthy project-specific documents merely to match template wording.
 
 ### C3. Standalone generation contract
 
-**Expected:** A generated standalone file has exactly the seven required top-level sections in order, no template markers or generation prompts, and no extra governance heading. Simple, medium, and complex outputs stay at or below 100, 125, and 150 lines respectively. There is no minimum and no padding. Project Map identifies the project, routes to the literal `coding-agent-guide.md` path, and names no directory tree, volatile workstream state, or separate codemap; Context routes to literal `implementation-planning.md`, `worker-policy.md`, `execution-recovery.md`, and `documentation-governance.md` paths under their stated triggers.
+**Expected:** A generated standalone file has the seven required NHK top-level sections in order, plus one optional native Matt navigation section, no template markers or generation prompts, and no extra governance heading. Simple, medium, and complex outputs stay at or below 100, 125, and 150 lines respectively. There is no minimum and no padding. Project Map identifies the project, routes to the literal `coding-agent-guide.md` path, and names no directory tree, volatile workstream state, or separate codemap; Context routes to literal `implementation-planning.md`, `worker-policy.md`, `execution-recovery.md`, and `documentation-governance.md` paths under their stated triggers.
 
 ### C4. Thin CLAUDE generation
 
@@ -134,9 +142,13 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** A standalone project instruction mentions its own “email template contract”; a planning guide moves required fields or Superpowers details outside their required sections; or a worker/recovery companion violates its required headings, line budget, routing boundary, or approved policy contract.
 
-**Expected:** The ordinary project phrase remains valid. Planning validation requires actual `Delivers`, `Blocked by`, and `Worker class` field syntax inside Task Contract and the preserved Superpowers details inside Workflow Compatibility. Companion validation rejects a malformed worker or recovery document without broad scans that mistake ordinary project facts for policy. It reads H1, second-level headings, and section bodies from active Markdown: fence delimiters count only when indented by at most three spaces, so a four-space-indented fence does not hide a following heading. Fenced or commented examples cannot satisfy those contracts, and it rejects versioned Codex presets declared outside the exact tier catalog, including GPT-6 Astra max and unrecognized effort suffixes on an allowed family.
+**Expected:** The ordinary project phrase remains valid. Superpowers planning validation requires actual `Delivers`, `Blocked by`, and `Worker class` field syntax inside Task Contract and the preserved Superpowers details inside Workflow Compatibility. Companion validation rejects a malformed worker or recovery document without broad scans that mistake ordinary project facts for policy. It reads H1, second-level headings, and section bodies from active Markdown: fence delimiters count only when indented by at most three spaces, so a four-space-indented fence does not hide a following heading. Fenced or commented examples cannot satisfy those contracts, and it rejects versioned Codex presets declared outside the exact tier catalog or its dedicated consultation declaration, including GPT-6 Astra max and unrecognized effort suffixes on an allowed family.
 
 **Atomic contract boundaries:** Source/final planning checks accept workspace facts such as “Each task records the module it changes.” They reject explicit task/module equations and whole-module delivery requirements. Source/final worker checks reject unconditional task routes such as “Standard tasks use nhk-light” or “Use nhk-deep for every task implementation”; task terminology and Claude definition names cannot bypass the declared low-risk or difficulty conditions.
+
+### C11a. Matt plans and executable tickets
+
+Read an existing Matt spec from `.scratch/labels/spec.md` or its configured remote issue. Split it into independently verifiable tickets with acceptance criteria and real blocking edges. Do not create a parallel Superpowers plan or translate tickets into `Task N` or mandatory file lists. With two independent ready tickets and one blocked ticket, Matt `implement-spec` may use isolated worktrees for the two ready tickets; integrate and review Standards and Spec on the fixed branch diff. Preserve the blocked ticket and verify the complete feature. A Superpowers plan retains its own sequential SDD or native review rules.
 
 ### C12. Companion budgets and measured instruction reduction
 
@@ -150,7 +162,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** A workspace task is ordinary coding, then a separate task asks the main thread to dispatch or review workers.
 
-**Expected:** Ordinary coding does not load either new companion. Orchestration loads `worker-policy.md` common sections and only the current platform route; a documented stop or recovery trigger additionally loads `execution-recovery.md`. No canonical instruction duplicates the catalog or recovery procedure.
+**Expected:** Ordinary coding does not load either new companion. Orchestration loads `worker-policy.md` common sections and only the current platform route; a consequential independent consultation or a recovery trigger additionally loads `execution-recovery.md`. No canonical instruction duplicates the catalog or recovery procedure.
 
 ### D2. Role-authorized explicit configuration
 
@@ -162,7 +174,7 @@ For topology detection, only a trimmed line exactly equal to `@AGENTS.md` or `@.
 
 **Setup:** A packet is clear low-risk work, an ordinary bounded implementation, or architecture/high-uncertainty work. In one run, the selected tier's configuration is unavailable.
 
-**Expected:** Capability Tiers defines `light`, `standard`, `deep`, and `audit` once, without platform names. The Codex catalog maps them exactly to GPT-6.1 Terra xhigh, GPT-6.1 Sol xhigh, GPT-6 Astra xhigh, and GPT-6 Astra xhigh; GPT-6 Astra max is not a worker preset. The `deep` and `audit` tiers share a preset but retain distinct permissions: `deep` may implement within its difficulty rules, while `audit` remains read-only. Ordinary local design or integration defaults to `standard`; a small, clear, low-risk standard feature and an independent deterministic conversion may use `light` without complete implementation code in the plan. Before `deep`, check sizing, interfaces, and context. A concrete remaining reasoning difficulty permits direct `deep` dispatch with a one-sentence reason; no lower-tier failure is required. Failure classification distinguishes scope/context/environment/verification from capability; only demonstrated capability limits justify escalation by one tier. The ordinary implementation ceiling is `deep`, with earlier stagnation and five-round recovery bounds intact. Unavailability does not authorize another tier, older model, or the `audit` configuration as fallback. Initial reviews independently default to `standard`. Main-thread model/effort does not constrain these permissions. Legacy Band routes, superseded GPT-6 Luna or `gpt-6-luna` selections, Terra efforts other than xhigh, superseded GPT-6 Sol or `gpt-6-sol` selections, Astra medium for `deep`, a duplicated, missing, or unrecognized tier row, and presets outside the catalog fail source/final validation; tier words in ordinary project facts, outside routing syntax, stay valid. Static checks validate declared rules, not actual task difficulty or cost savings.
+**Expected:** Capability Tiers defines `light`, `standard`, `deep`, and `audit` once, without platform names. The Codex catalog maps them exactly to GPT-6.1 Terra xhigh, GPT-6.2 Sol xhigh, GPT-6.2 Sol xhigh, and GPT-6.2 Sol xhigh; GPT-6 Astra max is not a worker preset. The `deep` and `audit` tiers share a preset but retain distinct permissions: `deep` may implement within its difficulty rules, while `audit` remains read-only. Ordinary local design or integration defaults to `standard`; a small, clear, low-risk standard feature and an independent deterministic conversion may use `light` without complete implementation code in the plan. Before `deep`, check sizing, interfaces, and context. A concrete remaining reasoning difficulty permits direct `deep` dispatch with a one-sentence reason; no lower-tier failure is required. Failure classification distinguishes scope/context/environment/verification from capability; only demonstrated capability limits justify escalation by one tier. The ordinary implementation ceiling is `deep`, with earlier stagnation and five-round recovery bounds intact. Unavailability does not authorize another tier, older model, or the `audit` configuration as fallback. Initial reviews independently default to `standard`. Main-thread model/effort does not constrain these permissions. Legacy Band routes, superseded GPT-6 Luna or `gpt-6-luna` selections, Terra efforts other than xhigh, superseded GPT-6 Sol or `gpt-6-sol` selections, Astra medium for `deep`, a duplicated, missing, or unrecognized tier row, and presets outside the catalog fail source/final validation; tier words in ordinary project facts, outside routing syntax, stay valid. Static checks validate declared rules, not actual task difficulty or cost savings.
 
 In both `worker-policy.md` and `execution-recovery.md`, unrelated facts such as "The project name is Terra." remain valid. Explicit model selections such as "Use Terra.", "Model: Terra.", or "Terra xhigh." still fail as additional routing declarations.
 
@@ -170,7 +182,7 @@ In both `worker-policy.md` and `execution-recovery.md`, unrelated facts such as 
 
 **Setup:** One task finishes, then a complex Superpowers plan reaches whole-change final review.
 
-**Expected:** In SDD, each atomic task or qualifying mechanical batch receives one independent read-only reviewer with separate spec-compliance and task-quality verdicts; both must pass. Complex whole-change final review and independent diagnosis use the read-only `audit` tier, which may be selected directly for the one diagnosis after a failed `deep` implementation. Other whole-change final reviews use `deep`. `audit` covers the bounded recovery consultation as that one diagnosis, but never implements, applies fixes, or performs the recovery fix wave. Fixes and re-reviews use their own tiers. Retaining the correct declaration and appending blanket `audit`, xhigh, or max implementation permissions fails source/final validation. Active preambles and misplaced catalogs are checked; fenced/commented examples stay inactive. The validator recognizes bounded declarations, not arbitrary prose semantics.
+**Expected:** In SDD, each atomic task or qualifying mechanical batch receives one independent read-only reviewer with separate spec-compliance and task-quality verdicts; both must pass. Complex whole-change final review uses read-only `audit`; other whole-change final reviews use `deep`. The one independent consultation uses its explicit platform route (Codex Astra xhigh or the existing read-only Claude diagnostic). It never implements, performs review, or applies recovery fixes. Fixes and re-reviews use their own tiers. Retaining the correct declaration and appending blanket `audit`, xhigh, or max implementation permissions fails source/final validation. Active preambles and misplaced catalogs are checked; fenced/commented examples stay inactive. The validator recognizes bounded declarations, not arbitrary prose semantics.
 
 ### D5. Initial-review route and upstream evidence
 
@@ -188,7 +200,7 @@ In both `worker-policy.md` and `execution-recovery.md`, unrelated facts such as 
 
 **Setup:** A fresh worker, a replacement after a normal fix, and two proposed independent research tasks are dispatched.
 
-**Expected:** Every fresh Codex worker uses `fork_turns: none`. The initial brief and any fresh replacement carry a self-contained objective, scope, read/write authority, acceptance, verification, forbidden actions, expected return, selected configuration, and binding interfaces/constraints through brief, report, and fixed diff handoff. Normal fixes resume the original implementer. Implementers remain sequential; read-only parallel work is allowed only when ownership, state, artifacts, services, and verification resources are independent. The main thread checks real progress and lifecycle before treating a timeout as a blocker, and owns integration and the final result.
+**Expected:** Every fresh Codex worker uses `fork_turns: none`. The initial brief and any fresh replacement carry a self-contained objective, scope, read/write authority, acceptance, verification, forbidden actions, expected return, selected configuration, and binding interfaces/constraints through brief, report, and fixed diff handoff. Normal fixes resume the original implementer. Superpowers SDD implementers remain sequential; read-only parallel work is allowed only when ownership, state, artifacts, services, and verification resources are independent. The main thread checks real progress and lifecycle before treating a timeout as a blocker, and owns integration and the final result.
 
 ### D7a. Uninterrupted SDD work and responsive exceptions
 
@@ -220,7 +232,7 @@ In both `worker-policy.md` and `execution-recovery.md`, unrelated facts such as 
 
 **Setup:** A worker request asks for Ultra or GPT-6 Astra max, with or without human approval; a separate request recurses without approval; a third has recursion approval for one named packet in the current run. Separately, upkeep finds an older `worker-policy.md` that still declares Ultra approval.
 
-**Expected:** No worker configuration exceeds the `audit` preset, so the first request is refused whatever approval it cites; the top effort stays with the human-chosen main thread. The second cannot recurse. The third may recurse for that packet only, and the approval never becomes a reusable project or session default. Upkeep replaces the legacy Ultra declarations with the current tier rules; left in place, they fail final validation.
+**Expected:** Ordinary workers stay within the four tier presets; the sole Codex exception is one fresh read-only GPT-6.2 Astra xhigh consultation. Ultra and Astra max remain unavailable to workers. The second cannot recurse. The third may recurse for that packet only, and the approval never becomes a reusable project or session default. Upkeep replaces the legacy Ultra declarations with the current tier rules; left in place, they fail final validation.
 
 ### D9. Claude worker permissions
 
@@ -232,7 +244,7 @@ In both `worker-policy.md` and `execution-recovery.md`, unrelated facts such as 
 
 **Setup:** Bootstrap runs in a Claude Code workspace without `.claude/agents/nhk-*.md`; in one run the human agrees, in another the human declines. Separately, a Codex-only workspace is bootstrapped.
 
-**Expected:** Bootstrap offers the definitions from `claude-agents-template.md`, recommends them, and creates the four files only after agreement, telling the human that a new `.claude/agents/` directory needs a fresh session. A decline leaves the seven-surface foundation complete; workers then receive `model: opus` and run at session effort. The Codex-only workspace is never offered Claude definitions. Source validation checks `nhk-light`, `nhk-standard`, `nhk-deep`, and `nhk-audit` in order, `model: haiku` for `nhk-light` and `model: opus` for the rest, strictly rising Opus worker effort below the top level, policy-pointing descriptions without proactive delegation, write denial for `nhk-audit`, and the retired-definition contract; it does not verify the runtime effort a live worker receives.
+**Expected:** Bootstrap offers the definitions from `claude-agents-template.md`, recommends them, and creates the four files only after agreement, telling the human that a new `.claude/agents/` directory needs a fresh session. A decline leaves the selected workflow’s foundation complete; workers then receive `model: opus` and run at session effort. The Codex-only workspace is never offered Claude definitions. Source validation checks `nhk-light`, `nhk-standard`, `nhk-deep`, and `nhk-audit` in order, `model: haiku` for `nhk-light` and `model: opus` for the rest, strictly rising Opus worker effort below the top level, policy-pointing descriptions without proactive delegation, write denial for `nhk-audit`, and the retired-definition contract; it does not verify the runtime effort a live worker receives.
 
 ### D9b. Claude delegation threshold and unfinished reports
 
@@ -246,7 +258,7 @@ In both `worker-policy.md` and `execution-recovery.md`, unrelated facts such as 
 
 **Setup:** A constructed SDD ledger records three failed fixes, then five fix-review rounds for a task or the same stable acceptance gap across tasks.
 
-**Expected:** Ordinary bugs use Superpowers systematic debugging, including its architecture check after three failed fixes. The fifth task-round or stable-gap failure stops ordinary fixing. One round is a fix dispatch plus verification and review; repeating the same broken promise counts even when local tests pass. Counts, diagnostic use, and recovery use are recorded in the existing SDD ledger, not a new tracker.
+**Expected:** Under Superpowers, ordinary bugs use systematic debugging, including its architecture check after three failed fixes. Under Matt, reproduce and verify using its diagnosing-bugs workflow and record material evidence with the ticket. The fifth task-round or stable-gap failure stops ordinary fixing. One round is a fix dispatch plus verification and review; repeating the same broken promise counts even when local tests pass. Counts, diagnostic use, and recovery use are recorded in the existing SDD ledger, not a new tracker.
 
 ### D11. Recovery counts do not reset
 
@@ -268,10 +280,16 @@ In both `worker-policy.md` and `execution-recovery.md`, unrelated facts such as 
 - There is no credible hypothesis: the main thread states that explicitly and sends the original evidence with a concrete causal question; the consultant need not approve a prewritten solution.
 - The consultant overturns the provisional direction: the main thread checks the evidence and records why it accepts or rejects the advice and the verification results. Agent agreement alone cannot justify recovery.
 - A report leaves a specific evidential omission or disagreement: at most one targeted clarification goes to the same diagnostic worker about the original question. It uses the same diagnosis allowance and grants no new investigation scope.
-- Evidence remains insufficient after diagnosis and any clarification: report blockers and options to the human; do not start another diagnostic chain or an unsupported repair.
+- If evidence is still inconclusive, the main thread tries any available discriminating check or reversible in-scope choice. Escalate only the remaining decision that needs new authority or an exhausted gap with no viable path. Continue independent work.
 - Either the task or the same stable acceptance gap has used diagnosis: no new diagnostic worker is available. An unused clarification may still go to the original worker; a used clarification cannot be repeated after resumption or replanning.
 
 **Validation:** Source and generated documents require the consultation clauses in their owning active sections. Missing, changed, moved, fenced, or commented clauses fail. Additional dispatch, permission, or reset declarations for consultation actors, including resets or renewals of the diagnosis or clarification allowance, fail even beside a correct clause or a prohibition. Project requirements on consultation actors without a permission, scope, or accounting predicate, such as authentication before reading logs, remain valid. Replacing the role reference or appending model/tier/effort routes fails; inactive examples and unrelated project facts remain valid. These bounded checks validate declared contracts, not arbitrary prose equivalence or live diagnostic quality. Bootstrap/upkeep keep their existing template references and section/line budgets; no new companion or agent definition is required.
+
+### D12b. Autonomous delivery under both workflows
+
+Give each model the same approved three-part task, a failing local regression and an external release check it lacks authority to run. Compare the old and new templates on the same model/effort. Check local output, tests, actual diff and the recorded work item; a proposed next step earns no completion credit. Expect the main thread to choose a reversible implementation, run the available checks, continue independent work and state the outstanding external check in the user’s language. Count requests for the user to say “continue.” No success claim for a check that never ran.
+
+For a consequential unresolved engineering question, optionally consult once before the five-round limit. Codex dispatches a fresh, read-only Astra xhigh; it neither implements nor reviews. The main thread tests the advice and decides. A used consultation, an unavailable consultant or disagreement between agents does not make a reversible decision a human blocker. A second consultation for the same task or gap, ordinary Astra reviews, and handing the main thread’s decision to the consultant fail this scenario.
 
 ### D13. One recovery wave and final-review boundary
 
@@ -295,15 +313,15 @@ In both `worker-policy.md` and `execution-recovery.md`, unrelated facts such as 
 
 ### E3. Missing foundation
 
-**Setup:** `implementation-planning.md`, `archive/README.md`, or any other foundation surface is missing.
+**Setup:** A stable companion or a required Superpowers archive index is missing. A separate Matt workspace has never archived and lacks both archive paths.
 
-**Expected:** Upkeep routes through `welcome-to-nhk` to bootstrap before maintenance. It does not create the missing foundation inside upkeep.
+**Expected:** Upkeep routes through `welcome-to-nhk` to bootstrap before maintenance. It does not create the missing foundation inside upkeep. Matt’s not-yet-created archive does not trigger repair.
 
 ### E4. Installed NHK update with structurally healthy documents
 
-**Setup:** The installed bundle has GPT-6.1 Terra xhigh for `light`, GPT-6.1 Sol xhigh for `standard` and GPT-6 Astra xhigh for `deep`, while a complete workspace retains GPT-6 Luna max for `light`, GPT-6 Sol xhigh, Astra medium for `deep`, the former three-band policy, GPT-6 Astra max diagnosis, and exception records whose presets are GPT-6 Luna max and GPT-6 Astra max for task implementation. Project paths and document structure are still correct. One project fact and one explicitly authorized exception must remain.
+**Setup:** The installed bundle has GPT-6.1 Terra xhigh for `light`, GPT-6.2 Sol xhigh for `standard` and `deep`, while a complete workspace retains GPT-6 Luna max for `light`, GPT-6 Sol xhigh, Astra medium for `deep`, the former three-band policy, GPT-6 Astra max diagnosis, and exception records whose presets are GPT-6 Luna max and GPT-6 Astra max for task implementation. Project paths and document structure are still correct. One project fact and one explicitly authorized exception must remain.
 
-**Expected:** An update check or explicit upkeep request routes to upkeep; missing foundation files still route to bootstrap first. Every upkeep compares the canonical instruction, all five companions, and archive index against current installed references, not only visible structural drift. It repairs NHK-owned rules into the tier contract, preserves project facts and approved exceptions whose preset is still a permitted `light`, `standard`, or `deep` preset, and reports the Luna max and Astra max implementation records as unresolved conflicts for a human decision; it never silently converts an approved exception to a different model. A confirmed Astra xhigh implementation record is now a permitted `deep` preset and retains its original scope and role; sharing that preset with `audit` grants no audit permissions. Previously read references can be reused only when unchanged. It does not fetch updates, rewrite whole documents, or introduce version tracking. Completion accounts for every compared surface as aligned, explicitly excepted, or unresolved.
+**Expected:** An update check or explicit upkeep request routes to upkeep; missing foundation files still route to bootstrap first. Every upkeep compares the canonical instruction, all five companions, and any applicable archive index against current installed references, not only visible structural drift. It repairs NHK-owned rules into the tier contract, preserves project facts and approved exceptions whose preset is still a permitted `light`, `standard`, or `deep` preset, and reports the Luna max and Astra max implementation records as unresolved conflicts for a human decision; it never silently converts an approved exception to a different model. Old Astra implementation exceptions are unresolved: never reinterpret them as new consultation authority. A still-permitted Terra implementation exception retains its original scope and role. Previously read references can be reused only when unchanged. It does not fetch updates, rewrite whole documents, or introduce version tracking. Completion accounts for every compared surface as aligned, explicitly excepted, or unresolved.
 
 ### E4a. Agent definitions follow the installed template
 
@@ -319,6 +337,10 @@ In both `worker-policy.md` and `execution-recovery.md`, unrelated facts such as 
 
 ## F. Archive Transition
 
+### F0. First Matt archive, local and remote
+
+A completed Matt release uses a closed remote issue. With explicit approval to archive that release, create the local archive index on demand, link the original issue once, and verify its identity. Do not copy ticket bodies, close or mutate remote issues during archive. An unverified remote identity leaves the transition pending. In a local tracker keep referenced ticket paths and shared documents in place; do not relocate the glossary, ADRs, tracker configuration or another open release. A second pass retains one resolvable index entry.
+
 ### F1. User says no
 
 **Prompt:** “No, keep it active.”
@@ -333,7 +355,7 @@ In both `worker-policy.md` and `execution-recovery.md`, unrelated facts such as 
 
 ### F3. Foundation missing
 
-**Setup:** The user says yes, but `implementation-planning.md`, `archive/`, `archive/README.md`, or another foundation surface is missing.
+**Setup:** In a Superpowers workspace the user says yes, but `implementation-planning.md`, `archive/`, `archive/README.md`, or another foundation surface is missing.
 
 **Expected:** Archive routes to bootstrap before moving anything. User approval does not bypass the foundation gate.
 
@@ -379,7 +401,7 @@ In both `worker-policy.md` and `execution-recovery.md`, unrelated facts such as 
 
 ### H1. Completed current-run handoff
 
-**Expected:** After dependency, instruction, seven-surface foundation, and lifecycle decisions resolve, `welcome-to-nhk` returns Dependencies, Instruction, Foundation, and Route. The handoff remains in conversation only, applies only to the current workspace and current NHK run, and is not emitted while a human choice remains unresolved.
+**Expected:** After resolving topology, selected workflow, relevant capabilities, foundation and lifecycle intent, `welcome-to-nhk` returns Workflow, Dependencies, Instruction, Foundation and Route. The handoff remains in conversation only, applies only to the current workspace and current NHK run, and is not emitted while a human choice remains unresolved.
 
 ### H2. Direct leaf invocation and changed foundation
 
@@ -393,6 +415,6 @@ In both `worker-policy.md` and `execution-recovery.md`, unrelated facts such as 
 
 ## I. Human Documentation Alignment
 
-**Expected:** English and Chinese READMEs both describe five recurring jobs, four skills plus eleven controlled references, seven mandatory foundation surfaces, the sibling install layout, optional validator and its two new final-document kinds, session refresh/discovery check, the Superpowers overlay, role-authorized worker routing, dual review verdicts, bounded recovery, routing-table-as-shallow-map policy, and Claude's on-demand companion loading. They describe atomic delivery boundaries, four capability tiers shared by both platforms, sizing before capability, eligible small standard features on `light` without complete code listings, `standard` as the default implementation tier, SDD versus native review boundaries, bounded `deep` selection as the implementation ceiling, and the read-only `audit` tier for independent diagnosis and complex final review. GPT-6.1 Sol xhigh main-thread guidance is a human suggestion in the READMEs only; users choose model and effort. The READMEs likewise suggest Opus high for a Claude Code main thread, describe Claude helpers through four definitions, one per tier, with `nhk-light` running Haiku and the other three running Opus, and present the agent definitions as optional, recommended, and effective only after a fresh session for a new `.claude/agents/` directory. They link the companion templates for the exact worker catalog and recovery procedure instead of carrying duplicate copies. Neither README presents scripts or tests as runtime dependencies.
+**Expected:** English and Chinese READMEs both describe five recurring jobs, four skills plus eleven controlled references, five stable companions and workflow-specific archive readiness, the sibling install layout, optional validator and its two new final-document kinds, session refresh/discovery check, the Superpowers overlay, role-authorized worker routing, dual review verdicts, bounded recovery, routing-table-as-shallow-map policy, and Claude's on-demand companion loading. They describe atomic delivery boundaries, four capability tiers shared by both platforms, sizing before capability, eligible small standard features on `light` without complete code listings, `standard` as the default implementation tier, SDD versus native review boundaries, bounded `deep` selection as the implementation ceiling, and the read-only `audit` tier for independent diagnosis and complex final review. GPT-6.2 Astra xhigh main-thread guidance is a human suggestion in the READMEs only; users choose model and effort. The READMEs likewise suggest Opus high for a Claude Code main thread, describe Claude helpers through four definitions, one per tier, with `nhk-light` running Haiku and the other three running Opus, and present the agent definitions as optional, recommended, and effective only after a fresh session for a new `.claude/agents/` directory. They link the companion templates for the exact worker catalog and recovery procedure instead of carrying duplicate copies. Neither README presents scripts or tests as runtime dependencies.
 
-**Negative check:** Source validation fails if either README loses the atomic boundary or low-risk implementation guidance, or if either or both READMEs lose the Sol main-thread recommendation, its suggestion-only status, the user's choice of model and effort, or worker permissions remaining independent of that choice. The diagnostic names each affected README.
+**Negative check:** Source validation fails if either README loses the atomic boundary or low-risk implementation guidance, or if either or both READMEs lose the Astra main-thread recommendation, its suggestion-only status, the user's choice of model and effort, or worker permissions remaining independent of that choice. The diagnostic names each affected README.

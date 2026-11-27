@@ -270,11 +270,11 @@ class InstructionExampleTests(unittest.TestCase):
             with self.subTest(template=template_name):
                 example = assemble_standalone(REFERENCES / template_name, "simple")
                 self.assertIn(
-                    "- Use Superpowers `systematic-debugging` for bugs and its required architecture checks.",
+                    "- Resolve defects at their cause using the selected workflow’s debugging method.",
                     example,
                 )
                 self.assertIn(
-                    "- Read `execution-recovery.md` after five failed rounds on one task or one acceptance gap, or earlier evidence of architectural stagnation.",
+                    "- Read `execution-recovery.md` for independent consultation, after five failed rounds on one task or acceptance gap, or earlier evidence of architectural stagnation.",
                     example,
                 )
 

@@ -10,7 +10,7 @@ NHK 是一个 prompt-first 的懒人包：帮你把 Codex 或 Claude Code 的 wo
 
 用 coding agent 用得认真一点，很快就会反复碰到下面 5 类事，NHK 就是来接手它们的：
 
-- 先把真正有用的工作流工具接进来，尤其是 `superpowers` 和 `planning-with-files`
+- 识别项目采用的工作流，接上它的工单或计划
 - 给当前的 agent 初始化合适的指令文件（`AGENTS.md` 或 `CLAUDE.md`），懒一点，但不乱来
 - 让指路、规划、派工、恢复和文档管理这几份说明，始终跟得上项目的真实情况
 - 判断一个 workstream 该继续保持 active，还是该进入 archive
@@ -20,7 +20,7 @@ NHK 是一个 prompt-first 的懒人包：帮你把 Codex 或 Claude Code 的 wo
 
 ## 快速开始
 
-**1. 装好 NHK 依赖的两个工具。** 分别是 [`superpowers`](https://github.com/obra/superpowers) 和 [`planning-with-files`](https://github.com/othmanadi/planning-with-files)。不确定装没装？没关系，NHK 会先检查，缺了就停下来问你，不会装作一切就绪。
+**1. 选择这个项目用的工作流。** 新项目推荐 [Matt Pocock Skills](https://github.com/mattpocock/skills)，也完整支持 [Superpowers](https://github.com/obra/superpowers)。已有的 Superpowers 项目升级时继续沿用原流程。NHK 按项目实际需要检查相应能力。
 
 **2. 把 NHK 复制到 agent 的 skills 目录。** 没有任何要编译的东西。四个 skill 目录和 `references/` 并排放：
 
@@ -62,16 +62,16 @@ python3 -B scripts/validate_nhk.py --install-root <skills-root>
 
 | Skill | 什么时候出场 | 做什么 |
 | --- | --- | --- |
-| `welcome-to-nhk` | 永远第一个 | 总入口。检查依赖和指令文件，然后从下面三个里选一个。拿不准的时候就从这里开始，让它当现场最清醒的那个人。 |
-| `nhk-bootstrap` | 第一次初始化，或者缺了必需的部分 | 写好主指令文件、五份配套说明，以及存放已完成工作的地方。你负责看，不用从空白文档开始写。 |
+| `welcome-to-nhk` | 总入口 | 识别主指令、工作流和当前操作所需的能力，再选择下一步。 |
+| `nhk-bootstrap` | 初次设置或缺少必需文件 | 接好主指令、五份配套说明和所选工作流的记录。 |
 | `nhk-upkeep` | 一个开发周期结束后，或者更新 NHK 之后 | 修正文档和当前 NHK 规则之间的漂移。只有某个 workstream 有明确的完成证据时，才会问你要不要归档。 |
-| `nhk-archive` | 只在你确认某个 workstream 完成之后 | 把这个完成的 workstream 移进 `archive/`，并保证索引找得到它。 |
+| `nhk-archive` | 你明确同意归档一项已完成的工作 | 索引仍由原处管理的记录，需要移动的本地材料先复制再核验。 |
 
 更新了本机的 NHK？在已有项目里从 `welcome-to-nhk` 开始，要求做一次 upkeep。就算文档看起来还挺整齐，它也会对照新模板检查一遍；项目事实和你批准过的例外会保留，缺少基础文件则先走 bootstrap。只更新安装包，不会顺手改写各个项目的文档。
 
 ## 你的项目里会多出什么
 
-主指令文件确定后，NHK 会备齐七项基础内容：指路、规划、派工、恢复和文档管理这五份说明，加上 `archive/` 和 `archive/README.md`。它们的分工是这样的：
+确定主指令后，NHK 接好五份配套说明。Superpowers 项目在初始化时建立 `archive/` 及索引；Matt 项目在第一次确认归档时建立。Matt 的工单和领域文档约定由 `docs/agents/` 管理。
 
 | 层 | 文件 | 作用 |
 | --- | --- | --- |
@@ -80,8 +80,8 @@ python3 -B scripts/validate_nhk.py --install-root <skills-root>
 | 规划层 | `implementation-planning.md` | 任务大小、依赖关系和大范围改动的结构，只在做计划时加载 |
 | 派工与恢复层 | `worker-policy.md`、`execution-recovery.md`，以及可选的 Claude `.claude/agents/nhk-*.md` | 怎么选帮手、检查成果，以及反复修不好时该怎样停下来判断 |
 | 治理层 | `documentation-governance.md` | 文档角色、active 与已归档材料的区分、命名和加载 |
-| 活跃工作层 | active 的 `specs/`、`plans/`，以及按需启用的根目录 `task_plan.md` / `progress.md` / `findings.md` | 只放正在进行的工作 |
-| 归档层 | `archive/` 加根级 `archive/README.md` | 已完成的 spec、plan 和 tracking，留作参考 |
+| 正在进行的工作 | Matt 在选定的 tracker 里保存 spec 和工单；Superpowers 使用 spec、plan 和执行记录 | 验收、依赖、证据和剩余工作 |
+| 归档 | `archive/README.md` | 指向已核验的本地材料或原始工单 |
 
 有几条主张是故意内置的：
 
@@ -98,18 +98,18 @@ NHK 的每个选择，都来自对 coding agent 实际表现的几条朴素观�
 
 - **靠 prompt，不靠 hook。** 每一步都是你读得懂的 prompt，没有东西在背后偷偷运行；出了问题，你能看到是哪条指令导致的。这也让 NHK 在 Codex 和 Claude Code 里表现一致。
 - **常驻指令要短，细节按需加载。** agent 会反复读取主指令文件，每读一次都要花 token 和注意力。所以主指令文件只放稳定规则和指路，配套说明等任务真的需要时再加载。
-- **写下来，比指望它记得靠谱。** agent 跨会话会忘，有时同一个会话里也会忘，文件不会。这就是 NHK 搭配 `planning-with-files`，并把路由、规划和归档规则写进文档的原因。
-- **难以撤回的决定留给你。** 归档、Claude 主线程使用 Fable、帮手再找帮手，以及任何有歧义的情况，都要等你明确点头。NHK 宁可多问一句，也不替你猜错。
+- **从工作记录接续。** 下一次会话直接读工单或执行记录里的进度与验证结果。需要额外跟踪、现有记录又不足时，才启用 `planning-with-files`。
+- **批准实施后，主线程持续推进。** 范围内可逆的工程选择由它决定，失败由它排查，必要检查由它收尾。剩余动作需要新权限、改变目标，或已用尽恢复机会且没有可行路径时，才需要你决定。归档、递归派工和 Claude 主线程使用 Fable 仍按各自的授权规则处理。
 - **帮手的强度跟着任务走。** 每派一个帮手都要花时间和 token，所以默认选够用的那一档，要升档就得说出理由。难度可以换来更强的帮手，习惯不行。
 - **反复失败，需要的是新解释。** 修复一直撞在同一堵墙上时，再打一个补丁很少有用。NHK 会给循环设上限，要求先换个角度重新看问题。
 - **故意保持新手尺寸。** 对 NHK 面向的项目，一套固定的小型基础文档加一张路由表已经够用。结构再多，主要就是多了要同步维护的东西。
 
-## 为什么是这两个依赖
+## 两套工作流怎样选、怎样搭配
 
-- `superpowers` 给 agent 的工作一个形状：先 brainstorm、spec、plan，再动手，而不是一路滑向“先随便做点什么再说”，隔二十分钟就重新发明一套方法论。
-- `planning-with-files` 给记忆一个落在模型外部的稳定位置。Codex 和 Claude Code 在长期记忆这件事上都偏模糊，几份朴素的 tracking 文件，比指望模型记得哪些验证跑过、哪个 workstream 还 active 可靠得多。
+- **Matt。** 缺少工单或领域配置时使用 Matt 的项目 setup。主指令中的 `## Agent skills` 导航指向 `docs/agents/issue-tracker.md`、`docs/agents/domain.md`；配置了 triage 才加入 `docs/agents/triage-labels.md`。双入口项目把这节放在 `AGENTS.md`，薄 `CLAUDE.md` 只负责导入。本地 tracker 使用 `.scratch/<feature>/spec.md` 和 `issues/` 下每票一份文件；远程 tracker 保留原编号、讨论和依赖。
+- **Superpowers。** 这项工作的需求、计划和进度由它的 spec、plan 和执行记录管理。项目也可以用 Matt 的 `GLOSSARY.md`、`GLOSSARY-MAP.md` 和架构决策记录（ADR）。这些知识按需建立，功能完成后仍留在项目里。旧项目中的 `CONTEXT.md` 先核实内容，再决定是否按旧版词表迁移。
 
-NHK 用这两者，让指令初始化、日常维护和归档判断不再拍脑袋。缺了其中一个，NHK 会停下来问你：安装、启用，还是只在本次运行里手动 adopt 它的约定。Adopt 不会安装任何东西，也不会延续到下一次运行，NHK 会如实说明。具体边界见 [`references/dependency-setup.md`](references/dependency-setup.md)。
+把默认选择记在 `documentation-governance.md` 的 `Workflow: Matt` 或 `Workflow: Superpowers` 一行。每项工作有一个负责的流程、一处权威进度。更换默认值用于新工作，进行中的工作仍从原记录接续。缺少当前操作必需的能力时，可以安装、启用，或明确选择只在这次手动遵循其约定。[依赖设置](references/dependency-setup.md) · [可选的 planning-with-files](https://github.com/othmanadi/planning-with-files)
 
 ## Codex 还是 Claude Code？
 
@@ -131,7 +131,7 @@ thin CLAUDE 只 import AGENTS。五份 companion docs 始终使用反引号普�
 
 **主线程用什么型号？** 两个平台各给一条建议：
 
-对于实施阶段的 Codex 主线程，建议使用 GPT-6.1 Sol xhigh。长期运行的主线程会反复读取自己的上下文，Sol 的 cache read 比更强的 Astra 系列便宜得多。这只是给使用者的建议：主线程型号和 effort 由你选择，NHK 的 worker 权限不依赖该选择。当前选项可参阅 [OpenAI 模型说明](https://learn.chatgpt.com/docs/models)。
+对于实施阶段的 Codex 主线程，建议使用 GPT-6.2 Astra xhigh，负责跨任务取舍、集成和交付。这只是给使用者的建议，主线程型号和 effort 由你选择，NHK 的 worker 权限不依赖该选择。[OpenAI 模型说明](https://learn.chatgpt.com/docs/models)
 
 对于实施阶段的 Claude Code 主线程，建议使用 Opus high，比默认 effort 高一档，因为协调工作压在主线程上。它和上面一样只是建议，不是规则；无论你怎么选，帮手的档位都不变。当前选项可参阅 [Anthropic effort 说明](https://platform.claude.com/docs/en/build-with-claude/effort)。
 
@@ -142,10 +142,10 @@ thin CLAUDE 只 import AGENTS。五份 companion docs 始终使用反引号普�
 简单版：
 
 - **帮手按任务匹配。** 日常工作用合理的默认档，明确、低风险的小任务可以轻一点，真正困难的活才用重档，而且要把难点写清楚。
-- **派出去的任务有独立检查。** SDD 按原子任务审查；native 保留自己的验证和一次独立终审。需求与质量两个结论都要通过。
+- **审查跟随实施流程。** Superpowers SDD 逐项审查，native 执行保留独立终审。Matt 对集成结果做项目规范和原始需求两方面的审查。
 - **主线程耐心等待。** 不会每隔几分钟就去催帮手。
 - **修复打转就先重新思考。** 同一个问题修到第五轮，下一步是给出更好的解释，而不是第六个补丁。
-- **大权限留在你手里。** 帮手再找帮手、Claude 主线程使用 Fable、归档，都需要你明确同意。任何帮手都不会高于只读的 `audit` 配置。
+- **重要权限由你掌握。** 归档、递归派工和 Claude 主线程使用 Fable 需要明确批准。实施期间，一次只读独立咨询已有授权。
 
 <details>
 <summary>细则，给好奇的你</summary>
@@ -158,7 +158,7 @@ thin CLAUDE 只 import AGENTS。五份 companion docs 始终使用反引号普�
 
 ### 仅 Codex
 
-**各档预设。** 日常的 `standard` 档用 Sol xhigh，以 Astra 一小部分的价格处理切分合理的原子任务。`deep` 换到 Astra xhigh，仍是实施上限。`audit` 使用同一份 Astra xhigh 预设，但权限仍限于只读诊断和复杂最终审查。共用预设不合并两档的角色权限。`light` 使用 Terra xhigh，Astra max 不属于 worker 预设。精确预设以模板为准。
+**各档预设。** `light` 使用 Terra xhigh。`standard`、`deep` 和只读 `audit` 使用 Sol xhigh。影响实现的重要问题经过调查仍拿不准时，主线程可另请一名 Astra xhigh 在全新上下文里给出独立意见。这位咨询者只读，不承担实施、审查和派工。[派工模板](references/worker-policy-template.md)列有精确型号。
 
 ### 仅 Claude Code
 
@@ -166,29 +166,29 @@ thin CLAUDE 只 import AGENTS。五份 companion docs 始终使用反引号普�
 
 ### 两个平台通用
 
-**特殊授权。** 让帮手继续找帮手需要你针对当前这次运行里的具体任务明确批准。帮手的配置不会高于 `audit`，也没有任何批准能解锁更高的配置：最强的设置只留给你选择的主线程。
+**特殊授权。** 递归派工要针对本次运行的具体任务另行批准。Astra 咨询与恢复诊断共用同一次机会，按任务和持续存在的同一验收缺口记账。它不会增加修复次数，也不能用作后备型号或替代终审。
 
 **帮手复用。** 普通修复优先交回原实现者，限定复审优先交回原独立审查者。允许用便宜配置不代表必须换人；只有独立完整的修复交接连同总开销都划算时，才换新帮手，并把合适的意见合并成一个修复包。
 
 **审查。** SDD 为每个原子任务或符合条件的机械批次安排一位独立只读审查者，分别给出需求符合度与实现质量结论，两项都要通过。初审默认使用 `standard`，只有审查本身确实困难才用 `deep`。整体终审使用 `deep`，复杂计划的整体终审使用 `audit`。内部步骤不单独派审查者。审查依据固定版本、约束、实际 diff 与测试证据。只有单任务、非复杂计划，已通过的 SDD 任务审查在相同最终范围、版本和证据上覆盖全部要求与改动时，才能兼作终审；任何变化都要重新判断。多任务和复杂计划保留整体终审。Native 执行保留自己的逐任务验证和一次独立整体终审，不增加逐任务子代理审查。合并审查不增加修复或恢复次数。
 
-**等待。** 派发或恢复后，以及两次主动进度检查之间，主线程至少等待 30 分钟；在工具限制和更高优先级指令允许时使用较长的事件等待，同时立即响应完成、提问、具体失败和你的消息。空等待返回或沉默，都不构成查状态、催促、中断、换人或重复调查的理由。这不是超时、定时轮询、缓存 TTL 或运行时设置。规则更新保留已完成和执行中任务的身份与进度；尚未开始的工作按原子任务契约重新评估，不重派已完成工作，也不重置恢复计数。
+**等待。** Superpowers SDD 的帮手派出或恢复后，以及两次主动进度检查之间，至少留 30 分钟。收到完成、提问、具体失败或你的消息时立即处理。恢复执行时沿用任务身份、证据与修复次数。
 
 **你已经做过的决定。** 已有的人类决定可以在 `worker-policy.md` 中保留为范围明确的普通派工例外。[派工模板](references/worker-policy-template.md)规定用一条 JSON 列表记录，写明目标、仓库相对路径范围、角色、一个 `light`、`standard` 或 `deep` 预设，以及具体批准依据。Bootstrap 和 upkeep 必须核对这个决定及其边界，不能编造授权。正常规则和型号目录仍然保留，记录只改变完全匹配范围内的预设选择；它不能豁免 worker class、审查要求、预算、`audit` 档或递归授权。可选的 validator 只检查记录结构，不证明你真的同意过；未记录的冲突，以及格式错误或范围笼统的记录仍会失败。
 
-**规划。** `implementation-planning.md` 是编写、批准或实质修改计划前才加载的 Superpowers overlay。两平台统一使用原子任务：能够独立测试、值得独立审查的最小交付。如果审查者可以接受一个结果、拒绝相邻结果，就可以拆开，即使它们属于同一功能。每项任务保留完整的实现、测试和必要的配置、迁移、文档；任务可以跨文件，功能可以跨任务。紧密耦合的事务、权限判断和恢复路径保持完整。内部执行步骤留在任务中；同形机械修改可按明确文件清单与共用验证组成一个批次。调查只有能交付可验证结论、接口契约或可复用决策时才单独拆出，普通的局部理解留给实施者。
+**规划。** `implementation-planning.md` 跟随当前工作的归属。Superpowers overlay 把计划拆成能够独立测试、值得独立审查的最小交付。Matt 在 tracker 里记录可独立验证的纵向切片、验收和依赖；`implement-spec` 可在隔离工作树中并行处理已就绪的独立工单，集成后对照项目规范和原始需求审查。更换项目默认值后，进行中的计划仍沿用原流程。
 
-计划保留 Files、Interfaces、具体 TDD steps、边界样例、命令、预期结果和必要代码范例；局部实现交给 worker，不要求主线程先写完整实现代码。Worker class 描述工作性质，不等于模型档位。SDD 每个任务或合格批次使用新的实施上下文，并保持实施串行；native 是独立的执行选择。沿用上游 brief、report、diff package 和 ledger 文件；即使提取工具只取得任务段落，交接也必须带上绑定的全局约束和相关接口。NHK 的原子粒度、规划详细度、角色路由、复用与等待规则覆盖冲突的上游默认，但不修改插件。规划字段保留为活跃文本。
+Superpowers 计划保留 Files、Interfaces、具体 TDD steps、边界样例、命令、预期结果和必要代码范例；局部实现交给 worker，不要求主线程先写完整实现代码。Worker class 描述工作性质，不等于模型档位。SDD 每个任务或合格批次使用新的实施上下文，并保持实施串行；native 是独立的执行选择。沿用上游 brief、report、diff package 和 ledger 文件；即使提取工具只取得任务段落，交接也必须带上绑定的全局约束和相关接口。NHK 的原子粒度、规划详细度、角色路由、复用与等待规则覆盖冲突的上游默认，但不修改插件。规划字段保留为活跃文本。
 
 **更新旧项目。** Upkeep 将 NHK 自有的完整模块默认规则改为原子任务契约，保留项目事实和已批准例外。旧 `module-implementation` / `initial-module-review` 记录只有仍指向同一个任务、相同范围和已确认批准依据时，才改为 `task-implementation` / `initial-task-review`。旧模块拆成多个任务或对应关系不明确时，报告给人决定，不把授权自动复制到新任务。旧版本按 Band 划分的路由改为档位规则；例外记录只有在其预设仍是该角色允许的 `light`、`standard` 或 `deep` 预设时才保留，其余情况等你决定。在 Claude Code 中，upkeep 会把旧的 `nhk-light` 定义改为 Haiku，补上缺失的当前定义（例如在已退役的 `nhk-diagnosis` 旁补上 `nhk-audit`），并请你删除退役的 `nhk-diagnosis` 文件，因为 upkeep 自己从不删除文件。仅更新安装包不会自动改写项目文件。
 
-**修复开始打转时。** 普通 bug 继续用 Superpowers 的系统性调试流程。同一个问题熬过了第五轮，NHK 会让主线程先重看自己的判断，再伸手去拿第六个补丁。每项任务最多五轮普通修复与复审；跨任务遇到同一个未解决的问题，次数也接着算，换个任务名不会清零。次数记在当前工作流已有的记录里。
+**修复开始打转时。** 按所选工作流排错。每项任务最多五轮普通修复与复审；跨任务遇到同一个未解决的问题，仍累计计算。把尝试与结果记在原工单或执行记录。达到上限时重新诊断原因，同时推进不受影响的工作。
 
-解释存在分歧、实施与审查意见冲突，或旧前提尚未验证、无法解释反复失败时，主线程可以通过 `worker-policy.md` 的独立诊断角色，进行一次全新上下文的只读恢复咨询；该角色映射到 `audit` 档。主线程先整理原始约定、未满足的验收要求、固定版本与差异、历次尝试和实际结果、反证与未决问题。自己的解释和恢复方向都作为暂定判断；没有可信假设也可以咨询，不必先想出完整方案。
+两套工作流遇到影响实现而尚无定论的问题时，都可在全新上下文中做一次只读咨询。Codex 使用专门的 Astra xhigh 咨询配置，Claude 使用已有的可续跑诊断角色。向它提供验收条件、事实、反证和具体问题。前期已用过的咨询，进入恢复后仍算同一次额度。
 
 咨询者核查原始证据，形成自己的解释，再与主线程的判断比较。它可以支持或推翻原判断，返回能解释历史失败的证据，或能区分不同解释的实验及预期结果。报告后，可以向同一咨询者进行一次定点追问，仅澄清原问题的证据、遗漏或分歧；追问计入同一次诊断，不扩展调查范围。诊断和追问的使用情况同时归属于任务和同一个持续验收问题，记入已有执行记录；换人、换会话、换模型、换提交、改任务名或重排计划都不清零。
 
-主线程核查关键证据，记录采纳或拒绝建议的理由及验证结果。双方同意一个方案不能代替证据。如果新的因果证据能解释前面为什么没修好，才允许一轮恢复修正和一次复审；主线程已有充分证据时，也可以直接决定，无需咨询。修复与复审按各自角色选配置。五轮是上限：三次修复失败后的架构检查，以及更早出现的停滞迹象，仍然有效。诊断及可选追问后证据仍不足，或者恢复失败时，接下来由你决定。[恢复模板](references/execution-recovery-template.md)规定了证据要求与停止规则。
+主线程核查证据，自行决定并继续实施。如果新证据解释了前几次失败，可以进行一轮恢复修正和一次复审。Superpowers 保留三次修复失败后的架构检查。只有剩余动作需要新授权、改变验收，或恢复已用尽且没有可行路径时，才由你决定。[恢复模板](references/execution-recovery-template.md)
 
 **配套说明缺失或过时。** 缺哪份配套说明，`nhk-bootstrap` 就按对应模板补哪份，已有的项目内容会留下。如果主指令文件里还放着旧版 NHK 的规则，bootstrap 或 upkeep 只把这些过时段落换成指向配套说明的链接。项目事实和你明确批准过的例外都会保留。
 

@@ -10,7 +10,7 @@ You do not need to become a harness engineer first. NHK makes a few sensible dec
 
 NHK takes care of five recurring jobs that show up surprisingly fast once you use coding agents seriously:
 
-- getting the useful workflow tools in place, especially `superpowers` and `planning-with-files`
+- choosing the project's workflow and connecting its tracker or plan
 - setting up the right instruction file (`AGENTS.md` or `CLAUDE.md`) for your agent, lazily but safely
 - keeping the project's routing, planning, worker, recovery, and governance notes in step with reality
 - deciding whether a workstream stays active or moves to archive
@@ -20,7 +20,7 @@ It is built for beginners, lazy pragmatists, and anyone who would rather ship th
 
 ## Quick Start
 
-**1. Install the two helpers NHK leans on.** They are [`superpowers`](https://github.com/obra/superpowers) and [`planning-with-files`](https://github.com/othmanadi/planning-with-files). Not sure whether you already have them? That is fine: NHK checks and asks before pretending everything is ready.
+**1. Choose the workflow for this project.** For a new project we recommend [Matt Pocock Skills](https://github.com/mattpocock/skills). [Superpowers](https://github.com/obra/superpowers) is an equally supported choice. NHK checks the capabilities your project needs. An existing Superpowers project keeps its workflow.
 
 **2. Copy NHK into your agent's skills folder.** There is nothing to compile. The four skill folders and `references/` sit side by side:
 
@@ -62,16 +62,16 @@ It confirms files and versions; it cannot confirm that your agent actually disco
 
 | Skill | When it shows up | What it does |
 | --- | --- | --- |
-| `welcome-to-nhk` | Always first | The router. It checks dependencies and your instruction files, then picks one of the three below. When in doubt, start here and let it be the adult in the room. |
-| `nhk-bootstrap` | First setup, or when a required piece is missing | Writes the main instruction file, five companion guides, and a home for finished work. You review; you do not write from scratch. |
+| `welcome-to-nhk` | Always first | Finds the canonical instructions and project workflow, checks what this operation needs, and picks the next skill. |
+| `nhk-bootstrap` | First setup, or when a required piece is missing | Connects the instruction file, five guides, and the selected workflow’s records. |
 | `nhk-upkeep` | After a delivery cycle, or after updating NHK | Repairs drift between your documents and the current NHK rules. It asks about archive only when one workstream has clear completion evidence. |
-| `nhk-archive` | Only after you say a workstream is done | Moves that finished workstream into `archive/` and keeps its index findable. |
+| `nhk-archive` | You approve archiving one completed workstream | Indexes records at their authoritative location or verifies local copies before moving them. |
 
 Updated your installed copy of NHK? Run `welcome-to-nhk` in an existing project and ask for upkeep. It compares the project against the new templates even when everything still looks tidy, keeps your project facts and approved exceptions, and sends any missing foundation piece through bootstrap first. Updating the bundle by itself never rewrites project documents.
 
 ## What Ends Up In Your Project
 
-Once the main instruction file is chosen, NHK sets up seven required pieces: the routing, planning, worker, recovery, and governance guides, plus `archive/` and `archive/README.md`. Here is how they fit together:
+After choosing a canonical instruction file, NHK connects five stable guides. Superpowers also starts with `archive/` and its index. A Matt workspace creates them on its first approved archive. The tracker and domain rules live in `docs/agents/`.
 
 | Layer | File(s) | Job |
 | --- | --- | --- |
@@ -80,8 +80,8 @@ Once the main instruction file is chosen, NHK sets up seven required pieces: the
 | Planning | `implementation-planning.md` | task sizing, dependencies, and wide-change structure, loaded only while planning |
 | Workers and recovery | `worker-policy.md`, `execution-recovery.md`, optional Claude `.claude/agents/nhk-*.md` | choosing helpers, reviewing their work, and knowing when to stop repeating fixes |
 | Governance | `documentation-governance.md` | document roles, active versus archived material, naming, and loading |
-| Active work | active `specs/` and `plans/`, optional root `task_plan.md` / `progress.md` / `findings.md` | work in progress only |
-| Archive | `archive/` plus root `archive/README.md` | finished specs, plans, and tracking, kept for reference |
+| Active work | Matt spec and tickets in the configured tracker, or a Superpowers spec, plan and execution ledger | acceptance, dependencies, evidence and remaining work |
+| Archive | `archive/README.md` | links to verified local materials or original tracker records |
 
 A few opinions come baked in:
 
@@ -98,18 +98,18 @@ Every choice in NHK follows from a few plain observations about how coding agent
 
 - **Prompts, not hooks.** Each step is a prompt you can read, so nothing happens behind your back, and when something goes wrong you can see which instruction caused it. It also keeps NHK working the same way in Codex and Claude Code.
 - **Short always-on instructions, details on demand.** The agent rereads the main instruction file constantly, which costs tokens and attention every time. So that file holds only stable rules and pointers, and the companion guides load when a task actually needs them.
-- **Written down beats remembered.** Agents forget between sessions and sometimes within one. Files do not. That is why NHK pairs with `planning-with-files`, and why routing, planning, and archive rules live in documents instead of in the model's head.
-- **You keep the decisions that are hard to undo.** Archiving, Fable on a Claude main thread, helpers hiring their own helpers, and anything ambiguous wait for your explicit yes. NHK would rather ask one extra question than guess wrong on your behalf.
+- **Resume from the work itself.** The tracker or execution ledger preserves progress and verification for the next session. Add `planning-with-files` only when the current record cannot support the tracking you need.
+- **Approved implementation keeps moving.** The main agent resolves reversible engineering choices, fixes failures and completes the agreed checks. It asks you when a remaining action needs new authority, changes the goal, or the recovery limit leaves no viable path. Archiving, recursive delegation and Fable on the Claude main thread retain their approval rules.
 - **Helpers sized to the job.** Every helper costs time and tokens, so the default is a capable-enough helper, and going heavier needs a stated reason. Difficulty earns stronger help; habit does not.
 - **A repeated failure calls for a new explanation.** When fixes keep bouncing off the same problem, another patch rarely helps. NHK caps the loop and asks for a fresh look instead.
 - **Beginner-sized on purpose.** A small fixed foundation and one routing table are enough for the projects NHK is aimed at. More structure would mostly mean more to keep in sync.
 
-## Why Those Two Dependencies
+## Choosing and combining workflows
 
-- `superpowers` gives agent work a shape: brainstorm, spec, plan, then build, instead of a vague "just keep going" spiral where the model reinvents its methodology every twenty minutes.
-- `planning-with-files` gives memory a reliable home outside the model. Codex and Claude Code are both a bit fuzzy about long-lived working memory, and a few plain tracking files beat hoping the model remembers what was verified and which workstream is still live.
+- **Matt.** Run Matt’s project setup when its tracker or domain configuration is missing. It maintains an `## Agent skills` navigation section in the canonical instruction file. In an `AGENTS.md` + thin `CLAUDE.md` workspace, keep that section only in AGENTS. It points to `docs/agents/issue-tracker.md`, `docs/agents/domain.md`, and `docs/agents/triage-labels.md` when triage is configured. A local tracker uses `.scratch/<feature>/spec.md` and one file per ticket under `issues/`. A remote tracker keeps native IDs, discussions and dependency links.
+- **Superpowers.** Its spec, implementation plan and execution ledger own the workstream. A team can also use Matt’s `GLOSSARY.md`, `GLOSSARY-MAP.md` or ADRs for shared language and decisions. These are durable knowledge, created as terms or decisions emerge. Inspect legacy `CONTEXT.md` before treating it as an old glossary.
 
-NHK uses both to make instruction setup, daily upkeep, and archive decisions less ad hoc. If one is missing, NHK pauses and asks whether to install it, enable it, or adopt its conventions manually for this run only. Adopting installs nothing and does not carry over to later runs, and NHK says so plainly. The details live in [`references/dependency-setup.md`](references/dependency-setup.md).
+Record the default once in `documentation-governance.md` as `Workflow: Matt` or `Workflow: Superpowers`. Each workstream keeps one owner and one authoritative progress record. Changing the default applies to new work; active work resumes from its existing record. When a required capability is missing, choose installation, enablement, or explicit manual adoption for this run. [Dependency setup](references/dependency-setup.md) · [Optional planning-with-files](https://github.com/othmanadi/planning-with-files)
 
 ## Codex Or Claude Code?
 
@@ -131,7 +131,7 @@ Thin CLAUDE imports only AGENTS. The five companion docs stay as backticked lite
 
 **Which model for the main conversation?** One suggestion per platform:
 
-For a Codex main thread, we suggest GPT-6.1 Sol xhigh during implementation. A long-lived thread rereads its context constantly, and Sol keeps those cache reads far cheaper than the stronger Astra family. This is a human-facing suggestion only: you choose the main-thread model and effort, and NHK worker permissions do not depend on that choice. See [OpenAI model guidance](https://learn.chatgpt.com/docs/models) for current options.
+For a Codex main thread, we suggest GPT-6.2 Astra xhigh for coordination, integration and delivery. This is a human-facing suggestion only. You choose the main-thread model and effort, and NHK worker permissions do not depend on that choice. [OpenAI model guidance](https://learn.chatgpt.com/docs/models)
 
 For a Claude Code main thread, we suggest Opus high during implementation, one level above its default, because the main thread carries the coordination. Treat it the same way: a suggestion for you, not a rule, and helper tiers stay the same whatever you pick. See [Anthropic effort guidance](https://platform.claude.com/docs/en/build-with-claude/effort) for current options.
 
@@ -142,10 +142,10 @@ You can use NHK without reading this section. It is here so you know what the ag
 The short version:
 
 - **Helpers are matched to the job.** Everyday work goes to a sensible default, clear low-risk tasks can go lighter, and genuinely hard work goes heavier, with the difficulty written down.
-- **Delegated tasks get an independent check.** SDD reviews each atomic task; native execution keeps its own checks and a final independent review. Both specification and quality verdicts must pass.
+- **Review follows the workflow.** Superpowers SDD reviews each task; native execution keeps its independent final review. Matt reviews the integrated change against the project standards and originating spec.
 - **The main agent waits politely.** No nagging helpers every few minutes.
 - **Fixes going in circles trigger a rethink.** After five rounds on the same problem, the next move is a better explanation, not patch number six.
-- **The big permissions stay with you.** Helpers hiring their own helpers, Fable on a Claude main thread, and archiving all need your explicit yes. No helper runs above the read-only `audit` configuration.
+- **You control permissions.** Archiving, recursive delegation and Fable on a Claude main thread require explicit approval. A single read-only consultation is already authorized during implementation.
 
 <details>
 <summary>The fine print, for the curious</summary>
@@ -158,7 +158,7 @@ The [worker policy template](references/worker-policy-template.md) defines the t
 
 ### Codex only
 
-**Tier presets.** The everyday `standard` tier runs Sol at xhigh for well-sized atomic tasks at a fraction of Astra's price. `deep` moves to Astra at xhigh and remains the implementation ceiling. `audit` uses the same Astra xhigh preset with read-only permissions for diagnosis and complex final review. Sharing a preset does not merge their role permissions. `light` runs Terra at xhigh, and Astra max is not a worker preset. The template holds the exact presets.
+**Tier presets.** `light` uses Terra xhigh. `standard`, `deep` and read-only `audit` use Sol xhigh. The main thread may separately ask one fresh Astra xhigh consultant for an independent opinion on a consequential question. That consultant has no write, review or delegation authority. See the [worker policy template](references/worker-policy-template.md) for exact model IDs.
 
 ### Claude Code only
 
@@ -166,29 +166,29 @@ The [worker policy template](references/worker-policy-template.md) defines the t
 
 ### Both platforms
 
-**Special permissions.** Letting a helper delegate further needs your approval for the specific task and current run. No helper configuration goes above `audit`, and there is no approval that unlocks one: the strongest settings stay with the main thread you choose.
+**Special permissions.** Recursive delegation requires approval for the specific task and run. The Astra consultation is available once per task or stable acceptance gap and shares the independent diagnosis allowance with recovery. It grants no additional fix round, fallback model, or final-review credit.
 
 **Reusing helpers.** Ordinary fixes go back to the original implementer, and scoped re-review prefers the original independent reviewer. Being allowed a cheaper configuration does not mean changing workers; a fresh cheaper worker is worth it only when a self-contained handoff justifies the overhead, and suitable findings travel together in one repair packet.
 
 **Reviews.** In SDD, each atomic task or qualifying mechanical batch has one independent, read-only reviewer with separate specification and quality verdicts; both must pass. Initial reviews default to `standard`, moving to `deep` only for difficulty in the review itself. Whole-change final review uses `deep`, or `audit` for a complex plan. Internal steps stay within their task. Reviews use fixed revisions, binding constraints, the actual diff, and test evidence. A passed SDD task review can serve as final review only for a single-task non-complex plan covering every requirement and change at the identical final scope, version, and evidence. Changes invalidate that reuse; multi-task and complex plans retain whole-change review. Native execution uses its own task verification and one independent whole-change final review, without per-task subagent reviews. Consolidation never extends repair or recovery allowances.
 
-**Waiting.** After dispatch or resumption, and between unsolicited progress checks, the main agent waits at least 30 minutes. It prefers longer event waits within tool limits and higher-priority instructions, and responds immediately to completion, questions, concrete failures, and your messages. Empty waits or silence do not justify status checks, reminders, interruption, replacement, or duplicate investigation. This interval is neither a timeout nor a polling schedule, cache TTL, or runtime setting. Rule updates preserve completed and in-flight task identities and progress. Unstarted work is reassessed against the atomic contract, without redispatching completed work or resetting recovery counts.
+**Waiting.** In Superpowers SDD, allow at least 30 minutes between unsolicited checks after dispatch or resumption. Completion, questions, concrete failure and user messages are handled immediately. Silence alone does not justify interrupting or replacing a worker. Keep the identity, evidence and repair count when resuming work.
 
 **Decisions you already made.** Existing human decisions can be kept as narrow ordinary-routing exceptions in `worker-policy.md`. The [worker policy template](references/worker-policy-template.md) defines a single JSON bullet naming the target, repository-relative scope, role, a `light`, `standard`, or `deep` preset, and a specific approval reference. Bootstrap and upkeep must confirm the decision and keep its scope; they never invent approval. Normal rules and the catalog stay in place, and the record changes only the matched preset choice. It cannot waive worker classes, review gates, budgets, the `audit` tier, or recursion. The optional validator checks the record's structure, not whether you actually consented; unrecorded conflicts and malformed or blanket records still fail.
 
-**Planning.** `implementation-planning.md` is a Superpowers overlay loaded before writing, approving, or materially revising a plan. Both platforms use atomic tasks: the smallest independently testable deliveries worth their own review. Split where a reviewer could accept one result and reject its neighbor, including within one feature. Keep each task's implementation, tests, and necessary configuration, migration, and docs together. A task may span files; a feature may span tasks. Keep tightly coupled transactions, permission decisions, and recovery paths intact. Internal execution steps stay inside their task, while same-shape mechanical changes may share one batch with an explicit file list and common verification. Separate investigation only for a verifiable conclusion, interface contract, or reusable decision; otherwise local understanding stays with implementation.
+**Planning.** `implementation-planning.md` follows the workstream owner. The Superpowers overlay uses the smallest independently testable deliveries worth their own review. Matt creates verifiable vertical slices with acceptance criteria and blocking edges in its tracker. `implement-spec` can run independent ready tickets in isolated worktrees, then integrate and review the branch against Standards and Spec. An in-flight plan keeps its original workflow after a default change.
 
-Plans preserve Files, Interfaces, concrete TDD steps, boundary examples, commands, expected results, and necessary code examples; the worker supplies local implementation rather than transcribing a mandatory complete code listing. Worker class describes the work, not its model. SDD starts a fresh implementer context for each task or qualifying batch and keeps implementation sequential; native execution remains a separate choice. Use upstream brief, report, diff package, and ledger files, carrying binding global constraints and relevant interfaces even when a helper extracts only the task section. NHK atomic sizing, planning detail, role routing, reuse, and timing override conflicting generic defaults without patching the plugin. Planning fields remain active text.
+Superpowers plans preserve Files, Interfaces, concrete TDD steps, boundary examples, commands, expected results, and necessary code examples; the worker supplies local implementation rather than transcribing a mandatory complete code listing. Worker class describes the work, not its model. SDD starts a fresh implementer context for each task or qualifying batch and keeps implementation sequential; native execution remains a separate choice. Use upstream brief, report, diff package, and ledger files, carrying binding global constraints and relevant interfaces even when a helper extracts only the task section. NHK atomic sizing, planning detail, role routing, reuse, and timing override conflicting generic defaults without patching the plugin. Planning fields remain active text.
 
 **Updating older workspaces.** Upkeep replaces NHK-owned whole-module defaults with the atomic contract while preserving project facts and approved exceptions. Legacy `module-implementation` / `initial-module-review` records become `task-implementation` / `initial-task-review` only for the same single task, scope, and confirmed approval. A module split or ambiguous mapping is reported for a human decision; permission never spreads automatically to the new tasks. Band-based routing from earlier versions becomes the tier rules; an exception record survives only when its preset is still a `light`, `standard`, or `deep` preset its role allows, and anything else waits for your decision. In Claude Code, upkeep moves an older `nhk-light` definition to Haiku, adds any missing current definition such as `nhk-audit` beside a retired `nhk-diagnosis`, and asks you to delete the retired `nhk-diagnosis` file, because upkeep never deletes files itself. Installing the updated bundle alone does not rewrite project documents.
 
-**When fixes go in circles.** Ordinary bugs keep using Superpowers systematic debugging. When the same problem survives round five, NHK asks the main agent to revisit its explanation before reaching for patch six. The five-round limit applies to each task and to the same unresolved problem across tasks; renaming the task does not wipe the slate. Counts stay in the workflow's existing record.
+**When fixes go in circles.** Use the selected workflow’s debugging method. The five-round limit applies to each task and the same unresolved problem across tasks. Record attempts in the original tracker or execution ledger. At the limit, reassess the cause and continue independent work.
 
-When explanations compete, implementation and review disagree, or an old premise remains unverified or cannot explain repeated failure, the main agent can use one fresh, read-only recovery consultation through the independent diagnosis role in `worker-policy.md`, which maps to `audit`. It first prepares the original contract, unmet acceptance, fixed revisions and diff, prior attempts and observed results, counterevidence, and open questions. Its explanation and proposed direction remain provisional; having no credible hypothesis is valid, and a complete solution is not required before asking.
+For a consequential unresolved question in either workflow, the main agent may use one fresh read-only consultation. Codex uses the exceptional Astra xhigh route; Claude uses its existing resumable diagnostic role. Provide the acceptance criteria, evidence, counterevidence and specific question. The same allowance applies before and during recovery.
 
 The consultant checks source evidence, forms its own explanation, and then compares the main agent's view. It may support or overturn that view, returning evidence that explains past failures or a discriminating experiment with expected outcomes. One targeted clarification with the same consultant may address evidence, omissions, or disagreements about the original question; it shares the diagnosis allowance and adds no investigation scope. Diagnostic and clarification use are tracked against both the task and the same unresolved gap in the existing execution record; changing workers, sessions, models, commits, task names, or plans does not reset them.
 
-The main agent verifies key evidence and records why it accepts or rejects the advice, along with verification results. Agreement between agents is not evidence. If new causal evidence explains why earlier attempts failed, NHK allows one recovery fix and one independent re-review; sufficient evidence also lets the main agent decide directly without consultation. Fixes and re-reviews use their own role permissions. Five rounds is a ceiling: the three-fix architecture check and earlier signs of stagnation still apply. If evidence stays inconclusive after diagnosis and any clarification, or recovery fails, the next decision is yours. The [recovery template](references/execution-recovery-template.md) defines the evidence and stopping rules.
+The main agent verifies the evidence, decides and continues. New evidence that explains earlier failures permits one recovery fix and one independent re-review. Superpowers retains its architecture check after three failed fixes. Ask for a decision only when the remaining action requires new authority, changes acceptance, or recovery is exhausted with no viable path. [Recovery template](references/execution-recovery-template.md)
 
 **Missing or outdated companions.** If a companion is missing, `nhk-bootstrap` adds it from its template and leaves existing project details in place. If older NHK rules are still sitting in the main instruction file, bootstrap or upkeep replaces just those outdated passages with pointers to the companions. Your project facts and explicitly approved exceptions stay intact.
 

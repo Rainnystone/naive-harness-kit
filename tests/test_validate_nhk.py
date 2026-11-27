@@ -594,7 +594,7 @@ class SourceValidationTests(ValidatorTestCase):
         path = root / "references" / "CLAUDE-template.md"
         path.write_text(
             path.read_text(encoding="utf-8").replace(
-                "Prefer the smallest direct change",
+                "Choose the simplest maintainable solution",
                 "Prefer a broad speculative change",
                 1,
             ),
@@ -611,7 +611,7 @@ class SourceValidationTests(ValidatorTestCase):
                 "`worker-policy.md` when useful",
             ),
             (
-                "`execution-recovery.md` after five failed rounds on one task or one acceptance gap, or earlier evidence of architectural stagnation",
+                "`execution-recovery.md` for independent consultation, after five failed rounds on one task or acceptance gap, or earlier evidence of architectural stagnation",
                 "`execution-recovery.md` after problems",
             ),
         )
@@ -1034,7 +1034,7 @@ class SourceValidationTests(ValidatorTestCase):
                 for name in names:
                     path = root / name
                     paragraphs = path.read_text(encoding="utf-8").split("\n\n")
-                    guidance = [p for p in paragraphs if "GPT-6.1 Sol" in p]
+                    guidance = [p for p in paragraphs if "GPT-6.2 Astra" in p]
                     self.assertEqual(len(guidance), 1)
                     paragraphs.remove(guidance[0])
                     path.write_text("\n\n".join(paragraphs), encoding="utf-8")
@@ -1045,11 +1045,11 @@ class SourceValidationTests(ValidatorTestCase):
 
     def test_readme_main_thread_guidance_drift_fails(self) -> None:
         cases = (
-            ("README.md", "we suggest GPT-6.1 Sol xhigh", "we suggest another available model"),
+            ("README.md", "we suggest GPT-6.2 Astra xhigh", "we suggest another available model"),
             ("README.md", "human-facing suggestion only", "mandatory main-thread policy"),
             ("README.md", "you choose the main-thread model and effort", "NHK chooses the main-thread model and effort"),
             ("README.md", "NHK worker permissions do not depend on that choice", "NHK worker permissions depend on that choice"),
-            ("README_CN.md", "建议使用 GPT-6.1 Sol xhigh", "建议考虑其他可用型号"),
+            ("README_CN.md", "建议使用 GPT-6.2 Astra xhigh", "建议考虑其他可用型号"),
             ("README_CN.md", "这只是给使用者的建议", "这是强制的主线程规则"),
             ("README_CN.md", "主线程型号和 effort 由你选择", "主线程型号和 effort 由 NHK 选择"),
             ("README_CN.md", "NHK 的 worker 权限不依赖该选择", "NHK 的 worker 权限依赖该选择"),
@@ -1433,6 +1433,35 @@ class FinalValidationTests(ValidatorTestCase):
                         complexity,
                     )
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_matt_navigation_is_optional_unique_and_canonical(self) -> None:
+        nav = (
+            "\n## Agent skills\n\n### Issue tracker\nSee `docs/agents/issue-tracker.md`.\n"
+            "\n### Domain docs\nSee [domain rules](docs/agents/domain.md).\n"
+        )
+        base = assemble_standalone(ROOT / "references/AGENTS-template.md", "simple")
+        for kind in ("agents", "claude"):
+            for section, valid in (
+                (nav, True), (nav + "\n### Triage labels\nSee `docs/agents/triage-labels.md`.\n", True),
+                (nav + nav, False), (nav + "\n### Triage labels\nSee project labels.\n", False),
+                (nav.replace("docs/agents/domain.md", "docs/agents/domain.md.old"), False),
+                (nav.replace("See `docs/agents/issue-tracker.md`.", "<!-- `docs/agents/issue-tracker.md` -->"), False),
+            ):
+                with self.subTest(kind=kind, section=section):
+                    result = run_cli("--final", self.write_final(base + section), "--kind", kind,
+                                     "--mode", "standalone", "--complexity", "simple")
+                    self.assertEqual(result.returncode, 0 if valid else 1, result.stdout)
+        result = run_cli("--final", self.write_final("@AGENTS.md\n" + nav), "--kind", "claude", "--mode", "thin")
+        self.assertEqual(result.returncode, 1, result.stdout)
+
+    def test_authorized_implementation_cannot_end_on_routine_uncertainty(self) -> None:
+        base = assemble_standalone(ROOT / "references/AGENTS-template.md", "simple")
+        damaged = base.replace("resolve engineering uncertainty and take the next in-scope action",
+                               "ask the user about each engineering decision before proceeding")
+        self.assertNotEqual(base, damaged)
+        result = run_cli("--final", self.write_final(damaged), "--kind", "agents", "--mode", "standalone")
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("Blockers and Human Approval", result.stdout)
 
     def test_simple_line_limit_fails(self) -> None:
         path = self.write_final(standalone_text(extra_lines=80))
