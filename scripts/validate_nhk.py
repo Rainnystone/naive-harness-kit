@@ -2332,6 +2332,29 @@ def validate_install(install_root: Path, source_root: Path) -> list[str]:
     return issues
 
 
+def archive_approval_waived(body: str) -> bool:
+    approval = r"(?:explicit )?human approval"
+    negative = r"(?:never|cannot|(?:do|does|must|shall|should|may|can) not)"
+    # The object may be a project-specific name. Stop at a new instruction or a clause boundary.
+    words = r"(?: (?!but\b|then\b|without\b|(?:and|or) (?:archive|proceed|skip|bypass)\b)[\w'’/`-]+)*"
+    # Remove only the prohibition itself so a later waiver in the same rule still fails.
+    protected = (
+        rf"\b(?:{negative} (?:(?:skip|bypass)|(?:be archived|archive){words} without)"
+        rf"|no{words} (?:may|can|shall) be archived without) {approval}\b"
+    )
+    waiver = rf"\b(?:do not require|without|skip|bypass) {approval}\b|\bhuman approval is (?:optional|not required)\b"
+    requirement = rf"\b(?:{approval} is (?:required|mandatory)|(?:require|obtain) {approval})\b"
+    # Preserve statement boundaries and join soft-wrapped lines inside each Markdown item.
+    for item in re.split(r"\n[ \t]*\n|\n(?=[ \t]*(?:[-+*]|\d+[.)])[ \t]+)", body.lower()):
+        for rule in re.split(r"(?<=[.!?;])\s+", normalize_space(item)):
+            if re.search(waiver, re.sub(protected, "", rule)):
+                return True
+            if re.search(r"\b(?:unless|except)\b", rule):
+                if re.search(protected, rule) or re.search(requirement, rule):
+                    return True
+    return False
+
+
 def validate_governance_workflow(
     text: str, sections: dict[str, str], issues: list[str]
 ) -> None:
@@ -2352,24 +2375,14 @@ def validate_governance_workflow(
         )
         return
 
-    invariants = normalize_space(sections.get("Archive Transition Invariants", "").lower())
+    archive_rules = sections.get("Archive Transition Invariants", "")
+    invariants = normalize_space(archive_rules.lower())
     matt_invariants = (
         "first explicitly approved archive",
         "remote links",
         "preserve local sources and tracking",
     )
-    approval = r"(?:explicit )?human approval"
-    negative = r"(?:never|cannot|(?:do|does|must|shall|should|may|can) not)"
-    # The object may be a project-specific name. Stop at a new instruction or a clause boundary.
-    words = r"(?: (?!but\b|then\b|without\b|(?:and|or) (?:archive|proceed|skip|bypass)\b)[\w'’/`-]+)*"
-    # Remove only the prohibition itself so a later waiver in the same rule still fails.
-    protected = (
-        rf"\b(?:{negative} (?:(?:skip|bypass)|(?:be archived|archive){words} without)"
-        rf"|no{words} (?:may|can|shall) be archived without) {approval}\b"
-    )
-    waiver_text = re.sub(protected, "", invariants)
-    if re.search(rf"\b(?:do not require|without|skip|bypass) {approval}\b"
-                 r"|\bhuman approval is (?:optional|not required)\b", waiver_text):
+    if archive_approval_waived(archive_rules):
         issues.append("doc-governance archive requires explicit human approval")
     required = ("human approval", "archive index")
     if markers == ["Workflow: Matt"]:
