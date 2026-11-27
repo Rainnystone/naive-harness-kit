@@ -225,4 +225,6 @@ python3 -B scripts/validate_nhk.py --final <execution-recovery.md> --kind execut
 python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance
 ```
 
+The governance check looks for an unconditional human approval rule under `Archive Transition Invariants`. The template supplies the wording. Put conditions for copying files or updating the index in their own sentences when the wording is ambiguous.
+
 The size tests use identical project facts to compare generated `AGENTS.md` and standalone `CLAUDE.md` examples with the baseline from before the detailed rules moved into companions. Both must contain at least 20% fewer always-loaded English words, and shuffling line breaks does not count. This measures instruction size, not a promised reduction in your bill. It is a maintainer check, not homework for installing NHK.

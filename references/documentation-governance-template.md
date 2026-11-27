@@ -45,7 +45,7 @@ Map instruction, routing, active documentation, optional tracking, and existing 
 
 ### Archive Transition Invariants
 
-Preserve the invariant about explicit human approval and use the rules for the recorded default. A workstream already owned by the other workflow uses that workflow's transition.
+Keep the unconditional approval instruction in its own sentence. Use the transition rules for the recorded default. A workstream already owned by the other workflow uses that workflow's transition.
 
 - **Both workflows.** Obtain explicit human approval before archiving the named workstream.
 - **Matt.** Create the archive index on the first explicitly approved archive. Verify local references and preserve local sources and tracking. Use remote links for tracker items and record any limits on remote verification.

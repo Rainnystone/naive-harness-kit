@@ -2332,42 +2332,60 @@ def validate_install(install_root: Path, source_root: Path) -> list[str]:
     return issues
 
 
-def archive_approval_waived(body: str) -> bool:
+def archive_policy_actions(body: str) -> Iterable[str]:
+    """Read independent instructions, preserving coordinated materials and soft wraps."""
+    lifecycle_verbs = (
+        r"archive|copy|move|remove|delete|reset|clear|update|verify|check|record|retain|"
+        r"keep|link|preserve|create|repair|stage|save|obtain|require|skip|bypass|proceed"
+    )
+    boundary = (
+        r"(?<=[.!?;:])\s+|(?:,\s*|\s+)(?:and then|then|but|whereas|while|even if|even when)\s+"
+        rf"|(?:,\s*|\s+)(?:and|or)\s+(?=(?:never|do not|{lifecycle_verbs})\b)"
+    )
+    for item in re.split(r"\n[ \t]*\n|\n(?=[ \t]*(?:[-+*]|\d+[.)])[ \t]+)", body):
+        item = re.sub(r"^\s*(?:[-+*]|\d+[.)])\s+", "", item)
+        plain = normalize_space(item.lower().replace("**", "").replace("__", "").replace("`", ""))
+        yield from (part.strip() for part in re.split(boundary, plain) if part.strip())
+
+
+def has_archive_approval_rule(body: str) -> bool:
+    """Require an unconditional approval action and reject independent waivers."""
     approval = r"(?:explicit )?human approval"
     negative = r"(?:never|cannot|(?:do|does|must|shall|should|may|can) not)"
-    # The object may be a project-specific name. Stop at a new instruction or a clause boundary.
-    words = r"(?: (?!but\b|then\b|without\b|(?:and|or) (?:archive|proceed|skip|bypass)\b)[\w'’/`-]+)*"
-    # Remove only the prohibition itself so a later waiver in the same rule still fails.
-    protected = (
-        rf"\b(?:{negative} (?:(?:skip|bypass)|(?:be archived|archive){words} without)"
-        rf"|no{words} (?:may|can|shall) be archived without) {approval}\b"
+    prohibition = (
+        rf"\b(?:{negative} (?:skip|bypass)|{negative} (?:archive|be archived)\b[^,;.?!]*? without"
+        rf"|no [^,;.?!]+? (?:may|can|shall) be archived without) {approval}\b"
     )
-    waiver = rf"\b(?:do not require|without|skip|bypass) {approval}\b|\bhuman approval is (?:optional|not required)\b"
-    requirement = rf"\b(?:{approval} is (?:required|mandatory)|(?:require|obtain) {approval})\b"
-    approval_rule = rf"(?:{protected}|{requirement})"
-    exception = r"(?:unless|except)\b"
-    # A consequence can be an imperative, or a subject followed by an obligation.
-    # Match its predicate at the start so a reminder mentioning consent stays a reminder.
-    subject = r"(?:[\w'-]+|(?:the|a|an|each|all) (?:[\w'-]+ ){0,3}[\w'-]+)"
-    obligation = r"(?:must|shall|should|may|can|will|needs? to|has to|have to)"
-    approval_action = rf"(?:(?:{subject} )?{obligation} )?(?:always )?{approval_rule}"
-    scope_words = r"(?: (?!then\b|but\b|even\b|unless\b|except\b|(?:and|or) (?:then|never|do|copy|remove|keep)\b)[\w'’/`-]+)*"
-    archive_scope = rf"(?: (?:before archiving|to archive|for){scope_words})?"
-    # A trailing exception must immediately follow the approval action and its archive scope.
-    action_start = r"(?:^|,|\b(?:and|then|but)\b)\s*(?:[-+*]|\d+[.)])?\s*"
-    trailing_exception = rf"{action_start}{approval_action}{archive_scope}\s*,?\s*{exception}"
-    leading_exception = rf"^(?:[-+*]|\d+[.)])?\s*{exception}[^,;.!?]*,\s*"
-    # Preserve statement boundaries and join soft-wrapped lines inside each Markdown item.
-    for item in re.split(r"\n[ \t]*\n|\n(?=[ \t]*(?:[-+*]|\d+[.)])[ \t]+)", body.lower()):
-        for rule in re.split(r"(?<=[.!?;:])\s+", normalize_space(item)):
-            if re.search(waiver, re.sub(protected, "", rule)):
-                return True
-            if re.search(trailing_exception, rule):
-                return True
-            condition = re.match(leading_exception, rule)
-            if condition and re.match(approval_action, rule[condition.end():]):
-                return True
-    return False
+    waiver = rf"\b(?:{negative} require|without|skip|bypass) {approval}\b|\bhuman approval is (?:optional|not required)\b"
+    requirement = (
+        rf"(?:(?:obtain|require|get|secure) {approval}\b|{approval} (?:is (?:required|mandatory)|must be obtained)\b"
+        rf"|archive\b[^,;.?!]*? only (?:after|with) (?:obtaining |receiving )?{approval}\b"
+        rf"|{negative} archive\b[^,;.?!]*? (?:unless|until) {approval} (?:is|has been) (?:given|obtained|granted)\b)"
+    )
+    # An actor may contain several words. A modal or a finite requirement verb
+    # identifies its predicate. A subordinate reminder cannot establish consent.
+    subject = r"(?:(?!(?:to|that|if|unless|except|and|or|then)\b)[\w'’-]+ )+?"
+    modal = r"(?:must|shall|needs? to|has to|have to)"
+    obligation = (
+        rf"(?:(?:{subject})?{modal} )?(?:always )?(?:{requirement}|{prohibition})"
+        rf"|{subject}(?:{prohibition}|requires? {approval}\b)"
+    )
+    found = False
+    for action in archive_policy_actions(body):
+        if "human approval" not in action:
+            continue
+        if re.search(waiver, re.sub(prohibition, "", action)):
+            return False
+
+        leading = re.match(r"^(?:unless|except)\b[^,]*,\s*", action)
+        predicate = action[leading.end():] if leading else action
+        predicate = re.sub(r"^before archiving(?: [^,]+)?,\s*", "", predicate)
+        attested = re.match(obligation, predicate)
+        if attested:
+            if leading or re.search(r"\b(?:unless|except)\b", predicate[attested.end():]):
+                return False
+            found = True
+    return found
 
 
 def validate_governance_workflow(
@@ -2397,8 +2415,9 @@ def validate_governance_workflow(
         "remote links",
         "preserve local sources and tracking",
     )
-    if archive_approval_waived(archive_rules):
-        issues.append("doc-governance archive requires explicit human approval")
+    if not has_archive_approval_rule(archive_rules):
+        issues.append("doc-governance archive requires explicit human approval; use an unconditional rule such as "
+                      "'Obtain explicit human approval before archiving the named workstream.'")
     required = ("human approval", "archive index")
     if markers == ["Workflow: Matt"]:
         required += matt_invariants

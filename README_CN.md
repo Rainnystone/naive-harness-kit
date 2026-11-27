@@ -225,4 +225,6 @@ python3 -B scripts/validate_nhk.py --final <execution-recovery.md> --kind execut
 python3 -B scripts/validate_nhk.py --final <documentation-governance.md> --kind doc-governance
 ```
 
+归档治理校验会在 `Archive Transition Invariants` 小节核对一条明确要求人工批准的规则，模板中已有对应原句。复制文件、更新索引各自有哪些条件，可以另起一句写清楚。
+
 篇幅测试会用相同的项目事实生成 `AGENTS.md` 和 standalone `CLAUDE.md` 示例，与细则拆到配套文件之前的基线比较。两者每轮加载的英文词数都要至少减少 20%，挪几个换行不算。这是在检查指令有没有真正变短，不是给实际费用打包票；也是维护者的检查，不是安装 NHK 要交的作业。
