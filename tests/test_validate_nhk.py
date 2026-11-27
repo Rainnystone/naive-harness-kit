@@ -2673,6 +2673,29 @@ class FinalValidationTests(ValidatorTestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("implementation-planning.md", result.stdout)
 
+    def test_archive_approval_prohibitions_and_waivers(self) -> None:
+        cases = (
+            ("Never archive without explicit human approval.", True),
+            ("Do not archive a workstream without human approval.", True),
+            ("Do not bypass explicit human approval.", True),
+            ("Never archive draft release notes and tickets without explicit human approval.", True),
+            ("Never archive draft tickets but proceed without human approval.", False),
+            ("No workstream may be archived without human approval.", True),
+            ("Archive without explicit human approval.", False),
+            ("Human approval is optional.", False),
+            ("Do not require explicit human approval before archiving.", False),
+            ("Never archive without human approval. For local archives, skip human approval.", False),
+        )
+        for rule, valid in cases:
+            with self.subTest(rule=rule):
+                content = doc_governance_text().replace(
+                    "Explicit human approval is required before archiving.", rule,
+                )
+                result = run_cli("--final", self.write_final(content), "--kind", "doc-governance")
+                self.assertEqual(result.returncode, 0 if valid else 1, result.stdout)
+                if not valid:
+                    self.assertIn("requires explicit human approval", result.stdout)
+
     def test_doc_governance_accepts_legacy_and_explicit_workflows(self) -> None:
         legacy = doc_governance_text()
         superpowers = legacy.replace(

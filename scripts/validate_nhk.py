@@ -2358,8 +2358,18 @@ def validate_governance_workflow(
         "remote links",
         "preserve local sources and tracking",
     )
-    if re.search(r"\b(?:do not require|without|skip|bypass) (?:explicit )?human approval\b"
-                 r"|\bhuman approval is (?:optional|not required)\b", invariants):
+    approval = r"(?:explicit )?human approval"
+    negative = r"(?:never|cannot|(?:do|does|must|shall|should|may|can) not)"
+    # The object may be a project-specific name. Stop at a new instruction or a clause boundary.
+    words = r"(?: (?!but\b|then\b|without\b|(?:and|or) (?:archive|proceed|skip|bypass)\b)[\w'’/`-]+)*"
+    # Remove only the prohibition itself so a later waiver in the same rule still fails.
+    protected = (
+        rf"\b(?:{negative} (?:(?:skip|bypass)|(?:be archived|archive){words} without)"
+        rf"|no{words} (?:may|can|shall) be archived without) {approval}\b"
+    )
+    waiver_text = re.sub(protected, "", invariants)
+    if re.search(rf"\b(?:do not require|without|skip|bypass) {approval}\b"
+                 r"|\bhuman approval is (?:optional|not required)\b", waiver_text):
         issues.append("doc-governance archive requires explicit human approval")
     required = ("human approval", "archive index")
     if markers == ["Workflow: Matt"]:
