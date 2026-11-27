@@ -86,7 +86,7 @@ Workflow: Matt
 
 - If the current workstream has a different owner, use its original spec, tickets or plan and the matching workflow section in the installed NHK package’s `references/implementation-planning-template.md`. Keep the workspace guide on its default.
 - Choose one primary workflow per workstream. Other skills may contribute without replacing the primary workflow or duplicating its artifacts.
-- Use `to-spec` for the shared spec and `to-tickets` for implementation tickets in Matt's configured tracker. Use native blocking edges where available or one Markdown file per ticket with the local tracker.
+- Use `to-spec` for the shared spec and `to-tickets` for implementation tickets in Matt's configured tracker. Use native blocking edges where available or one Markdown file per ticket with the local tracker. Without triage, pass the configured ready-state mapping or Matt's default `ready-for-agent` to the publishing skill.
 
 ### Plan Layers
 

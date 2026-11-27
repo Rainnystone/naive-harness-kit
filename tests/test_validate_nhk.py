@@ -827,6 +827,9 @@ class SourceValidationTests(ValidatorTestCase):
             ("\nWorkflow: Superpowers\n", "Superpowers"),
             ("\nWorkflow: Matt\n", "Matt"),
             ("isolated worktrees", "Matt"),
+            ("configured ready-state mapping", "Matt"),
+            ("including untracked files", "Matt"),
+            ("has a different owner", "Superpowers"),
         ):
             with self.subTest(token=token):
                 root = self.make_source_fixture()
@@ -1833,6 +1836,9 @@ class FinalValidationTests(ValidatorTestCase):
             ("vertical slice", "component", "Plan Layers"),
             ("observable acceptance criteria", "completion", "Task Contract"),
             ("isolated worktrees", "one shared checkout", "Dependencies and Execution"),
+            ("configured ready-state mapping", "call setup", "Workflow Compatibility"),
+            ("including untracked files", "only committed files", "Dependencies and Execution"),
+            ("has a different owner", "also uses a plugin", "Workflow Compatibility"),
             ("Keep ticket state in the configured tracker", "Duplicate ticket state in a separate ledger", "Dependencies and Execution"),
             ("verifiable batches", "one step", "Wide Changes"),
             ("Standards and Spec", "Standards alone", "Plan Review"),

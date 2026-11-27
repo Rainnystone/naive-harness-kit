@@ -240,6 +240,12 @@ PLANNING_PRIMARY_WORKFLOW = (
     "without replacing the primary workflow or duplicating its artifacts."
 )
 
+PLANNING_OTHER_OWNER = (
+    "If the current workstream has a different owner, use its original spec, tickets or plan and "
+    "the matching workflow section in the installed NHK package’s `references/implementation-planning-template.md`. "
+    "Keep the workspace guide on its default."
+)
+
 LEGACY_CODING_GUIDE_HEADINGS = {
     "Current Execution State",
     "High-Frequency Packet Routing",
@@ -869,6 +875,7 @@ MATT_PLANNING_DECLARATIONS = {
         "Use `to-spec` for the shared spec and `to-tickets` for implementation tickets in Matt's "
         "configured tracker. Use native blocking edges where available or one Markdown file per "
         "ticket with the local tracker.",
+        "Without triage, pass the configured ready-state mapping or Matt's default `ready-for-agent` to the publishing skill.",
     ),
     "Plan Layers": (
         "Keep shared outcomes, constraints, decisions, and testing seams in the spec. Make each "
@@ -880,6 +887,8 @@ MATT_PLANNING_DECLARATIONS = {
         "ticket. Carry binding constraints and decisions through pointers to the spec and ticket.",
     ),
     "Dependencies and Execution": (
+        "For a local tracker, give each helper read access to the spec and ticket in their authoritative "
+        "checkout, including untracked files. The primary thread owns tracker updates.",
         "Give `implement-spec` the spec and ticket references. Use separate branches and isolated "
         "worktrees, one of each per ticket. Independent tickets with resolved blockers may run "
         "concurrently when write boundaries are safe. Use Matt's `tdd` for each ticket, then merge "
@@ -1048,6 +1057,11 @@ def validate_planning_contract(
                 f"{label} Workflow Compatibility must contain exactly one active {permitted} declaration"
             )
             return
+
+    if declarations:
+        compatibility = normalized_contract(sections.get("Workflow Compatibility", ""))
+        if normalized_contract(PLANNING_OTHER_OWNER) not in compatibility:
+            issues.append(f"{label} Workflow Compatibility is missing the route for a workstream with a different owner")
 
     if workflow == "Matt":
         validate_declared_clauses(
