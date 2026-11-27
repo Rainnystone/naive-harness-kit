@@ -345,7 +345,7 @@ The optional governance CLI accepts a nonempty archive section in the project’
 
 ### F1. Approval is missing or declined
 
-In each workflow, start at the router without a handoff and ask whether the named completed workstream is ready to archive. Expect the archive route for a read-only assessment. With no decision yet, expect a request for approval and unchanged files and tracker state. A decline leaves them unchanged as well. A closed ticket or a passed test supplies completion evidence only.
+In each workflow, start at the router without a handoff and ask whether the named completed workstream is ready to archive. Expect the archive route for a read-only assessment. Repeat with a missing workflow marker and clear ownership in the records. Use the inferred workflow for the assessment and leave the governance file untouched. With no decision yet, expect a request for approval and unchanged files and tracker state. A decline leaves them unchanged as well. A closed ticket or a passed test supplies completion evidence only.
 
 ### F2. Approved Superpowers move and retry
 

@@ -42,11 +42,13 @@ Check the five stable companions:
 
 For a Superpowers workspace default, also require `archive/` and `archive/README.md` as the legacy archive foundation. With a Matt default, an absent archive directory or index is normal until the first explicitly approved archive. Record any existing archive surfaces in the handoff.
 
-For a read-only archive question, report any missing prerequisite without running repairs. Select the route in this order:
+For an archive readiness or verification question, select `nhk-archive` using the workflow identified from the records, even if its marker is missing or stale. Keep that choice in the handoff. If a missing prerequisite prevents the assessment, report it and stop. Leave bootstrap, upkeep and all writes for a separate request.
+
+For other requests, select a route in this order:
 
 1. Route to `nhk-bootstrap` when the canonical instruction or a required foundation surface is missing or needs the approved topology repair. Complete bootstrap and reroute any outstanding intent.
 2. Route to `nhk-upkeep` to record a newly resolved or changed workspace default or repair its marker in otherwise complete governance. Preserve any explicit archive approval for the named workstream and reroute that intent after the marker is recorded.
-3. Route to `nhk-archive` when the user asks about archive readiness for a named workstream, approves its archive, or asks to verify or retry its archive. A readiness or verification request is read-only.
+3. Route to `nhk-archive` when the user approves archiving a named workstream or asks to retry that transition.
 4. Route to `nhk-upkeep` when the user requests upkeep, after an NHK update needs workspace reconciliation, when current NHK work requires repository setup for Matt in an otherwise complete workspace, or when workspace descriptions or existing archive links may have drifted.
 5. Otherwise, select `ready` and report the foundation status.
 
