@@ -85,9 +85,9 @@ LEGACY_CODEX_PRESET_LADDER = (
 
 CODEX_TIER_LINES = (
     "`light`: GPT-6.1 Terra xhigh.",
-    "`standard`: GPT-6.1 Sol xhigh.",
-    "`deep`: GPT-6 Astra xhigh.",
-    "`audit`: GPT-6 Astra xhigh.",
+    "`standard`: GPT-6.2 Sol xhigh.",
+    "`deep`: GPT-6.2 Sol xhigh.",
+    "`audit`: GPT-6.2 Sol xhigh.",
 )
 
 STANDARD_TIER_CLAUSE = (
@@ -193,7 +193,7 @@ def human_routing_exception(**overrides: str) -> str:
         "target": "billing-module",
         "scope": "src/billing/",
         "role": 'task-implementation',
-        "preset": "GPT-6 Astra xhigh",
+        "preset": "GPT-6.2 Sol xhigh",
         "approval": "decisions/billing.md#low-route",
     }
     record.update(overrides)
@@ -287,6 +287,10 @@ class RecoveryConsultationTests(ValidatorTestCase):
             "at most one targeted clarification with the same diagnostic worker",
             "Record counts, diagnostic use, clarification use, and recovery use for both the task and stable acceptance gap",
             "never resets diagnostic or clarification use",
+            "For ordinary uncertainty, the main thread examines available evidence",
+            "reasonable experiments leave that question unresolved",
+            "If either the task or stable acceptance gap has used diagnosis, the allowance is exhausted.",
+            "The bounded Codex dispatch is already authorized within the current task",
             "record why advice was accepted or rejected and the verification results",
             "Agreement between agents is not causal evidence",
         )
@@ -327,6 +331,12 @@ class RecoveryConsultationTests(ValidatorTestCase):
             "The diagnosis allowance resets after a new session.",
             "Diagnostic workers may dispatch another helper.",
             "Clarifications can be repeated after resumption.",
+            "Ordinary uncertainty requires a consultation.",
+            "The main thread must obtain human approval before consultation.",
+            "Routine ambiguity triggers independent consultation.",
+            "Consultations are required for routine bugs.",
+            "A consultation requires separate human approval.",
+            "Always consult another agent before continuing.",
         )
         for source in (False, True):
             for grant in grants:
@@ -397,6 +407,35 @@ class RecoveryConsultationTests(ValidatorTestCase):
 
 
 class SourceValidationTests(ValidatorTestCase):
+    def test_active_source_and_final_reject_extra_astra_permissions(self) -> None:
+        for grant in (
+            "Use GPT-6.2 Astra xhigh for implementation.",
+            "Use `gpt-6.2-astra` for final review.",
+            "The independent consultant may write files after reporting.",
+            "For ordinary uncertainty, always consult another agent.",
+            "Use the independent consultation as fallback when Sol is unavailable.",
+        ):
+            for source in (False, True):
+                with self.subTest(source=source, grant=grant):
+                    if source:
+                        root = self.make_source_fixture()
+                        path = root / "references" / "worker-policy-template.md"
+                        content = path.read_text(encoding="utf-8")
+                        heading = "### Codex Routing"
+                    else:
+                        content = worker_policy_text()
+                        heading = "## Codex Routing"
+                    content = content.replace(heading, f"{heading}\n\n- {grant}", 1)
+                    if source:
+                        path.write_text(content, encoding="utf-8")
+                        result = run_cli("--root", root)
+                    else:
+                        result = run_cli(
+                            "--final", self.write_final(content), "--kind", "worker-policy"
+                        )
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn("additional routing", result.stdout)
+
     def test_compliant_source_fixture_passes(self) -> None:
         result = run_cli("--root", self.make_source_fixture())
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -870,8 +909,8 @@ class SourceValidationTests(ValidatorTestCase):
             ("there is no mandatory `light` trial", "always start in `light`"),
             ("Tiers determine permission", "Escalate whenever useful"),
             (
-                "No worker configuration exceeds the `audit` preset",
-                "Ultra exceeds the `audit` preset with approval",
+                "Its trigger and existing authorization cover one fresh-context dispatch, shared with recovery diagnosis.",
+                "Another fresh dispatch is allowed every time recovery starts.",
             ),
         )
         for required, replacement in mutations:
@@ -894,7 +933,7 @@ class SourceValidationTests(ValidatorTestCase):
         path.write_text(
             path.read_text(encoding="utf-8").replace(
                 CODEX_TIER_LINES[2],
-                CODEX_TIER_LINES[2].replace("GPT-6 Astra xhigh", "GPT-6 Astra max"),
+                CODEX_TIER_LINES[2].replace("GPT-6.2 Sol xhigh", "GPT-6 Astra max"),
                 1,
             ),
             encoding="utf-8",
@@ -909,9 +948,11 @@ class SourceValidationTests(ValidatorTestCase):
             (CODEX_TIER_LINES[0], "`light`: GPT-6.1 Terra high."),
             (CODEX_TIER_LINES[0], "`light`: GPT-6.1 Terra max."),
             ("`gpt-6.1-terra`", "`gpt-6-luna`"),
-            (CODEX_TIER_LINES[1], "`standard`: GPT-6 Sol xhigh."),
-            (CODEX_TIER_LINES[2], "`deep`: GPT-6 Astra medium."),
-            ("`gpt-6.1-sol`", "`gpt-6-sol`"),
+            (CODEX_TIER_LINES[1], "`standard`: GPT-6.1 Sol xhigh."),
+            (CODEX_TIER_LINES[2], "`deep`: GPT-6 Astra xhigh."),
+            (CODEX_TIER_LINES[3], "`audit`: GPT-6.2 Astra xhigh."),
+            ("`gpt-6.2-sol`", "`gpt-6.1-sol`"),
+            ("`gpt-6.2-astra`", "`gpt-6-astra`"),
         )
         for current, superseded in mutations:
             with self.subTest(superseded=superseded):
@@ -1238,6 +1279,7 @@ class AtomicRoutingRegressionTests(ValidatorTestCase):
             "same single task, scope, and confirmed approval",
             "never copy its authorization across the new tasks",
             "Legacy tier migration",
+            "the superseded GPT-6.1 Sol and GPT-6 Astra presets",
             "its role remains permitted for that tier",
         ):
             with self.subTest(phrase=phrase):
@@ -1718,6 +1760,10 @@ class FinalValidationTests(ValidatorTestCase):
             human_routing_exception(role="all"),
             human_routing_exception(preset="GPT-6 Astra max"),
             human_routing_exception(preset="GPT-6 Astra medium"),
+            human_routing_exception(preset="GPT-6 Astra xhigh"),
+            human_routing_exception(preset="GPT-6.1 Sol xhigh"),
+            human_routing_exception(preset="GPT-6.2 Astra xhigh"),
+            human_routing_exception(role="independent-consultation"),
             human_routing_exception(preset="Ultra"),
             human_routing_exception(preset="GPT-6 Luna max"),
             human_routing_exception(role="recursive-delegation"),
@@ -1742,7 +1788,7 @@ class FinalValidationTests(ValidatorTestCase):
             human_routing_exception(target="billing-project"),
             human_routing_exception(role='initial-task-review'),
             human_routing_exception(role="scoped-re-review", preset="GPT-6.1 Terra xhigh"),
-            human_routing_exception(role="local-fix", preset="GPT-6.1 Sol xhigh"),
+            human_routing_exception(role="local-fix", preset="GPT-6.2 Sol xhigh"),
         ):
             text = worker_policy_text().replace("## Codex Routing", "## Codex Routing\n" + record, 1)
             result = run_cli("--final", self.write_final(text), "--kind", "worker-policy")
@@ -1896,7 +1942,7 @@ class FinalValidationTests(ValidatorTestCase):
             *CODEX_TIER_LINES,
             STANDARD_TIER_CLAUSE,
             "`deep`: a concrete reasoning difficulty remaining after those checks, or demonstrated `standard` capability limits.",
-            "`audit` is read-only: independent diagnosis (including recovery consultation) and complex whole-change final review, never implementation or recovery fixes.",
+            "`audit` is read-only and covers complex whole-change final review and independent diagnosis when the platform routes diagnosis to that tier.",
             "Other whole-change final reviews use `deep`.",
             "Map tiers to definitions: `light` uses `nhk-light`, `standard` uses `nhk-standard`, `deep` uses `nhk-deep`, and `audit` uses the read-only `nhk-audit`.",
         ):
@@ -1930,16 +1976,16 @@ class FinalValidationTests(ValidatorTestCase):
     def test_worker_policy_rejects_wrong_missing_extra_or_duplicate_presets(self) -> None:
         valid = CODEX_TIER_LINES[1]
         invalid = (
-            valid.replace("GPT-6.1 Sol xhigh", "GPT-6.1 Sol max"),
-            valid.replace("GPT-6.1 Sol xhigh", "GPT-6.1 Sol high"),
-            valid.replace("GPT-6.1 Sol xhigh", "GPT-6 Astra xhigh"),
-            valid.replace("GPT-6.1 Sol xhigh", "GPT-5.6 Terra xhigh"),
-            valid.replace("GPT-6.1 Sol xhigh", "GPT-5.5 xhigh"),
-            valid.replace("GPT-6.1 Sol xhigh", ""),
-            valid.replace("GPT-6.1 Sol xhigh", "GPT-5.6 Sol medium"),
-            valid.replace("GPT-6.1 Sol xhigh", "GPT-6.1 Sol xhigh; GPT-6.1 Terra xhigh"),
-            valid.replace("GPT-6.1 Sol xhigh", "GPT-6.1 Sol xhigh; GPT-6.1 Sol xhigh"),
-            valid + "\n- `audit`: GPT-6 Astra xhigh.",
+            valid.replace("GPT-6.2 Sol xhigh", "GPT-6.2 Sol max"),
+            valid.replace("GPT-6.2 Sol xhigh", "GPT-6.2 Sol high"),
+            valid.replace("GPT-6.2 Sol xhigh", "GPT-6.2 Astra xhigh"),
+            valid.replace("GPT-6.2 Sol xhigh", "GPT-5.6 Terra xhigh"),
+            valid.replace("GPT-6.2 Sol xhigh", "GPT-5.5 xhigh"),
+            valid.replace("GPT-6.2 Sol xhigh", ""),
+            valid.replace("GPT-6.2 Sol xhigh", "GPT-5.6 Sol medium"),
+            valid.replace("GPT-6.2 Sol xhigh", "GPT-6.2 Sol xhigh; GPT-6.1 Terra xhigh"),
+            valid.replace("GPT-6.2 Sol xhigh", "GPT-6.2 Sol xhigh; GPT-6.2 Sol xhigh"),
+            valid + "\n- " + CODEX_TIER_LINES[3],
         )
         for replacement in invalid:
             with self.subTest(replacement=replacement):
@@ -1952,6 +1998,26 @@ class FinalValidationTests(ValidatorTestCase):
     def test_worker_policy_rejects_drift_in_review_and_special_roles(self) -> None:
         mutations = (
             (
+                "Keep Superpowers SDD implementers sequential.",
+                "Keep subagent-driven implementers sequential.",
+                "Dispatch Contract",
+            ),
+            (
+                "independent ready tickets may run concurrently",
+                "all tickets may run concurrently",
+                "Dispatch Contract",
+            ),
+            (
+                "independent read-only Standards and Spec reviewers in parallel",
+                "an independent read-only reviewer issuing one combined verdict",
+                "Review Gates",
+            ),
+            (
+                "All other Superpowers plans",
+                "All other plans",
+                "Review Gates",
+            ),
+            (
                 "Both must pass; self-review is not a substitute.",
                 "Either verdict may pass; self-review is enough.",
                 "Review Gates",
@@ -1962,7 +2028,7 @@ class FinalValidationTests(ValidatorTestCase):
                 "Capability Tiers",
             ),
             (
-                "`audit` is read-only: independent diagnosis (including recovery consultation) and complex whole-change final review, never implementation or recovery fixes.",
+                "`audit` is read-only and covers complex whole-change final review and independent diagnosis when the platform routes diagnosis to that tier.",
                 "`audit` may perform ordinary implementation and recovery.",
                 "Capability Tiers",
             ),
@@ -1977,8 +2043,8 @@ class FinalValidationTests(ValidatorTestCase):
                 "Claude Routing",
             ),
             (
-                "No worker configuration exceeds the `audit` preset;",
-                "Ultra may exceed the `audit` preset with approval;",
+                "only for the read-only independent consultation defined in `execution-recovery.md`.",
+                "for any authorized fix or final review.",
                 "Codex Routing",
             ),
             (

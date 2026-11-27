@@ -321,10 +321,10 @@ class InstructionExampleTests(unittest.TestCase):
         for token in (
             "fork_turns: none",
             "`light`: GPT-6.1 Terra xhigh.",
-            "`standard`: GPT-6.1 Sol xhigh.",
-            "`deep`: GPT-6 Astra xhigh.",
-            "`audit`: GPT-6 Astra xhigh.",
-            "No worker configuration exceeds the `audit` preset",
+            "`standard`: GPT-6.2 Sol xhigh.",
+            "`deep`: GPT-6.2 Sol xhigh.",
+            "`audit`: GPT-6.2 Sol xhigh.",
+            "Use GPT-6.2 Astra xhigh (`gpt-6.2-astra`) only for the read-only independent consultation",
         ):
             self.assertIn(token, codex)
         self.assertNotIn("Ultra", codex)
@@ -354,6 +354,8 @@ class InstructionExampleTests(unittest.TestCase):
             "why prior attempts failed",
             "discriminating observation",
             "original scope and authority",
+            "For Matt Pocock, use its native diagnosing-bugs workflow.",
+            "Codex independent consultation and recovery diagnosis share one allowance.",
         ):
             self.assertIn(token, example)
         self.assertIn("do not create an SDD-only or parallel state system", example)

@@ -268,10 +268,12 @@ LEGACY_CODEX_PRESET_LADDER = (
 # to exactly one preset.
 CODEX_TIER_PRESETS = {
     "light": "GPT-6.1 Terra xhigh",
-    "standard": "GPT-6.1 Sol xhigh",
-    "deep": "GPT-6 Astra xhigh",
-    "audit": "GPT-6 Astra xhigh",
+    "standard": "GPT-6.2 Sol xhigh",
+    "deep": "GPT-6.2 Sol xhigh",
+    "audit": "GPT-6.2 Sol xhigh",
 }
+CODEX_CONSULTATION_PRESET = "GPT-6.2 Astra xhigh"
+CODEX_CONSULTATION_MODEL_ID = "gpt-6.2-astra"
 # Human routing exceptions may choose only ordinary tiers, never the read-only audit tier.
 CODEX_EXCEPTION_TIERS = ("light", "standard", "deep")
 # Any backticked row label in Codex Routing is a catalog row, so an extra tier
@@ -297,8 +299,8 @@ TERRA_ROUTE_PATTERN = (
     r"\bTerra\s+(?:(?:at|with)\s+)?(?:models?|presets?|workers?|low|medium|high|xhigh|max|Extra\s+High)\b|"
     r"\b(?:model|preset)\s*(?::|=|\bis\b)?\s*Terra\b"
 )
-CODEX_ALLOWED_FAMILY_NAMES = ("GPT-6.1 Terra", "GPT-6.1 Sol", "GPT-6 Astra")
-CODEX_ALLOWED_RUNTIME_IDS = ("gpt-6.1-terra", "gpt-6.1-sol", "gpt-6-astra")
+CODEX_ALLOWED_FAMILY_NAMES = ("GPT-6.1 Terra", "GPT-6.2 Sol")
+CODEX_ALLOWED_RUNTIME_IDS = ("gpt-6.1-terra", "gpt-6.2-sol", CODEX_CONSULTATION_MODEL_ID)
 CODEX_QUALIFIER_STOPWORDS = (
     "a",
     "an",
@@ -540,6 +542,7 @@ def validate_codex_declared_presets(
     allowed_display = {
         *(preset.lower() for preset in CODEX_TIER_PRESETS.values()),
         *(name.lower() for name in CODEX_ALLOWED_FAMILY_NAMES),
+        CODEX_CONSULTATION_PRESET.lower(),
     }
     allowed_runtime = {item.lower() for item in CODEX_ALLOWED_RUNTIME_IDS}
     seen: set[str] = set()
@@ -552,7 +555,7 @@ def validate_codex_declared_presets(
         seen.add(declared)
         issues.append(
             f"{label} Codex Routing declares unapproved versioned preset "
-            f"{match.group(0)!r}; allowed presets are the tier catalog"
+            f"{match.group(0)!r}; use the tier catalog or the declared consultation"
         )
 
     leftover = CODEX_DISPLAY_PRESET_RE.sub(" ", codex)
@@ -563,7 +566,7 @@ def validate_codex_declared_presets(
         seen.add(token)
         issues.append(
             f"{label} Codex Routing declares unapproved versioned preset "
-            f"{match.group(0)!r}; allowed presets are the tier catalog"
+            f"{match.group(0)!r}; use the tier catalog or the declared consultation"
         )
 
 
@@ -577,7 +580,7 @@ DIAGNOSTIC_ROUTE = (
 CONSULTATION_DECLARATIONS = {
     "Triggers and Accounting": [
         "Record counts, diagnostic use, clarification use, and recovery use for both the task "
-        "and stable acceptance gap in that record. Other trackers only reference it.",
+        "and stable acceptance gap in that record. Record a Codex consultation as diagnostic use.",
         "Worker, session, model, commit, task rename, or replanning never resets diagnostic or clarification use.",
         "Read-only diagnosis spends no fix round and grants no additional modification authority.",
     ],
@@ -587,15 +590,23 @@ CONSULTATION_DECLARATIONS = {
         "Include a provisional explanation and recovery direction if available; explicitly state when no credible "
         "hypothesis exists. A complete solution is not a prerequisite for consultation.",
         "The main thread decides directly when evidence is sufficient and remains responsible for the final judgment.",
+        "For ordinary uncertainty, the main thread examines available evidence, tests reasonable alternatives, "
+        "records consequential decisions, and continues within scope.",
         "After consultation, verify key evidence and record why advice was accepted or rejected and the verification "
         "results. Agreement between agents is not causal evidence.",
+        "The main thread decides and continues the authorized work when verified evidence supports a path.",
     ],
     "Independent Diagnosis": [
-        "Use diagnosis only for competing explanations, review-versus-implementation conflict, an unverified old "
-        "premise, or no credible explanation for repeated failure.",
+        "In recovery, use independent diagnosis only for competing explanations, review-versus-implementation "
+        "conflict, an unverified old premise, or no credible explanation for repeated failure.",
+        "Codex may also consult before recovery when a concrete question could materially affect acceptance, a "
+        "public contract, or the ability to finish within scope, and the main thread's evidence and reasonable "
+        "experiments leave that question unresolved.",
         DIAGNOSTIC_ROUTE,
-        "Recovery consultation uses the existing diagnosis allowance; if either the task or stable acceptance gap "
-        "has used diagnosis, do not dispatch another diagnostic worker.",
+        "Codex independent consultation and recovery diagnosis share one allowance. If either the task or stable "
+        "acceptance gap has used diagnosis, the allowance is exhausted.",
+        "The bounded Codex dispatch is already authorized within the current task. Existing human approval "
+        "boundaries still apply to the main thread's decisions.",
         "Give the diagnostic worker the reassessment handoff and an explicit no-write boundary. "
         "Separate observations from prior hypotheses.",
         "Diagnosis checks source evidence and forms its own explanation before comparing the main thread's "
@@ -607,8 +618,8 @@ CONSULTATION_DECLARATIONS = {
         "allowance and grants no new investigation scope.",
         "A diagnostic worker does not authorize a fix or replace the main thread's judgment; select any recovery "
         "fix and re-review for their own roles in `worker-policy.md`.",
-        "If evidence remains insufficient after diagnosis and any clarification, present blockers and options "
-        "to the human. Do not start a diagnostic chain.",
+        "If an exhausted task or gap still lacks a credible recovery after diagnosis and any clarification, "
+        "present blockers and options to the human. Do not start a diagnostic chain.",
     ],
 }
 DIAGNOSTIC_MENTION_RE = re.compile(
@@ -655,9 +666,13 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                        'constraints.',
                        'Recursive delegation needs separate human authorization for a named '
                        'packet.',
-                       'Keep subagent-driven implementers sequential. Parallelize read-only work '
+                       'Keep Superpowers SDD implementers sequential. Parallelize read-only work '
                        'only when ownership, state, artifacts, services, and verification '
                        'resources are independent.',
+                       'In the Matt Pocock workflow, independent ready tickets may run concurrently '
+                       'when the workflow and runtime support isolated write scopes and independent '
+                       'state, artifacts, services, and verification resources. Keep dependent or '
+                       'overlapping tickets sequential.',
                        'Check runtime progress and lifecycle. A timeout alone is not a blocker and '
                        'does not require a nonexistent close tool.',
                        'The main thread owns integration, cross-task verification, recovery '
@@ -665,10 +680,10 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
  'Review Gates': ['In SDD, every atomic task or qualifying mechanical batch gets one independent '
                   'read-only reviewer with separate spec-compliance and task-quality verdicts. '
                   'Both must pass; self-review is not a substitute.',
-                  'Internal task steps do not dispatch separate reviewers. Native execution '
-                  'retains its own task verification and one independent whole-change final '
-                  'review, without per-task subagent reviews.',
-                  'Use the upstream task-reviewer, re-review, and final-review prompts. Do not '
+                  'In Superpowers, internal task steps do not dispatch separate reviewers. Its inline '
+                  'execution retains task verification and one independent whole-change final review, '
+                  'without per-task subagent reviews.',
+                  'In Superpowers, use the upstream task-reviewer, re-review, and final-review prompts. Do not '
                   'maintain copied NHK review prompts.',
                   'Give reviewers fixed BASE and HEAD revisions, binding constraints, the report, '
                   'and evidence. Check implementer claims against the diff and test output.',
@@ -679,12 +694,15 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                   'at identical final scope and fixed version.',
                   'Re-evaluate consolidation when scope, version, or evidence changes; never reuse '
                   'stale approval.',
-                  'All other plans, including multi-task and complex plans, retain one '
-                  'whole-change final review. Final review allows at most one concentrated fix '
+                  'All other Superpowers plans, including multi-task and complex plans, retain one '
+                  'whole-change final review. Its final review allows at most one concentrated fix '
                   'wave and one scoped re-review.',
-                  'Consolidation never resets or extends task or acceptance-gap repair counts, '
-                  'execution recovery, or final fix-wave bounds.'],
- 'Capability Tiers': ['Route each packet to one tier: `light`, `standard`, `deep`, or `audit`. '
+                  'Superpowers review consolidation never resets or extends task or acceptance-gap repair counts, '
+                  'execution recovery, or final fix-wave bounds.',
+                  'For a Matt Pocock code review, use its native `code-review` at a fixed diff with '
+                  'independent read-only Standards and Spec reviewers in parallel. Keep review '
+                  "findings on separate axes and apply the selected workflow's verification and review rules."],
+ 'Capability Tiers': ['Route each ordinary worker packet to one tier: `light`, `standard`, `deep`, or `audit`. '
                       'Tiers determine permission; the platform section maps them to '
                       'configurations, and there is no mandatory `light` trial.',
                       '`light`: small mechanical or standard tasks meeting the low-risk '
@@ -704,10 +722,8 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                       'failed lower-tier trial.',
                       'A review uses `deep` when the review itself meets that difficulty '
                       'condition; assess review difficulty separately from implementation.',
-                      '`audit` is read-only: independent diagnosis (including recovery consultation) '
-                      'and complex whole-change final review, never implementation or recovery fixes. After a failed `deep` '
-                      'implementation it may be selected directly for the one independent '
-                      'diagnosis.',
+                      '`audit` is read-only and covers complex whole-change final review and '
+                      'independent diagnosis when the platform routes diagnosis to that tier.',
                       'Other whole-change final reviews use `deep`.',
                       'First classify failures as scope, context, environment, verification, or '
                       'capability. Escalate one tier only for demonstrated capability limits of a '
@@ -724,10 +740,12 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                       'another tier, an older model, or the `audit` configuration as fallback.'],
  'Codex Routing': ['Every fresh Codex worker uses `fork_turns: none` and receives a self-contained '
                    'brief, required files, and binding global constraints.',
-                   'Runtime model IDs are `gpt-6.1-terra`, `gpt-6.1-sol`, and `gpt-6-astra`; UI Extra '
-                   'High maps to `xhigh`.',
-                   'No worker configuration exceeds the `audit` preset; the top effort stays with '
-                   'the human-chosen main thread.',
+                   'Ordinary worker model IDs are `gpt-6.1-terra` and `gpt-6.2-sol`. UI Extra High maps to `xhigh`.',
+                   f'Use {CODEX_CONSULTATION_PRESET} (`{CODEX_CONSULTATION_MODEL_ID}`) only for the read-only '
+                   'independent consultation defined in `execution-recovery.md`. Its trigger and existing '
+                   'authorization cover one fresh-context dispatch, shared with recovery diagnosis.',
+                   'The independent consultation grants no authority to implement, fix, review, substitute '
+                   'for an unavailable worker, or delegate recursively.',
                    'Preserve an existing human routing exception only as an active `Human routing '
                    'exception:` JSON bullet in Codex Routing with exactly `target`, `scope`, '
                    '`role`, `preset`, and `approval` string fields.',
@@ -760,7 +778,8 @@ WORKER_DECLARATIONS = {'Dispatch Contract': ['In SDD, start a fresh implementer 
                     'Continuations are not repair rounds; afterwards classify the failure.',
                     'Dispatch independent diagnosis to a resumable worker: `nhk-audit`, or without '
                     'definitions a general-purpose agent with `model: opus`; never the one-shot '
-                    'Explore or Plan agents. Record its agent ID with the diagnostic use.',
+                    'Explore or Plan agents. Record its agent ID with the diagnostic use. After a failed '
+                    '`deep` implementation, this route may be used directly when the diagnosis trigger applies.',
                     'Never continue a diagnostic worker for open items. Its only continuation is the '
                     'one recovery clarification, sent with SendMessage to the recorded worker; if '
                     'that worker cannot be resumed, the clarification lapses and no fresh worker '
@@ -1038,7 +1057,7 @@ def without_routing_exceptions(
                 elif record["role"] not in ROUTING_EXCEPTION_ROLES:
                     reason = "must name one ordinary implementation or review role; it cannot authorize recursion"
                 elif record["preset"] not in ordinary_presets:
-                    reason = "may choose only a `light`, `standard`, or `deep` preset, never `audit` or Ultra permissions"
+                    reason = "may choose only a `light`, `standard`, or `deep` preset, never consultation or Ultra permissions"
                 elif record["role"] == "initial-task-review" and record["preset"] == CODEX_TIER_PRESETS["light"]:
                     reason = "does not authorize `light` initial reviews"
                 elif not approval_reference(record["approval"]):
@@ -1088,7 +1107,9 @@ def validate_worker_policy_contract(
     validate_declared_clauses(
         declared_sections, WORKER_DECLARATIONS, label, issues,
         r"\b(?:Band\s*\d|GPT[- ]|gpt-|Astra|Luna|Sol|modules?|tasks?|mechanical|standard|judgment|"
-        r"review|consolidat\w*|repair|fix(?:es)?|Sonnet|Opus|Fable|Ultra)\b|" + TIER_ROUTE_PATTERN + "|" + TERRA_ROUTE_PATTERN,
+        r"reviews?|consolidat\w*|repair|fix(?:es)?|Sonnet|Opus|Fable|Ultra|consult(?:s|ing|ed|ations?|ants?)?)\b|"
+        r"\bimplementers?\s+(?:must\s+be\s+)?sequential\b|"
+        + TIER_ROUTE_PATTERN + "|" + TERRA_ROUTE_PATTERN,
     )
     validate_ui_alias_routes(declared_sections, label, issues)
     validate_exact_codex_tiers(policy_sections.get("Codex Routing", ""), label, issues)
@@ -1136,7 +1157,7 @@ def validate_execution_recovery_contract(
         r"(?:(?:may|can|must|shall)\s+(?:(?:also|then|still|now|always|again|freely)\s+)*"
         r"(?:be\s+)?" + consultation_predicate + r"|"
         r"authorizes?|resets?|renews?|grants?|"
-        r"(?:is|are)\s+(?:allowed|permitted|authorized|reset|renewed))\b|"
+        r"(?:is|are)\s+(?:allowed|permitted|authorized|required|reset|renewed))\b|"
         # Explicit worker/allowance objects and additional counted permissions do
         # not depend on trailing timing prose. Only ambiguous bare topic objects
         # need an end boundary to avoid treating diagnosis logs/codes as a role.
@@ -1154,6 +1175,16 @@ def validate_execution_recovery_contract(
         + process_object + r")" + object_end,
         re.IGNORECASE,
     )
+    consultation_gate = re.compile(
+        r"\b(?:ordinary|routine)\s+(?:uncertaint\w*|ambiguit\w*|bugs?)\s+"
+        r"(?:requires?|triggers?)\s+(?:an?\s+|independent\s+)*(?:consult\w*|diagnosis)\b|"
+        r"\b(?:human approval|permission|consent)\s+(?:is required\s+)?"
+        r"(?:before|for)\s+(?:an?\s+|independent\s+)*consult\w*\b|"
+        r"\bconsultations?\s+requires?\s+(?:(?:separate|explicit)\s+)?"
+        r"(?:human approval|permission|consent)\b|"
+        r"\b(?:always|must)\s+consult\s+(?:another|an?|the)\s+(?:agent|worker|model)\b",
+        re.IGNORECASE,
+    )
     prohibition = re.compile(
         r"\b(?:do not|never)\s+(?:dispatch|request)\s+(?:a second|another)\s+diagnostic worker[.;]|"
         r"\bdo not allow a second clarification[.;]|"
@@ -1165,7 +1196,7 @@ def validate_execution_recovery_contract(
         # Normalize ordinary emphasis only for the extra-declaration scan.
         clause = re.sub(r"(?<!\w)(\*{1,2}|_{1,2})(?=\S)(.+?)(?<=\S)\1(?!\w)", r"\2", clause)
         clause = prohibition.sub("", clause)
-        if consultation_grant.search(clause):
+        if consultation_grant.search(clause) or consultation_gate.search(clause):
             issues.append(f"{label} contains additional consultation permissions; use the declared contract only")
 
     if headings != EXECUTION_RECOVERY_HEADINGS:
@@ -1178,11 +1209,12 @@ def validate_execution_recovery_contract(
         sections,
         "Triggers and Accounting",
         (
-            "systematic-debugging",
-            "architecture check after three failed fixes",
+            "For Superpowers, use systematic-debugging and its architecture check after three failed fixes.",
+            "For Matt Pocock, use its native diagnosing-bugs workflow.",
             "five rounds are a ceiling, not a waiting requirement",
             "five fix-review rounds per task",
             "five rounds for the same stable acceptance gap across tasks",
+            "A round is one fix attempt (a dispatch in SDD) plus verification and any review required by the selected workflow.",
             "Reaching either the task-round bound or stable-gap bound stops ordinary fixing",
             "Worker, session, model, commit, task rename, or replanning never resets a task or gap count",
             "existing authoritative execution record",
@@ -1215,7 +1247,8 @@ def validate_execution_recovery_contract(
             "may be the sixth modification and supersedes an old absolute “No sixth patch” rule",
             "stop automatic fixes and ask the human",
             "Changing model, plan, or task never renews recovery",
-            "Final review retains one concentrated fix wave and one scoped re-review",
+            "Superpowers final review retains one concentrated fix wave and one scoped re-review.",
+            "Matt Pocock uses its native review process.",
             "An exhausted earlier gap cannot use final review as another repair allowance",
             "never return to the ordinary loop",
         ),
@@ -2015,6 +2048,7 @@ def validate_source(root: Path) -> list[str]:
             "same single task, scope, and confirmed approval",
             "never copy its authorization across the new tasks",
             "Legacy tier migration",
+            "the superseded GPT-6.1 Sol and GPT-6 Astra presets",
             "its role remains permitted for that tier",
         ):
             require_text(worker_template, token, "worker-policy-template.md", issues)
